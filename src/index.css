@@ -44,12 +44,27 @@
   --radius-btn: 20px;
 }
 
+/* Base body style */
 body {
   margin: 0;
   font-family: var(--font-sans);
   background-color: var(--color-background);
   color: var(--color-on-background);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Hide horizontal scrollbars on snap carousels */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Respect device safe area at the bottom of fixed sheets/bars */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
 }
 
 /* Material Symbols configuration */

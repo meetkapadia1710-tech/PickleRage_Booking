@@ -30,9 +30,13 @@ export default function SplashScreen() {
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="flex flex-col items-center space-y-6 z-10"
       >
-        <div className="w-[100px] h-[100px] rounded-3xl bg-primary-container/30 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+        <motion.div
+          animate={{ scale: [1, 1.06, 1] }}
+          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut', delay: 0.8 }}
+          className="w-[100px] h-[100px] rounded-3xl bg-primary-container/30 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+        >
           <span className="material-symbols-outlined text-[56px] text-[#afefdd]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 300" }}>sports_tennis</span>
-        </div>
+        </motion.div>
         <h1 className="font-bold text-[28px] md:text-[30px] tracking-tight text-white text-center">
           PlayHub
         </h1>
