@@ -32,44 +32,48 @@ export default function BottomNav() {
           animate={{ y: 0 }}
           exit={{ y: 96 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="md:hidden bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(0,52,43,0.04)] fixed bottom-0 w-full z-50 flex justify-around items-center px-2 pt-2 pb-[calc(8px+env(safe-area-inset-bottom))] rounded-t-xl border-t border-surface-variant/50 overflow-hidden"
+          className="md:hidden bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(0,52,43,0.04)] fixed bottom-0 w-full z-50 flex flex-col rounded-t-xl border-t border-surface-variant/50"
         >
-          {tabs.map(tab => {
-            const active = location.pathname === tab.path;
-            return (
-              <button
-                key={tab.path}
-                onClick={() => handleTab(tab.path, active)}
-                className="relative flex flex-col items-center justify-center px-5 py-1 outline-none min-w-0 flex-1"
-                aria-current={active ? 'page' : undefined}
-              >
-                {active && (
-                  <motion.div
-                    layoutId="nav-pill"
-                    transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-                    className="absolute inset-x-1 inset-y-0 bg-secondary-container rounded-full"
-                  />
-                )}
-                <motion.span
-                  animate={{ scale: active ? 1.08 : 1 }}
-                  transition={{ type: 'spring', damping: 14, stiffness: 400 }}
-                  className={`relative z-10 material-symbols-outlined transition-colors duration-200 ${
-                    active ? 'text-on-secondary-container' : 'text-on-surface-variant'
-                  }`}
-                  style={{ fontVariationSettings: `'FILL' ${active ? 1 : 0}` }}
+          <div className="flex items-stretch px-2 pt-1">
+            {tabs.map(tab => {
+              const active = location.pathname === tab.path;
+              return (
+                <button
+                  key={tab.path}
+                  onClick={() => handleTab(tab.path, active)}
+                  className="relative flex flex-col items-center justify-center flex-1 h-[58px] outline-none"
+                  aria-current={active ? 'page' : undefined}
                 >
-                  {tab.icon}
-                </motion.span>
-                <span
-                  className={`relative z-10 font-medium text-[12px] mt-1 transition-colors duration-200 ${
-                    active ? 'text-on-secondary-container' : 'text-on-surface-variant'
-                  }`}
-                >
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
+                  {active && (
+                    <motion.div
+                      layoutId="nav-pill"
+                      transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+                      className="absolute inset-x-1 inset-y-1 bg-secondary-container rounded-full"
+                    />
+                  )}
+                  <motion.span
+                    animate={{ scale: active ? 1.08 : 1 }}
+                    transition={{ type: 'spring', damping: 14, stiffness: 400 }}
+                    className={`relative z-10 material-symbols-outlined transition-colors duration-200 ${
+                      active ? 'text-on-secondary-container' : 'text-on-surface-variant'
+                    }`}
+                    style={{ fontVariationSettings: `'FILL' ${active ? 1 : 0}` }}
+                  >
+                    {tab.icon}
+                  </motion.span>
+                  <span
+                    className={`relative z-10 font-medium text-[10px] mt-0.5 whitespace-nowrap transition-colors duration-200 ${
+                      active ? 'text-on-secondary-container' : 'text-on-surface-variant'
+                    }`}
+                  >
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {/* Safe area spacer for home indicator / gesture bar */}
+          <div style={{ height: 'env(safe-area-inset-bottom)' }} />
         </motion.nav>
       )}
     </AnimatePresence>
