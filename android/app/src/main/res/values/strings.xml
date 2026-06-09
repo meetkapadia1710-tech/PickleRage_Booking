@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">playhub</string>
+    <string name="title_activity_main">playhub</string>
+    <string name="package_name">com.playhub.app</string>
+    <string name="custom_url_scheme">com.playhub.app</string>
+</resources>

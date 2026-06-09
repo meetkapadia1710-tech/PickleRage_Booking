@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AceCourt - My Bookings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary": "#795900",
+                        "on-tertiary-container": "#4cc2b5",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#261a00",
+                        "inverse-surface": "#2e3132",
+                        "background": "#f8f9fa",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-secondary-container": "#6d5000",
+                        "on-surface-variant": "#3f4945",
+                        "on-background": "#191c1d",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#94d3c1",
+                        "on-error": "#ffffff",
+                        "primary": "#00342b",
+                        "surface-dim": "#d9dadb",
+                        "surface": "#f8f9fa",
+                        "on-primary-container": "#7ebdac",
+                        "on-tertiary-fixed-variant": "#005049",
+                        "surface-variant": "#e1e3e4",
+                        "secondary-fixed-dim": "#fbbc00",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#5c4300",
+                        "primary-container": "#004d40",
+                        "tertiary-fixed": "#84f5e8",
+                        "tertiary-container": "#004c46",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#afefdd",
+                        "tertiary-fixed-dim": "#66d9cc",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#bfc9c4",
+                        "secondary-fixed": "#ffdfa0",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "surface-container": "#edeeef",
+                        "outline": "#707975",
+                        "inverse-primary": "#94d3c1",
+                        "tertiary": "#00332f",
+                        "on-primary-fixed": "#00201a",
+                        "secondary-container": "#ffbf00",
+                        "surface-tint": "#29695b",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-container-high": "#e7e8e9",
+                        "on-primary-fixed-variant": "#065043",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#00201d"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "touch-target": "48px",
+                        "margin-main": "20px",
+                        "stack-sm": "8px",
+                        "stack-lg": "24px",
+                        "stack-md": "16px",
+                        "gutter": "16px"
+                    },
+                    fontFamily: {
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "label-lg": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"]
+                    },
+                    fontSize: {
+                        "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+                        "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.5px", fontWeight: "500" }],
+                        "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.1px", fontWeight: "600" }],
+                        "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "700" }],
+                        "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "headline-lg": ["30px", { lineHeight: "38px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "34px", fontWeight: "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8f9fa; /* background */
+            color: #191c1d; /* on-background */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Ambient shadows for lifted feel */
+        .ambient-shadow-sm {
+            box-shadow: 0 4px 12px rgba(0, 52, 43, 0.04);
+        }
+        
+        .ambient-shadow-md {
+            box-shadow: 0 8px 20px rgba(0, 52, 43, 0.08);
+        }
+
+        /* Hide scrollbar for clean look */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24 md:pb-0 pt-[72px]">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background flex justify-between items-center px-margin-main h-touch-target w-full">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-[24px]">sports_tennis</span>
+<span class="font-headline-md text-headline-md text-primary font-bold">AceCourt</span>
+</div>
+<button class="text-primary w-touch-target h-touch-target flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-100">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="px-margin-main max-w-3xl mx-auto mt-stack-lg">
+<!-- Header Section -->
+<div class="mb-stack-lg">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-stack-sm">My Bookings</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage your court reservations.</p>
+</div>
+<!-- Custom Tab Interface -->
+<div class="flex w-full mb-stack-lg bg-surface-container-lowest p-1 rounded-xl ambient-shadow-sm relative">
+<div class="absolute left-1 top-1 bottom-1 w-[calc(50%-0.25rem)] bg-primary rounded-lg transition-transform duration-300 ease-in-out" id="tab-indicator"></div>
+<button class="flex-1 relative z-10 h-touch-target flex items-center justify-center font-label-lg text-label-lg text-on-primary transition-colors duration-200" id="tab-upcoming" onclick="switchTab('upcoming')">
+                Upcoming
+            </button>
+<button class="flex-1 relative z-10 h-touch-target flex items-center justify-center font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors duration-200" id="tab-past" onclick="switchTab('past')">
+                Past
+            </button>
+</div>
+<!-- Upcoming Tab Content -->
+<div class="space-y-stack-md block" id="content-upcoming">
+<!-- Upcoming Booking Card 1 -->
+<div class="bg-surface-container-lowest rounded-[20px] p-stack-md ambient-shadow-sm border border-transparent hover:border-primary/20 transition-all">
+<div class="flex justify-between items-start mb-stack-md">
+<div>
+<div class="inline-flex items-center gap-1 bg-secondary-container/20 text-on-secondary-container px-2 py-1 rounded-md mb-2">
+<span class="material-symbols-outlined text-[14px]">event</span>
+<span class="font-label-md text-label-md">Tomorrow, 10:00 AM</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary">Downtown Tennis Center</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Court 4 • Hard Court</p>
+</div>
+<div class="bg-secondary px-3 py-1 rounded-full text-on-secondary font-label-md text-label-md">
+                        Confirmed
+                    </div>
+</div>
+<div class="flex gap-stack-sm mt-stack-md pt-stack-md border-t border-surface-container-high">
+<button class="flex-1 h-touch-target bg-transparent text-primary font-label-lg text-label-lg border-[1.5px] border-primary rounded-full hover:bg-primary/5 transition-colors">
+                        Reschedule
+                    </button>
+<button class="flex-1 h-touch-target bg-secondary-container text-on-secondary-container font-label-lg text-label-lg rounded-full hover:bg-secondary-container/90 transition-colors">
+                        View Details
+                    </button>
+</div>
+</div>
+<!-- Upcoming Booking Card 2 -->
+<div class="bg-surface-container-lowest rounded-[20px] p-stack-md ambient-shadow-sm border border-transparent hover:border-primary/20 transition-all">
+<div class="flex justify-between items-start mb-stack-md">
+<div>
+<div class="inline-flex items-center gap-1 bg-surface-container text-on-surface-variant px-2 py-1 rounded-md mb-2">
+<span class="material-symbols-outlined text-[14px]">event</span>
+<span class="font-label-md text-label-md">Oct 24, 6:00 PM</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary">Riverside Club</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Court 1 • Clay Court</p>
+</div>
+<div class="bg-surface-container px-3 py-1 rounded-full text-on-surface-variant font-label-md text-label-md">
+                        Pending
+                    </div>
+</div>
+<div class="flex gap-stack-sm mt-stack-md pt-stack-md border-t border-surface-container-high">
+<button class="flex-1 h-touch-target bg-transparent text-primary font-label-lg text-label-lg border-[1.5px] border-primary rounded-full hover:bg-primary/5 transition-colors">
+                        Cancel
+                    </button>
+<button class="flex-1 h-touch-target bg-secondary-container text-on-secondary-container font-label-lg text-label-lg rounded-full hover:bg-secondary-container/90 transition-colors">
+                        View Details
+                    </button>
+</div>
+</div>
+</div>
+<!-- Past Tab Content (Hidden by default) -->
+<div class="space-y-stack-md hidden" id="content-past">
+<!-- Past Booking Card 1 -->
+<div class="bg-surface-container-lowest rounded-[20px] p-stack-md ambient-shadow-sm opacity-80">
+<div class="flex justify-between items-start mb-stack-md">
+<div>
+<div class="inline-flex items-center gap-1 text-on-surface-variant mb-2">
+<span class="material-symbols-outlined text-[14px]">history</span>
+<span class="font-label-md text-label-md">Oct 10, 9:00 AM</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary">Downtown Tennis Center</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Court 2 • Hard Court</p>
+</div>
+<div class="bg-surface-variant px-3 py-1 rounded-full text-on-surface-variant font-label-md text-label-md">
+                        Completed
+                    </div>
+</div>
+<div class="mt-stack-md pt-stack-md border-t border-surface-container-high">
+<button class="w-full h-touch-target bg-transparent text-primary font-label-lg text-label-lg hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">replay</span>
+                        Rebook this court
+                    </button>
+</div>
+</div>
+<!-- Past Booking Card 2 -->
+<div class="bg-surface-container-lowest rounded-[20px] p-stack-md ambient-shadow-sm opacity-80">
+<div class="flex justify-between items-start mb-stack-md">
+<div>
+<div class="inline-flex items-center gap-1 text-on-surface-variant mb-2">
+<span class="material-symbols-outlined text-[14px]">history</span>
+<span class="font-label-md text-label-md">Sep 28, 5:30 PM</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary">Oakridge Athletics</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Court 5 • Grass Court</p>
+</div>
+<div class="bg-surface-variant px-3 py-1 rounded-full text-on-surface-variant font-label-md text-label-md">
+                        Completed
+                    </div>
+</div>
+<div class="mt-stack-md pt-stack-md border-t border-surface-container-high">
+<button class="w-full h-touch-target bg-transparent text-primary font-label-lg text-label-lg hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">replay</span>
+                        Rebook this court
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface-container-lowest rounded-t-xl shadow-[0_-4px_12px_0_rgba(0,52,43,0.04)] flex justify-around items-center px-4 py-2">
+<!-- Home (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity w-touch-target h-touch-target" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md mt-1">Home</span>
+</a>
+<!-- My Bookings (Active) -->
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-6 py-1 hover:opacity-80 transition-opacity active:scale-90 duration-150 h-touch-target" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">event_available</span>
+<span class="font-label-md text-label-md mt-1">My Bookings</span>
+</a>
+<!-- Profile (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity w-touch-target h-touch-target" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md mt-1">Profile</span>
+</a>
+</nav>
+<!-- Desktop Navigation (Hidden on mobile) -->
+<nav class="hidden md:flex fixed top-0 left-1/2 -translate-x-1/2 h-touch-target items-center gap-8 z-50">
+<a class="font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors" href="#">Home</a>
+<a class="font-label-lg text-label-lg text-primary border-b-2 border-primary pb-1" href="#">My Bookings</a>
+<a class="font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors" href="#">Profile</a>
+</nav>
+<script>
+        function switchTab(tab) {
+            const upcomingContent = document.getElementById('content-upcoming');
+            const pastContent = document.getElementById('content-past');
+            const tabUpcoming = document.getElementById('tab-upcoming');
+            const tabPast = document.getElementById('tab-past');
+            const indicator = document.getElementById('tab-indicator');
+
+            if (tab === 'upcoming') {
+                // Content
+                upcomingContent.classList.remove('hidden');
+                upcomingContent.classList.add('block');
+                pastContent.classList.add('hidden');
+                pastContent.classList.remove('block');
+                
+                // Colors
+                tabUpcoming.classList.remove('text-on-surface-variant');
+                tabUpcoming.classList.add('text-on-primary');
+                tabPast.classList.remove('text-on-primary');
+                tabPast.classList.add('text-on-surface-variant');
+                
+                // Indicator
+                indicator.style.transform = 'translateX(0)';
+
+            } else {
+                // Content
+                pastContent.classList.remove('hidden');
+                pastContent.classList.add('block');
+                upcomingContent.classList.add('hidden');
+                upcomingContent.classList.remove('block');
+                
+                // Colors
+                tabPast.classList.remove('text-on-surface-variant');
+                tabPast.classList.add('text-on-primary');
+                tabUpcoming.classList.remove('text-on-primary');
+                tabUpcoming.classList.add('text-on-surface-variant');
+                
+                // Indicator
+                indicator.style.transform = 'translateX(100%)';
+            }
+        }
+    </script>
+</body></html>

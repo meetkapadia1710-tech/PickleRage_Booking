@@ -1,0 +1,94 @@
+# PlayHub Project Plan
+
+## Phase 0: Setup
+**1. Goal:** Initialize the project with the required tech stack and tooling constraints.
+**2. Stitch Screens:** None.
+**3. Firestore Collections/Schema:** Initialize Firebase project (No schema changes yet).
+**4. Cloud Functions:** Initialize Firebase Cloud Functions environment.
+**5. Acceptance Criteria:** 
+- Vite + React + TS + Tailwind are configured.
+- Folder structure is in place.
+- Capacitor is installed with Android platform added.
+
+## Phase 1: Auth & Shell
+**1. Goal:** Implement user authentication (Phone OTP) and application shell (routing, navigation).
+**2. Stitch Screens:** `splash_screen`, `phone_login`, `profile`
+**3. Firestore Collections/Schema:** 
+- `users`: `{ uid, phoneNumber, displayName, createdAt }`
+**4. Cloud Functions:** 
+- `onCreateUser` trigger (optional, for profile initialization)
+**5. Acceptance Criteria:** 
+- App loads splash screen and transitions to login.
+- User can log in using Firebase Phone Auth.
+- User can view and update their profile.
+- Basic routing framework is operational.
+
+## Phase 2: Venues
+**1. Goal:** Create the venue browsing experience and display venue details, replacing AceCourt with PlayHub branding (2 pickleball, 1 box cricket).
+**2. Stitch Screens:** `home_venue_list`, `venue_detail`, `court_premium`
+**3. Firestore Collections/Schema:**
+- `venues`: `{ id, name, type ("pickleball" | "box cricket"), images, pricing, address, amenities }`
+- `courts`: `{ id, venueId, name, type, operatingHours }`
+**4. Cloud Functions:** None.
+**5. Acceptance Criteria:**
+- 3 hardcoded venues are seeded into Firestore.
+- Home screen correctly displays the venues and "All / Pickleball / Box cricket" filters.
+- Tapping a venue shows the correct detail screen (standard or premium).
+- UI precisely matches the Stitch export for venue cards and detail layouts.
+
+## Phase 3: Slots & Availability
+**1. Goal:** Display the court booking calendar and real-time availability grid.
+**2. Stitch Screens:** `time_slots`
+**3. Firestore Collections/Schema:**
+- `bookings`: `{ id, userId, venueId, courtId, date, startTime, endTime, status }` (used to derive availability)
+**4. Cloud Functions:** None yet.
+**5. Acceptance Criteria:**
+- Date picker works accurately.
+- Live slot grid computes availability by taking court operating hours and subtracting existing `bookings` documents.
+- Real-time listeners update the grid immediately if another user books a slot.
+
+## Phase 4: Booking & Payment
+**1. Goal:** Securely lock slots, handle payments via Razorpay, and show the user's booking history.
+**2. Stitch Screens:** `booking_confirmation`, `payment_success`, `my_bookings`
+**3. Firestore Collections/Schema:**
+- `bookings`: Add states for payment processing (`pending`, `confirmed`, `failed`).
+- `payments`: `{ id, bookingId, razorpayOrderId, razorpayPaymentId, amount, status }`
+**4. Cloud Functions:**
+- `createRazorpayOrder`: Generates the Razorpay order ID securely.
+- `verifyRazorpayPayment`: Verifies Razorpay payment signature and updates booking status.
+**5. Acceptance Criteria:**
+- Firestore transaction safely checks and locks the selected slot.
+- Booking confirmation summarizes the costs before payment.
+- Successful payment redirects to the success screen.
+- My Bookings screen accurately lists upcoming and past bookings.
+
+## Phase 5: Notifications & Admin
+**1. Goal:** Keep users informed and provide an admin panel to manage the platform.
+**2. Stitch Screens:** None (admin panel is a separate web panel).
+**3. Firestore Collections/Schema:**
+- User FCM tokens for push notifications.
+**4. Cloud Functions:**
+- `sendBookingConfirmation`: Triggered on successful booking.
+- `sendBookingReminder`: Scheduled function to remind users.
+**5. Acceptance Criteria:**
+- Users receive push notifications upon booking and reminders before their slot.
+- Admins can view all bookings, manage venues/courts, and set pricing/operating hours via the separate web panel.
+
+## Phase 6: Native Polish & Release
+**1. Goal:** Ensure the app feels fully native and prepare for Google Play release.
+**2. Stitch Screens:** Refinements across all screens.
+**3. Firestore Collections/Schema:** None.
+**4. Cloud Functions:** None.
+**5. Acceptance Criteria:**
+- Framer Motion spring transitions and tap feedbacks are integrated throughout.
+- Haptics (@capacitor/haptics) respond to critical user actions.
+- Safe-area and status bar are correctly handled (using the deep teal color).
+- PWA correctly configured.
+- Signed Android App Bundle (AAB)/APK generated via Capacitor 8.
+- Google Play Console closed-test checklist completed.
+
+---
+## Open Decisions
+- **Final Branding:** Confirm exactly what PlayHub logo assets to use.
+- **Pricing:** Exact Indian Rupee (₹) pricing structure for Pickleball vs Box Cricket per hour.
+- **Cancellation/Refund Policy:** Rules around how close to the slot time a user can cancel, and refund processing logic.

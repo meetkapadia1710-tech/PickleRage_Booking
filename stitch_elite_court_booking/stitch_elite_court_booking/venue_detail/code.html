@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Venue Detail - AceCourt</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#795900",
+                        "on-tertiary-container": "#4cc2b5",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#261a00",
+                        "inverse-surface": "#2e3132",
+                        "background": "#f8f9fa",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-secondary-container": "#6d5000",
+                        "on-surface-variant": "#3f4945",
+                        "on-background": "#191c1d",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#94d3c1",
+                        "on-error": "#ffffff",
+                        "primary": "#00342b",
+                        "surface-dim": "#d9dadb",
+                        "surface": "#f8f9fa",
+                        "on-primary-container": "#7ebdac",
+                        "on-tertiary-fixed-variant": "#005049",
+                        "surface-variant": "#e1e3e4",
+                        "secondary-fixed-dim": "#fbbc00",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#5c4300",
+                        "primary-container": "#004d40",
+                        "tertiary-fixed": "#84f5e8",
+                        "tertiary-container": "#004c46",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#afefdd",
+                        "tertiary-fixed-dim": "#66d9cc",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#bfc9c4",
+                        "secondary-fixed": "#ffdfa0",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "surface-container": "#edeeef",
+                        "outline": "#707975",
+                        "inverse-primary": "#94d3c1",
+                        "tertiary": "#00332f",
+                        "on-primary-fixed": "#00201a",
+                        "secondary-container": "#ffbf00",
+                        "surface-tint": "#29695b",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-container-high": "#e7e8e9",
+                        "on-primary-fixed-variant": "#065043",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#00201d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "2xl": "1.25rem"
+                    },
+                    "spacing": {
+                        "touch-target": "48px",
+                        "margin-main": "20px",
+                        "stack-sm": "8px",
+                        "stack-lg": "24px",
+                        "stack-md": "16px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "label-lg": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Hide scrollbar for horizontal scrolling elements but keep functionality */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest min-h-screen pb-[100px] antialiased selection:bg-primary selection:text-on-primary">
+<!-- Hero Image & Navigation overlay -->
+<div class="relative w-full h-[340px] md:h-[420px]">
+<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10"></div>
+<img alt="High-end tennis court" class="w-full h-full object-cover" data-alt="A pristine, high-end professional tennis hard court bathed in bright, crisp morning sunlight. The sleek, modern corporate aesthetic is emphasized by geometric lines and a minimalist architectural surroundings. Deep teal structural accents frame the court, contrasting beautifully with the pristine surface. The scene conveys athletic precision, luxury, and a quiet, focused energy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKFWDwUkJOC1ABRjsh3SwFIK6rFX_5A6kgUHwc1e7MZrgIh339YcdYsqPyQEsYjYj9pEPRHdY-CvtctpSe04An-dj9lFxEgix1ZZtzt79nJzhK_qofld5ufuawior8yrUeGEjegfByPbbaBRtlbCZp-_AjHSEZi025nGsYEOXXjqhq_PMWBzeR3aaJIMY5i8pXqBwW-zJpOMO-OEiYsLxAhapu6Y3Gvp8soyfttVQfJePJTY_lBLasjc2oGXZL8tZ5bXZZAhxzVNY"/>
+<!-- App Bar over image -->
+<div class="absolute top-0 w-full flex justify-between items-center px-margin-main pt-6 h-touch-target z-20">
+<button class="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-on-primary hover:bg-surface-container-lowest/30 transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex gap-3">
+<button class="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-on-primary hover:bg-surface-container-lowest/30 transition-colors">
+<span class="material-symbols-outlined">favorite_border</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-on-primary hover:bg-surface-container-lowest/30 transition-colors">
+<span class="material-symbols-outlined">share</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Main Content Canvas -->
+<main class="relative z-20 -mt-10 bg-background rounded-t-[32px] px-margin-main pt-8 min-h-[442px] shadow-[0_-8px_24px_rgba(0,52,43,0.08)]">
+<!-- Title & Location Info -->
+<header class="mb-stack-lg">
+<div class="flex justify-between items-start mb-2">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background pr-4">AceCenter Pro Complex</h1>
+<div class="flex items-center gap-1 bg-secondary-container/20 px-2.5 py-1 rounded-lg shrink-0">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-lg text-label-lg text-on-secondary-container">4.9</span>
+</div>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">location_on</span>
+<span class="font-body-md text-body-md">1200 Baseline Road, Downtown District</span>
+</div>
+</header>
+<!-- Divider -->
+<div class="h-px w-full bg-surface-variant mb-stack-lg"></div>
+<!-- Amenities -->
+<section class="mb-stack-lg">
+<h2 class="font-headline-sm text-headline-sm text-on-background mb-stack-md">Amenities</h2>
+<div class="flex gap-5 overflow-x-auto pb-2 hide-scrollbar">
+<div class="flex flex-col items-center gap-2 min-w-[64px]">
+<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined">local_parking</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Parking</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px]">
+<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined">shower</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Showers</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px]">
+<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined">lock</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Lockers</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px]">
+<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined">water_drop</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Water</span>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[64px]">
+<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined">storefront</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Pro Shop</span>
+</div>
+</div>
+</section>
+<!-- Availability Calendar (Horizontal Scroll) -->
+<section class="mb-stack-lg">
+<h2 class="font-headline-sm text-headline-sm text-on-background mb-stack-md">Select Date</h2>
+<div class="flex gap-3 overflow-x-auto pb-4 hide-scrollbar -mx-margin-main px-margin-main">
+<!-- Active Day -->
+<button class="relative flex flex-col items-center justify-center w-[64px] h-[80px] rounded-full bg-primary text-on-primary shrink-0 shadow-[0_4px_12px_rgba(0,52,43,0.15)] transition-transform active:scale-95">
+<span class="font-label-md text-label-md uppercase mb-1 opacity-90">Tue</span>
+<span class="font-headline-md text-headline-md">14</span>
+<span class="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-secondary-container"></span>
+</button>
+<!-- Inactive Days -->
+<button class="flex flex-col items-center justify-center w-[64px] h-[80px] rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface shrink-0 hover:bg-surface-container transition-colors">
+<span class="font-label-md text-label-md uppercase mb-1 text-on-surface-variant">Wed</span>
+<span class="font-headline-md text-headline-md">15</span>
+</button>
+<button class="flex flex-col items-center justify-center w-[64px] h-[80px] rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface shrink-0 hover:bg-surface-container transition-colors">
+<span class="font-label-md text-label-md uppercase mb-1 text-on-surface-variant">Thu</span>
+<span class="font-headline-md text-headline-md">16</span>
+</button>
+<button class="flex flex-col items-center justify-center w-[64px] h-[80px] rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface shrink-0 hover:bg-surface-container transition-colors">
+<span class="font-label-md text-label-md uppercase mb-1 text-on-surface-variant">Fri</span>
+<span class="font-headline-md text-headline-md">17</span>
+</button>
+<button class="flex flex-col items-center justify-center w-[64px] h-[80px] rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface shrink-0 hover:bg-surface-container transition-colors">
+<span class="font-label-md text-label-md uppercase mb-1 text-on-surface-variant">Sat</span>
+<span class="font-headline-md text-headline-md">18</span>
+</button>
+<button class="flex flex-col items-center justify-center w-[64px] h-[80px] rounded-full bg-surface-container-lowest border border-outline-variant text-on-surface shrink-0 hover:bg-surface-container transition-colors">
+<span class="font-label-md text-label-md uppercase mb-1 text-on-surface-variant">Sun</span>
+<span class="font-headline-md text-headline-md">19</span>
+</button>
+</div>
+</section>
+<!-- Court Type Selector (Bento-style Grid) -->
+<section class="mb-stack-lg">
+<h2 class="font-headline-sm text-headline-sm text-on-background mb-stack-md">Court Surface</h2>
+<div class="grid grid-cols-2 gap-3">
+<!-- Selected Court -->
+<button class="text-left relative overflow-hidden rounded-2xl border-2 border-primary bg-primary/5 p-4 transition-all">
+<div class="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-on-primary font-bold">check</span>
+</div>
+<span class="material-symbols-outlined text-primary mb-3 text-[28px]">sports_tennis</span>
+<h3 class="font-label-lg text-label-lg text-on-background mb-1">Hard Court</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Fast paced • Premium</p>
+<p class="font-label-lg text-label-lg text-primary mt-2">$45 / hr</p>
+</button>
+<!-- Unselected Court -->
+<button class="text-left rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 transition-all hover:border-primary/50">
+<span class="material-symbols-outlined text-on-surface-variant mb-3 text-[28px]">grass</span>
+<h3 class="font-label-lg text-label-lg text-on-background mb-1">Clay Court</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Slower pace • Classic</p>
+<p class="font-label-lg text-label-lg text-on-surface mt-2">$55 / hr</p>
+</button>
+<!-- Unavailable Court -->
+<button class="text-left rounded-2xl border border-surface-variant bg-surface-container p-4 opacity-60 cursor-not-allowed">
+<span class="material-symbols-outlined text-on-surface-variant mb-3 text-[28px]">domain</span>
+<h3 class="font-label-lg text-label-lg text-on-surface-variant mb-1">Indoor Court</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Climate controlled</p>
+<p class="font-label-md text-label-md text-error mt-2">Sold Out</p>
+</button>
+</div>
+</section>
+</main>
+<!-- Floating Action Bar (Booking) -->
+<div class="fixed bottom-0 w-full bg-surface-container-lowest pt-4 pb-6 px-margin-main z-50 shadow-[0_-8px_20px_0_rgba(0,52,43,0.06)] rounded-t-2xl border-t border-surface-variant/50">
+<div class="flex justify-between items-center max-w-md mx-auto">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">Total Price</span>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg text-headline-lg text-primary">$45</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/hr</span>
+</div>
+</div>
+<button class="bg-secondary-container text-on-secondary-container font-headline-sm text-headline-sm px-8 py-3 rounded-full min-w-[160px] h-[56px] shadow-[0_4px_12px_rgba(255,191,0,0.2)] hover:opacity-90 transition-opacity active:scale-95 flex items-center justify-center gap-2">
+<span>Book Now</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Booking Confirmation</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#795900",
+                    "on-tertiary-container": "#4cc2b5",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed": "#261a00",
+                    "inverse-surface": "#2e3132",
+                    "background": "#f8f9fa",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-secondary-container": "#6d5000",
+                    "on-surface-variant": "#3f4945",
+                    "on-background": "#191c1d",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#94d3c1",
+                    "on-error": "#ffffff",
+                    "primary": "#00342b",
+                    "surface-dim": "#d9dadb",
+                    "surface": "#f8f9fa",
+                    "on-primary-container": "#7ebdac",
+                    "on-tertiary-fixed-variant": "#005049",
+                    "surface-variant": "#e1e3e4",
+                    "secondary-fixed-dim": "#fbbc00",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed-variant": "#5c4300",
+                    "primary-container": "#004d40",
+                    "tertiary-fixed": "#84f5e8",
+                    "tertiary-container": "#004c46",
+                    "on-tertiary": "#ffffff",
+                    "primary-fixed": "#afefdd",
+                    "tertiary-fixed-dim": "#66d9cc",
+                    "surface-bright": "#f8f9fa",
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#bfc9c4",
+                    "secondary-fixed": "#ffdfa0",
+                    "surface-container-low": "#f3f4f5",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#191c1d",
+                    "surface-container": "#edeeef",
+                    "outline": "#707975",
+                    "inverse-primary": "#94d3c1",
+                    "tertiary": "#00332f",
+                    "on-primary-fixed": "#00201a",
+                    "secondary-container": "#ffbf00",
+                    "surface-tint": "#29695b",
+                    "surface-container-highest": "#e1e3e4",
+                    "surface-container-high": "#e7e8e9",
+                    "on-primary-fixed-variant": "#065043",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed": "#00201d"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "touch-target": "48px",
+                    "margin-main": "20px",
+                    "stack-sm": "8px",
+                    "stack-lg": "24px",
+                    "stack-md": "16px",
+                    "gutter": "16px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "label-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                    "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500" }],
+                    "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+                    "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                    "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                    "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                    "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                    "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "700" }]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface h-screen w-full overflow-hidden relative font-body-md text-body-md">
+<!-- Mock Background Content (The screen underneath the modal) -->
+<div class="h-full w-full flex flex-col blur-[2px] opacity-60 pointer-events-none">
+<!-- TopAppBar (From JSON) -->
+<header class="bg-background dark:bg-on-background flex justify-between items-center px-margin-main h-touch-target w-full docked full-width top-0">
+<button class="w-touch-target h-touch-target flex items-center justify-center text-primary dark:text-primary-fixed hover:bg-surface-container-high transition-colors rounded-full">
+<span class="material-symbols-outlined">sports_tennis</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed font-bold tracking-tight">AceCourt</h1>
+<button class="w-touch-target h-touch-target flex items-center justify-center text-primary dark:text-primary-fixed hover:bg-surface-container-high transition-colors rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<main class="p-margin-main flex-1">
+<div class="w-full h-48 bg-surface-container rounded-xl mb-stack-md"></div>
+<div class="w-full h-24 bg-surface-container rounded-xl mb-stack-sm"></div>
+<div class="w-full h-24 bg-surface-container rounded-xl"></div>
+</main>
+</div>
+<!-- Backdrop Overlay -->
+<div class="absolute inset-0 bg-on-background/30 z-40 transition-opacity duration-300"></div>
+<!-- Bottom Sheet Modal (Level 2 Elevation) -->
+<div class="absolute bottom-0 left-0 w-full bg-surface-container-lowest z-50 rounded-t-[24px] shadow-[0_-8px_20px_rgba(0,52,43,0.08)] flex flex-col pb-safe max-h-[795px] overflow-y-auto transform translate-y-0 transition-transform duration-300 ease-out">
+<!-- Drag Handle Indicator -->
+<div class="w-full flex justify-center pt-stack-sm pb-2">
+<div class="w-12 h-1.5 bg-surface-variant rounded-full"></div>
+</div>
+<!-- Sheet Header -->
+<div class="px-margin-main pb-stack-sm flex items-center justify-between sticky top-0 bg-surface-container-lowest z-10">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Confirm Booking</h2>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-variant transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Scrollable Content -->
+<div class="px-margin-main flex flex-col gap-stack-lg pb-margin-main">
+<!-- Venue Summary Card -->
+<div class="flex gap-gutter bg-surface p-stack-sm rounded-[16px] border border-outline-variant/30">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-surface-variant relative">
+<img alt="Tennis Court" class="w-full h-full object-cover" data-alt="A pristine indoor hard tennis court illuminated by bright, even professional sports lighting. The playing surface is a vibrant, premium deep teal blue with crisp, high-contrast white boundary lines. The net is perfectly taut in the center. The overall aesthetic is clean, modern, and athletic, conveying a sense of anticipation and high-end facility quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkDoy7-nQR1ZmrCQO8cppHDWcDBDXBtiNrqmwALoLEIh9YAob56NaAvfVhHk7V2y6DpUNWe0oAl-JMZSi9IigishVnqhyty0IyAkyRkhAS8q7GaksyxKjXee7uVorYjneTG94f1kOJsnudq8K6jV3HuiLyfveR_4dy3sua8YdClMMbDp9Df8X7WgE4HOdIUf9771jdY1NCxkLzJKZtcLKfj5eoSfPHu-y5hZtEJM1xuplKNmXzmUWmltZ-i0QtIKsyq5aajsGzvtM"/>
+</div>
+<div class="flex flex-col justify-center">
+<h3 class="font-label-lg text-label-lg text-on-surface mb-1">Grand Slam Tennis Club</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-2">Court 4 • Indoor Hard</p>
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">4.9</span>
+</div>
+</div>
+</div>
+<!-- Booking Details Grid -->
+<div class="grid grid-cols-2 gap-stack-md bg-surface-container-low p-stack-md rounded-[16px]">
+<div class="flex items-start gap-3">
+<div class="mt-0.5 text-primary">
+<span class="material-symbols-outlined">calendar_today</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-0.5">Date</p>
+<p class="font-label-lg text-label-lg text-on-surface">Thu, Oct 24</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<div class="mt-0.5 text-primary">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-0.5">Time</p>
+<p class="font-label-lg text-label-lg text-on-surface">18:00 - 19:30</p>
+</div>
+</div>
+</div>
+<!-- Price Breakdown -->
+<div class="flex flex-col gap-stack-sm pt-stack-sm border-t border-surface-variant">
+<h4 class="font-label-lg text-label-lg text-on-surface mb-2">Payment Summary</h4>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Court Fee (1.5 hrs)</span>
+<span class="font-body-md text-body-md text-on-surface">$45.00</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1">
+                        Service Fee
+                        <span class="material-symbols-outlined text-[14px] cursor-help">info</span>
+</span>
+<span class="font-body-md text-body-md text-on-surface">$2.50</span>
+</div>
+<div class="flex justify-between items-center mt-stack-sm pt-stack-sm border-t border-surface-variant border-dashed">
+<span class="font-headline-sm text-headline-sm text-on-surface">Total</span>
+<span class="font-headline-sm text-headline-sm text-primary">$47.50</span>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full h-touch-target bg-secondary-container text-primary rounded-full font-label-lg text-label-lg flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all mt-stack-sm shadow-sm">
+<span class="material-symbols-outlined">lock</span>
+                Pay &amp; Book
+            </button>
+<p class="text-center font-label-md text-label-md text-on-surface-variant mt-2">
+                By booking, you agree to our <a class="text-primary underline decoration-primary/30 underline-offset-2" href="#">Cancellation Policy</a>
+</p>
+</div>
+</div>
+</body></html>
