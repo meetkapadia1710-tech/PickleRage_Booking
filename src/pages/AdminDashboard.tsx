@@ -589,7 +589,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* ── Mobile header ── */}
-      <header className="md:hidden bg-surface-container-lowest border-b border-surface-variant px-4 py-3 flex justify-between items-center sticky top-0 z-50">
+      <header className="md:hidden bg-surface-container-lowest border-b border-surface-variant px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-3 flex justify-between items-center sticky top-0 z-50">
         <div className="flex items-center gap-2 text-primary">
           <span className="material-symbols-outlined text-[22px]">sports_tennis</span>
           <span className="font-bold text-[18px]">PlayHub Admin</span>

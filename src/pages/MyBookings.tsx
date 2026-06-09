@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/fire
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import type { Booking, Venue, Court } from '../types';
+import AppHeader from '../components/AppHeader';
 
 export default function MyBookings() {
   const { currentUser } = useAuth();
@@ -95,18 +96,10 @@ export default function MyBookings() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="bg-background text-on-background min-h-screen pb-24 md:pb-0 pt-[72px]"
+      className="bg-background text-on-background min-h-screen pb-24 md:pb-0 flex flex-col"
     >
       {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-background flex justify-between items-center px-5 h-[48px] border-b border-surface-variant/20">
-        <div className="flex items-center gap-2 text-primary">
-          <span className="material-symbols-outlined text-[24px]">sports_tennis</span>
-          <span className="font-bold text-[24px]">PlayHub</span>
-        </div>
-        <button className="text-primary w-[48px] h-[48px] flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-100 cursor-pointer">
-          <span className="material-symbols-outlined">notifications</span>
-        </button>
-      </header>
+      <AppHeader />
 
       {/* Main Content */}
       <main className="px-5 max-w-3xl mx-auto mt-6">
@@ -138,8 +131,9 @@ export default function MyBookings() {
         {/* Tab Content */}
         <div className="space-y-4">
           {loading ? (
-            <div className="flex justify-center py-12">
-              <span className="material-symbols-outlined animate-spin text-[36px] text-primary">sync</span>
+            <div className="space-y-4">
+              <BookingCardSkeleton />
+              <BookingCardSkeleton />
             </div>
           ) : activeTab === 'upcoming' ? (
             upcomingBookings.length === 0 ? (
@@ -296,3 +290,27 @@ function PastBookingCard({
     </div>
   );
 }
+
+function BookingCardSkeleton() {
+  return (
+    <div className="bg-surface-container-lowest rounded-[20px] p-4 shadow-[0_4px_12px_rgba(0,52,43,0.04)] border border-transparent animate-pulse">
+      <div className="flex justify-between items-start mb-4">
+        <div className="w-full">
+          {/* Date pill skeleton */}
+          <div className="h-5 w-32 bg-surface-container-high rounded mb-3" />
+          {/* Venue name skeleton */}
+          <div className="h-6 w-3/4 bg-surface-container-high rounded mb-2" />
+          {/* Court details skeleton */}
+          <div className="h-4 w-1/2 bg-surface-container-high rounded" />
+        </div>
+        {/* Status badge skeleton */}
+        <div className="h-5 w-16 bg-surface-container-high rounded-full shrink-0" />
+      </div>
+      <div className="flex gap-2 mt-4 pt-4 border-t border-surface-container-high">
+        {/* Button skeleton */}
+        <div className="flex-1 h-[48px] bg-surface-container-high rounded-full" />
+      </div>
+    </div>
+  );
+}
+

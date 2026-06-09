@@ -70,7 +70,7 @@ export default function VenueDetail() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10"></div>
         <img src={venue.images[0]} alt={venue.name} className="w-full h-full object-cover" />
         
-        <div className="absolute top-0 w-full flex justify-between items-center px-5 pt-6 h-[48px] z-20">
+        <div className="absolute top-0 left-0 right-0 max-w-3xl mx-auto w-full flex justify-between items-center px-5 pt-[calc(1.5rem+env(safe-area-inset-top))] h-auto z-20">
           <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
@@ -156,7 +156,7 @@ export default function VenueDetail() {
       </main>
 
       {/* Floating Action Bar */}
-      <div className="fixed bottom-0 w-full bg-surface-container-lowest pt-4 pb-6 px-5 z-50 shadow-[0_-8px_20px_0_rgba(0,52,43,0.06)] rounded-t-2xl border-t border-surface-variant/50">
+      <div className="fixed bottom-0 w-full bg-surface-container-lowest pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] px-5 z-50 shadow-[0_-8px_20px_0_rgba(0,52,43,0.06)] rounded-t-2xl border-t border-surface-variant/50">
         <div className="flex justify-between items-center max-w-md mx-auto">
           <div className="flex flex-col">
             <span className="font-medium text-[12px] text-on-surface-variant">Total Price</span>

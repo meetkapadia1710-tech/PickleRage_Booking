@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/fire
 import { updateProfile } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import AppHeader from '../components/AppHeader';
 
 // ─── Sheet backdrop + slide-up wrapper ───────────────────────────────────────
 function Sheet({ open, onClose, title, children }: {
@@ -22,7 +23,7 @@ function Sheet({ open, onClose, title, children }: {
           <motion.div
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 240 }}
-            className="relative bg-surface-container-lowest rounded-t-[28px] shadow-[0_-8px_32px_rgba(0,52,43,0.12)] pb-10 max-h-[90vh] flex flex-col"
+            className="relative bg-surface-container-lowest rounded-t-[28px] md:rounded-2xl shadow-[0_-8px_32px_rgba(0,52,43,0.12)] pb-10 max-h-[90vh] flex flex-col w-full md:max-w-md md:mx-auto md:mb-6"
           >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1 shrink-0">
@@ -503,18 +504,8 @@ export default function Profile() {
         exit={{ opacity: 0 }}
         className="bg-background text-on-background min-h-screen pb-[96px] antialiased"
       >
-        {/* TopAppBar — desktop only */}
-        <header className="bg-background top-0 w-full z-40 hidden md:block border-b border-surface-variant/20">
-          <div className="flex justify-between items-center px-5 h-[56px] w-full max-w-3xl mx-auto">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>sports_tennis</span>
-              <span className="font-bold text-[24px] text-primary">PlayHub</span>
-            </div>
-            <button className="w-[48px] h-[48px] flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors active:scale-95 cursor-pointer">
-              <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
-            </button>
-          </div>
-        </header>
+        {/* TopAppBar */}
+        <AppHeader />
 
         <main className="max-w-md mx-auto md:max-w-4xl px-5 pt-6">
           {/* ── Profile Header ── */}
@@ -528,8 +519,8 @@ export default function Profile() {
                 </div>
               )}
             </div>
-            <h1 className="font-semibold text-[20px] text-on-background mb-1">{displayName}</h1>
-            <p className="text-[14px] text-on-surface-variant">{email}</p>
+            <h1 className="font-semibold text-[20px] text-on-background mb-1 truncate max-w-[280px] md:max-w-md px-2 text-center" title={displayName}>{displayName}</h1>
+            <p className="text-[14px] text-on-surface-variant truncate max-w-[280px] md:max-w-md px-2 text-center" title={email}>{email}</p>
             <span className="mt-4 px-4 py-1 rounded-full bg-secondary-container text-on-secondary-container font-medium text-[12px] flex items-center gap-1">
               <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
               Pro Member
