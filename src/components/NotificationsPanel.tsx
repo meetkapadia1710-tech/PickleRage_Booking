@@ -74,6 +74,7 @@ export default function NotificationsPanel({ open, onClose }: { open: boolean; o
             exit={{ y: '-100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
             className="relative w-full bg-surface-container-lowest rounded-b-[28px] shadow-[0_8px_32px_rgba(0,52,43,0.15)] pb-4"
+            style={{ paddingTop: 'env(safe-area-inset-top)' }}
           >
             <div className="flex justify-between items-center px-5 pt-5 pb-3">
               <h2 className="font-semibold text-[20px] text-on-surface">Notifications</h2>

@@ -32,7 +32,7 @@ export default function BottomNav() {
           animate={{ y: 0 }}
           exit={{ y: 96 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="md:hidden bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(0,52,43,0.04)] fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pt-2 pb-[calc(8px+env(safe-area-inset-bottom))] rounded-t-xl border-t border-surface-variant/50"
+          className="md:hidden bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(0,52,43,0.04)] fixed bottom-0 w-full z-50 flex justify-around items-center px-2 pt-2 pb-[calc(8px+env(safe-area-inset-bottom))] rounded-t-xl border-t border-surface-variant/50 overflow-hidden"
         >
           {tabs.map(tab => {
             const active = location.pathname === tab.path;
@@ -40,14 +40,14 @@ export default function BottomNav() {
               <button
                 key={tab.path}
                 onClick={() => handleTab(tab.path, active)}
-                className="relative flex flex-col items-center justify-center px-6 py-1 outline-none"
+                className="relative flex flex-col items-center justify-center px-5 py-1 outline-none min-w-0 flex-1"
                 aria-current={active ? 'page' : undefined}
               >
                 {active && (
                   <motion.div
                     layoutId="nav-pill"
                     transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-                    className="absolute inset-0 bg-secondary-container rounded-full"
+                    className="absolute inset-x-1 inset-y-0 bg-secondary-container rounded-full"
                   />
                 )}
                 <motion.span
