@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
@@ -55,6 +55,46 @@ export default function PhoneLogin() {
     } catch (err: any) {
       console.error('Error initiating Google Sign-in:', err);
       setError(err.message || 'An error occurred initiating authentication.');
+      setLoading(false);
+    }
+  };
+
+  const handleTestSignIn = async () => {
+    setLoading(true);
+    setError(null);
+    const email = 'testplayer@playhub.com';
+    const password = 'password123';
+    try {
+      let userCredential;
+      try {
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      } catch (signInErr: any) {
+        // If the user doesn't exist or credentials fail, attempt registration
+        if (signInErr.code === 'auth/user-not-found' || signInErr.code === 'auth/invalid-credential') {
+          userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        } else {
+          throw signInErr;
+        }
+      }
+
+      const user = userCredential.user;
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          displayName: 'Test Player',
+          email: user.email || '',
+          photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+          createdAt: new Date().toISOString(),
+        });
+      }
+      navigate('/home');
+    } catch (err: any) {
+      console.error('Error during test account sign-in:', err);
+      setError(err.message || 'Failed to sign in with test account.');
+    } finally {
       setLoading(false);
     }
   };
@@ -132,6 +172,22 @@ export default function PhoneLogin() {
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
                 </svg>
                 <span>Sign in with Google</span>
+              </>
+            )}
+          </motion.button>
+
+          <motion.button 
+            whileTap={{ scale: 0.98 }}
+            disabled={loading}
+            onClick={handleTestSignIn}
+            className="w-full h-[52px] border border-primary/20 hover:bg-primary/5 text-primary rounded-[26px] font-semibold text-[16px] flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-75 cursor-pointer relative"
+          >
+            {loading ? (
+              <span className="material-symbols-outlined animate-spin text-[24px]">sync</span>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-primary text-[22px]">account_circle</span>
+                <span>Continue with Test Account</span>
               </>
             )}
           </motion.button>

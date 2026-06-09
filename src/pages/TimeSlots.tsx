@@ -122,8 +122,8 @@ export default function TimeSlots() {
       className="bg-background text-on-background min-h-screen flex flex-col"
     >
       {/* TopAppBar */}
-      <header className="bg-background w-full top-0 sticky z-40">
-        <div className="flex justify-between items-center px-5 h-[48px] w-full">
+      <header className="bg-background w-full top-0 sticky z-40 pt-[env(safe-area-inset-top)] border-b border-surface-variant/10">
+        <div className="flex justify-between items-center px-5 h-[48px] w-full max-w-3xl mx-auto">
           <button onClick={() => navigate(-1)} className="flex items-center justify-center hover:bg-surface-container-high transition-colors rounded-full p-1 cursor-pointer text-primary">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>

@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import NotificationsPanel from './NotificationsPanel';
 
+const tabs = [
+  { path: '/home', icon: 'home', label: 'Home' },
+  { path: '/leaderboard', icon: 'leaderboard', label: 'Leaderboard' },
+  { path: '/bookings', icon: 'event_available', label: 'Bookings' },
+  { path: '/profile', icon: 'person', label: 'Profile' },
+];
+
 export default function AppHeader({ showBack = false }: { showBack?: boolean }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
@@ -19,7 +27,7 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
   return (
     <>
       <header
-        className={`bg-background w-full z-40 sticky top-0 transition-shadow duration-300 ${
+        className={`bg-background w-full z-40 sticky top-0 transition-shadow duration-300 pt-[env(safe-area-inset-top)] border-b border-surface-variant/20 ${
           scrolled ? 'shadow-[0_2px_16px_rgba(0,52,43,0.08)]' : 'shadow-none'
         }`}
       >
@@ -45,6 +53,42 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
             </motion.span>
             <span className="font-bold text-[24px]">PlayHub</span>
           </div>
+
+          {/* Desktop Navigation Tabs */}
+          <nav className="hidden md:flex items-center gap-1 bg-surface-container-low p-1 rounded-full border border-surface-variant/30">
+            {tabs.map(tab => {
+              const active = location.pathname === tab.path;
+              return (
+                <Link
+                  key={tab.path}
+                  to={tab.path}
+                  className="relative px-4 py-1.5 rounded-full font-semibold text-[13px] flex items-center gap-1.5 outline-none select-none cursor-pointer"
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="desktop-nav-pill"
+                      transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+                      className="absolute inset-0 bg-primary rounded-full"
+                    />
+                  )}
+                  <span
+                    className={`relative z-10 material-symbols-outlined text-[18px] transition-colors duration-200 ${
+                      active ? 'text-on-primary' : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    {tab.icon}
+                  </span>
+                  <span
+                    className={`relative z-10 transition-colors duration-200 ${
+                      active ? 'text-on-primary' : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    {tab.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
 
           <motion.button
             whileTap={{ scale: 0.85 }}

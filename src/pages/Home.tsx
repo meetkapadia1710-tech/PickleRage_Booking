@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Venue } from '../types';
+import AppHeader from '../components/AppHeader';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -26,8 +27,8 @@ export default function Home() {
     fetchVenues();
   }, []);
 
-  const filteredVenues = filter === "all" 
-    ? venues 
+  const filteredVenues = filter === 'all'
+    ? venues
     : venues.filter(v => v.type === filter);
 
   return (
@@ -38,42 +39,13 @@ export default function Home() {
       className="antialiased min-h-screen flex flex-col pb-24 bg-background text-on-background"
     >
       {/* TopAppBar */}
-      <header className="bg-background w-full z-40 sticky top-0 border-b border-surface-variant/20">
-        <div className="flex justify-between items-center px-5 h-[48px] w-full">
-          <div className="flex items-center gap-2 text-primary">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>sports_tennis</span>
-            <span className="font-bold text-[24px]">PlayHub</span>
-          </div>
-          <button className="text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 rounded-full p-2 cursor-pointer">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>notifications</span>
-          </button>
-        </div>
-      </header>
+      <AppHeader />
 
       {/* Main Content Canvas */}
       <main className="flex-grow px-5 pt-2 pb-6 flex flex-col gap-6 max-w-3xl mx-auto w-full">
-        {/* Search Bar */}
-        <section>
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <span className="material-symbols-outlined text-outline">search</span>
-            </div>
-            <input 
-              type="text" 
-              placeholder="Find courts, venues, cities..." 
-              className="block w-full pl-11 pr-4 py-3 bg-surface-container-low border-[1.5px] border-outline-variant rounded-xl text-on-surface text-[16px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder-on-surface-variant/70"
-            />
-            <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
-              <button className="p-2 text-primary hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer">
-                <span className="material-symbols-outlined">tune</span>
-              </button>
-            </div>
-          </div>
-        </section>
-
         {/* Category Filters */}
         <section>
-          <div className="flex overflow-x-auto gap-2 pb-2 -mx-5 px-5 snap-x hide-scrollbar">
+          <div className="flex overflow-x-auto gap-2 pb-2 -mx-5 px-5 snap-x hide-scrollbar md:overflow-visible md:justify-center md:gap-3 md:mx-0 md:px-0">
             <FilterButton 
               label="All" 
               icon="dashboard" 
@@ -156,13 +128,13 @@ function FilterButton({ label, icon, active, onClick }: { label: string, icon: s
   return (
     <button 
       onClick={onClick}
-      className={`snap-start shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-[14px] transition-transform active:scale-95 cursor-pointer ${
+      className={`snap-start shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 md:gap-2 md:px-5 md:py-2.5 rounded-full font-semibold text-[13px] md:text-[14px] transition-transform active:scale-95 cursor-pointer ${
         active 
           ? 'bg-primary text-on-primary shadow-sm' 
           : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
       }`}
     >
-      <span className="material-symbols-outlined text-[18px]">{icon}</span>
+      <span className="material-symbols-outlined text-[16px] md:text-[18px]">{icon}</span>
       {label}
     </button>
   );

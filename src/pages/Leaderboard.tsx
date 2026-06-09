@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Booking } from '../types';
+import AppHeader from '../components/AppHeader';
 
 interface PlayerRank {
   uid: string;
@@ -73,18 +74,10 @@ export default function Leaderboard() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="bg-background text-on-background min-h-screen pb-24 md:pb-6 pt-[72px] antialiased font-sans"
+      className="bg-background text-on-background min-h-screen pb-24 md:pb-6 antialiased font-sans flex flex-col"
     >
       {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-background flex justify-between items-center px-5 h-[48px] border-b border-surface-variant/20">
-        <div className="flex items-center gap-2 text-primary">
-          <span className="material-symbols-outlined text-[24px]">sports_tennis</span>
-          <span className="font-bold text-[24px]">PlayHub</span>
-        </div>
-        <button className="text-primary w-[48px] h-[48px] flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-100 cursor-pointer">
-          <span className="material-symbols-outlined">notifications</span>
-        </button>
-      </header>
+      <AppHeader />
 
       {/* Main Container */}
       <main className="px-5 max-w-3xl mx-auto mt-6 flex flex-col gap-6">
@@ -94,9 +87,7 @@ export default function Leaderboard() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20">
-            <span className="material-symbols-outlined animate-spin text-[36px] text-primary">sync</span>
-          </div>
+          <LeaderboardSkeleton />
         ) : leaderboard.length === 0 ? (
           <div className="bg-surface-container-lowest rounded-[20px] p-8 text-center text-on-surface-variant border border-dashed border-outline-variant/30">
             No players registered yet.
@@ -187,23 +178,32 @@ function PodiumItem({
   borderClass: string; 
   isGold?: boolean; 
 }) {
+  const photoURL = player.photoURL;
   return (
-    <div className="flex flex-col items-center flex-1 max-w-[110px]">
-      <div className="relative mb-2">
-        {isGold && (
-          <span className="material-symbols-outlined text-[28px] text-secondary-container absolute top-[-20px] left-1/2 transform -translate-x-1/2 drop-shadow-sm animate-bounce" style={{ fontVariationSettings: "'FILL' 1" }}>
-            crown
-          </span>
+    <div className="flex flex-col items-center w-24 relative">
+      {/* Avatar with Badge overlay */}
+      <div className="relative mb-1">
+        {photoURL ? (
+          <img 
+            src={photoURL} 
+            alt={player.displayName} 
+            className={`w-14 h-14 rounded-full object-cover shadow-md bg-surface-container border-2 ${isGold ? 'border-secondary-container' : 'border-surface-variant'}`}
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center bg-primary/5 border-2 ${isGold ? 'border-secondary-container' : 'border-surface-variant'}`}>
+            <span className="material-symbols-outlined text-[28px] text-primary">person</span>
+          </div>
         )}
-        <img 
-          src={player.photoURL} 
-          alt={player.displayName} 
-          className={`w-14 h-14 rounded-full object-cover border-2 shadow-sm ${isGold ? 'border-secondary-container' : 'border-surface-variant'}`}
-          referrerPolicy="no-referrer"
-        />
-        <div className={`absolute bottom-[-6px] right-[-6px] w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold text-white shadow-sm ${
-          rank === 1 ? 'bg-secondary-container !text-on-secondary-container' : rank === 2 ? 'bg-outline' : 'bg-orange-700'
-        }`}>
+        
+        {/* Crown for 1st place */}
+        {isGold && (
+          <div className="absolute top-[-14px] left-[17px] text-secondary-container">
+            <span className="material-symbols-outlined text-[20px] rotate-[-12deg]" style={{ fontVariationSettings: "'FILL' 1" }}>crown</span>
+          </div>
+        )}
+        
+        <div className={`absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-5 h-5 rounded-full flex items-center justify-center font-bold text-[11px] shadow-sm ${isGold ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-variant text-on-surface-variant'}`}>
           {rank}
         </div>
       </div>
@@ -220,6 +220,56 @@ function PodiumItem({
         <span className="font-extrabold text-[22px] text-primary">{player.bookingsCount}</span>
         <span className="text-[9px] text-on-surface-variant font-semibold uppercase tracking-wider">Bookings</span>
       </motion.div>
+    </div>
+  );
+}
+
+function LeaderboardSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      {/* Podium Card Skeleton */}
+      <div className="bg-surface-container-lowest rounded-[24px] p-6 shadow-[0_4px_16px_rgba(0,52,43,0.03)] flex flex-col items-center border border-outline-variant/10">
+        <div className="h-6 w-36 bg-surface-container-high rounded mb-8" />
+        <div className="flex items-end justify-center w-full max-w-md gap-4 pt-4">
+          {/* 2nd place skeleton */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-12 h-12 rounded-full bg-surface-container-high" />
+            <div className="h-4 w-16 bg-surface-container-high rounded" />
+            <div className="w-24 h-28 bg-surface-container-low rounded-t-lg" />
+          </div>
+          {/* 1st place skeleton */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-14 h-14 rounded-full bg-surface-container-high" />
+            <div className="h-4 w-20 bg-surface-container-high rounded" />
+            <div className="w-28 h-36 bg-surface-container-low rounded-t-lg" />
+          </div>
+          {/* 3rd place skeleton */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-12 h-12 rounded-full bg-surface-container-high" />
+            <div className="h-4 w-16 bg-surface-container-high rounded" />
+            <div className="w-24 h-24 bg-surface-container-low rounded-t-lg" />
+          </div>
+        </div>
+      </div>
+      {/* Other ranks skeleton */}
+      <div className="space-y-3">
+        <div className="h-5 w-24 bg-surface-container-high rounded mx-1" />
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-surface-container-lowest rounded-xl p-4 flex items-center justify-between border border-outline-variant/10">
+              <div className="flex items-center gap-4 w-full">
+                <div className="w-6 h-5 bg-surface-container-high rounded shrink-0" />
+                <div className="w-10 h-10 rounded-full bg-surface-container-high shrink-0" />
+                <div className="space-y-2 w-1/3">
+                  <div className="h-4 bg-surface-container-high rounded" />
+                  <div className="h-3 bg-surface-container-high rounded w-2/3" />
+                </div>
+              </div>
+              <div className="h-5 w-20 bg-surface-container-high rounded shrink-0" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

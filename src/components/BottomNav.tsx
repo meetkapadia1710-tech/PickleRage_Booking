@@ -32,7 +32,7 @@ export default function BottomNav() {
           animate={{ y: 0 }}
           exit={{ y: 96 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="md:hidden bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(0,52,43,0.04)] fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-2 rounded-t-xl border-t border-surface-variant/50"
+          className="md:hidden bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(0,52,43,0.04)] fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pt-2 pb-[calc(8px+env(safe-area-inset-bottom))] rounded-t-xl border-t border-surface-variant/50"
         >
           {tabs.map(tab => {
             const active = location.pathname === tab.path;
