@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AceCourt - Select Time</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#795900",
+                    "on-tertiary-container": "#4cc2b5",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed": "#261a00",
+                    "inverse-surface": "#2e3132",
+                    "background": "#f8f9fa",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-secondary-container": "#6d5000",
+                    "on-surface-variant": "#3f4945",
+                    "on-background": "#191c1d",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#94d3c1",
+                    "on-error": "#ffffff",
+                    "primary": "#00342b",
+                    "surface-dim": "#d9dadb",
+                    "surface": "#f8f9fa",
+                    "on-primary-container": "#7ebdac",
+                    "on-tertiary-fixed-variant": "#005049",
+                    "surface-variant": "#e1e3e4",
+                    "secondary-fixed-dim": "#fbbc00",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed-variant": "#5c4300",
+                    "primary-container": "#004d40",
+                    "tertiary-fixed": "#84f5e8",
+                    "tertiary-container": "#004c46",
+                    "on-tertiary": "#ffffff",
+                    "primary-fixed": "#afefdd",
+                    "tertiary-fixed-dim": "#66d9cc",
+                    "surface-bright": "#f8f9fa",
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#bfc9c4",
+                    "secondary-fixed": "#ffdfa0",
+                    "surface-container-low": "#f3f4f5",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#191c1d",
+                    "surface-container": "#edeeef",
+                    "outline": "#707975",
+                    "inverse-primary": "#94d3c1",
+                    "tertiary": "#00332f",
+                    "on-primary-fixed": "#00201a",
+                    "secondary-container": "#ffbf00",
+                    "surface-tint": "#29695b",
+                    "surface-container-highest": "#e1e3e4",
+                    "surface-container-high": "#e7e8e9",
+                    "on-primary-fixed-variant": "#065043",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed": "#00201d"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "touch-target": "48px",
+                    "margin-main": "20px",
+                    "stack-sm": "8px",
+                    "stack-lg": "24px",
+                    "stack-md": "16px",
+                    "gutter": "16px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "label-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .slot-chip {
+            transition: all 0.2s ease-in-out;
+        }
+        .slot-chip.selected {
+            background-color: theme('colors.primary');
+            color: theme('colors.on-primary');
+            border-color: theme('colors.primary');
+        }
+        .slot-chip.unavailable {
+            opacity: 0.3;
+            pointer-events: none;
+            background-color: theme('colors.surface-variant');
+            border-color: transparent;
+        }
+        
+        /* Ambient shadow for the bottom action bar */
+        .ambient-shadow-top {
+            box-shadow: 0 -4px 20px rgba(0, 52, 43, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-lg antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-background dark:bg-on-background w-full top-0 sticky z-10">
+<div class="flex justify-between items-center px-margin-main h-touch-target w-full">
+<div class="flex items-center gap-2 hover:bg-surface-container-high transition-colors rounded-full p-1 cursor-pointer" onclick="history.back()">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed" data-icon="arrow_back">arrow_back</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed font-bold">AceCourt</h1>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant dark:text-outline-variant cursor-pointer hover:bg-surface-container-high transition-colors rounded-full p-1" data-icon="notifications">notifications</span>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto pb-[100px]">
+<div class="max-w-3xl mx-auto px-margin-main pt-stack-md">
+<!-- Context Header -->
+<div class="mb-stack-lg">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-stack-sm">Select Time</h2>
+<div class="flex items-center text-on-surface-variant gap-2 font-body-md text-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="sports_tennis">sports_tennis</span>
+<span>Downtown Indoor Courts • Court 3</span>
+</div>
+</div>
+<!-- Date Scroller -->
+<div class="mb-stack-lg flex overflow-x-auto gap-stack-md pb-2 no-scrollbar snap-x">
+<!-- Past Date -->
+<div class="flex flex-col items-center justify-center min-w-[60px] h-[72px] rounded-xl bg-surface-container-low text-on-surface-variant opacity-50 snap-start">
+<span class="font-label-md text-label-md uppercase">Mon</span>
+<span class="font-headline-sm text-headline-sm mt-1">12</span>
+</div>
+<!-- Selected Date -->
+<div class="flex flex-col items-center justify-center min-w-[60px] h-[72px] rounded-xl bg-primary text-on-primary snap-start relative shadow-[0_4px_12px_rgba(0,52,43,0.15)]">
+<span class="font-label-md text-label-md uppercase">Tue</span>
+<span class="font-headline-sm text-headline-sm mt-1">13</span>
+<div class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-secondary-container"></div>
+</div>
+<!-- Future Dates -->
+<div class="flex flex-col items-center justify-center min-w-[60px] h-[72px] rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer snap-start">
+<span class="font-label-md text-label-md uppercase">Wed</span>
+<span class="font-headline-sm text-headline-sm mt-1">14</span>
+</div>
+<div class="flex flex-col items-center justify-center min-w-[60px] h-[72px] rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer snap-start">
+<span class="font-label-md text-label-md uppercase">Thu</span>
+<span class="font-headline-sm text-headline-sm mt-1">15</span>
+</div>
+<div class="flex flex-col items-center justify-center min-w-[60px] h-[72px] rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer snap-start">
+<span class="font-label-md text-label-md uppercase">Fri</span>
+<span class="font-headline-sm text-headline-sm mt-1">16</span>
+</div>
+<div class="flex flex-col items-center justify-center min-w-[60px] h-[72px] rounded-xl bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer snap-start">
+<span class="font-label-md text-label-md uppercase">Sat</span>
+<span class="font-headline-sm text-headline-sm mt-1">17</span>
+</div>
+</div>
+<!-- Slots Container -->
+<div class="space-y-stack-lg">
+<!-- Morning Section -->
+<section>
+<div class="flex items-center gap-2 mb-stack-md">
+<span class="material-symbols-outlined text-primary" data-icon="light_mode">light_mode</span>
+<h3 class="font-headline-sm text-headline-sm text-primary">Morning</h3>
+</div>
+<div class="grid grid-cols-3 md:grid-cols-4 gap-gutter">
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            06:00
+                        </button>
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            07:00
+                        </button>
+<button class="slot-chip unavailable h-touch-target rounded-[12px] text-on-surface font-label-lg text-label-lg flex items-center justify-center">
+<span class="line-through">08:00</span>
+</button>
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            09:00
+                        </button>
+<button class="slot-chip selected h-touch-target rounded-[12px] font-label-lg text-label-lg flex items-center justify-center border">
+                            10:00
+                        </button>
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            11:00
+                        </button>
+</div>
+</section>
+<!-- Afternoon Section -->
+<section>
+<div class="flex items-center gap-2 mb-stack-md">
+<span class="material-symbols-outlined text-primary" data-icon="wb_sunny">wb_sunny</span>
+<h3 class="font-headline-sm text-headline-sm text-primary">Afternoon</h3>
+</div>
+<div class="grid grid-cols-3 md:grid-cols-4 gap-gutter">
+<button class="slot-chip unavailable h-touch-target rounded-[12px] text-on-surface font-label-lg text-label-lg flex items-center justify-center">
+<span class="line-through">12:00</span>
+</button>
+<button class="slot-chip unavailable h-touch-target rounded-[12px] text-on-surface font-label-lg text-label-lg flex items-center justify-center">
+<span class="line-through">13:00</span>
+</button>
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            14:00
+                        </button>
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            15:00
+                        </button>
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            16:00
+                        </button>
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            17:00
+                        </button>
+</div>
+</section>
+<!-- Evening Section -->
+<section>
+<div class="flex items-center gap-2 mb-stack-md">
+<span class="material-symbols-outlined text-primary" data-icon="nights_stay">nights_stay</span>
+<h3 class="font-headline-sm text-headline-sm text-primary">Evening</h3>
+</div>
+<div class="grid grid-cols-3 md:grid-cols-4 gap-gutter">
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            18:00
+                        </button>
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            19:00
+                        </button>
+<button class="slot-chip unavailable h-touch-target rounded-[12px] text-on-surface font-label-lg text-label-lg flex items-center justify-center">
+<span class="line-through">20:00</span>
+</button>
+<button class="slot-chip h-touch-target rounded-[12px] bg-[#F1F3F4] text-on-surface font-label-lg text-label-lg flex items-center justify-center border border-transparent">
+                            21:00
+                        </button>
+<button class="slot-chip unavailable h-touch-target rounded-[12px] text-on-surface font-label-lg text-label-lg flex items-center justify-center">
+<span class="line-through">22:00</span>
+</button>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- Floating Action Area (Confirm Selection) -->
+<div class="fixed bottom-0 w-full z-50 bg-surface-container-lowest ambient-shadow-top pb-safe">
+<div class="max-w-3xl mx-auto px-margin-main py-stack-md flex justify-between items-center">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Selected</p>
+<p class="font-headline-sm text-headline-sm text-primary">10:00 - 11:00</p>
+</div>
+<button class="h-touch-target px-8 rounded-full bg-secondary-container text-on-secondary-container font-label-lg text-label-lg font-bold flex items-center justify-center shadow-[0_4px_12px_rgba(255,191,0,0.2)] hover:opacity-90 active:scale-95 transition-all">
+                Confirm Selection
+            </button>
+</div>
+</div>
+<style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+    </style>
+<script>
+        // Simple script to toggle slot selection for demonstration
+        document.addEventListener('DOMContentLoaded', () => {
+            const slots = document.querySelectorAll('.slot-chip:not(.unavailable)');
+            
+            slots.forEach(slot => {
+                slot.addEventListener('click', () => {
+                    // Remove selected class from all
+                    slots.forEach(s => s.classList.remove('selected'));
+                    slots.forEach(s => s.classList.add('bg-[#F1F3F4]'));
+                    
+                    // Add selected class to clicked
+                    slot.classList.add('selected');
+                    slot.classList.remove('bg-[#F1F3F4]');
+                    
+                    // Update bottom bar text
+                    const timeText = slot.textContent.trim();
+                    // Assuming 1 hour slots for demo
+                    const endHour = parseInt(timeText.split(':')[0]) + 1;
+                    const endTime = `${endHour.toString().padStart(2, '0')}:00`;
+                    
+                    document.querySelector('.fixed.bottom-0 p.font-headline-sm').textContent = `${timeText} - ${endTime}`;
+                });
+            });
+        });
+    </script>
+</body></html>

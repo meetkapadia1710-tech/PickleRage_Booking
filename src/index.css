@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00342b;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #004d40;
+  --color-on-primary-container: #7ebdac;
+  
+  --color-secondary: #795900;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #ffbf00;
+  --color-on-secondary-container: #6d5000;
+  
+  --color-tertiary: #00332f;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #004c46;
+  --color-on-tertiary-container: #4cc2b5;
+  
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  
+  --color-background: #f8f9fa;
+  --color-on-background: #191c1d;
+  
+  --color-surface: #f8f9fa;
+  --color-on-surface: #191c1d;
+  --color-surface-variant: #e1e3e4;
+  --color-on-surface-variant: #3f4945;
+  
+  --color-outline: #707975;
+  --color-outline-variant: #bfc9c4;
+  
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f4f5;
+  --color-surface-container: #edeeef;
+  --color-surface-container-high: #e7e8e9;
+  --color-surface-container-highest: #e1e3e4;
+
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-headline: 'Plus Jakarta Sans', system-ui, sans-serif;
+  
+  --radius-btn: 20px;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-on-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Material Symbols configuration */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Floating label input group */
+.input-group {
+    position: relative;
+}
+.input-group label {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    background: var(--color-surface-container-lowest);
+    padding: 0 4px;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-sans);
+    font-size: 16px;
+}
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label {
+    top: 0;
+    font-size: 12px;
+    color: var(--color-primary);
+}
