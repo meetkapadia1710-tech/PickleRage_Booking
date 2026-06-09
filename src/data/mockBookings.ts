@@ -1,4 +1,4 @@
-import { Booking } from '../types';
+import type { Booking } from '../types';
 
 // Mock bookings to show some unavailable slots
 export const mockBookings: Booking[] = [

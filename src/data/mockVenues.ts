@@ -1,4 +1,4 @@
-import { Venue, Court } from '../types';
+import type { Venue, Court } from '../types';
 
 export const mockVenues: Venue[] = [
   {
