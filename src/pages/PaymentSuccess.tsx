@@ -5,6 +5,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Booking, Venue, Court } from '../types';
 import { formatDate, formatTime } from '../lib/format';
+import { generateGoogleWalletUrl } from '../lib/wallet';
+import googleWalletBadge from '../assets/add-to-google-wallet-badge.svg';
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
@@ -14,6 +16,10 @@ export default function PaymentSuccess() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [venue, setVenue] = useState<Venue | null>(null);
   const [court, setCourt] = useState<Court | null>(null);
+
+  const walletUrl = (booking && venue && court)
+    ? generateGoogleWalletUrl(booking, venue, court)
+    : '';
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -199,6 +205,22 @@ export default function PaymentSuccess() {
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>confirmation_number</span>
             View Bookings
           </motion.button>
+
+          {walletUrl && (
+            <motion.a
+              href={walletUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              whileTap={{ scale: 0.96 }}
+              className="flex justify-center items-center w-full"
+            >
+              <img 
+                src={googleWalletBadge} 
+                alt="Save to Google Wallet" 
+                className="h-[48px] object-contain" 
+              />
+            </motion.a>
+          )}
 
           <motion.button
             whileTap={{ scale: 0.96 }}
