@@ -1,17 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { mockVenues, mockCourts } from '../data/mockVenues';
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../firebase';
+import type { Venue, Court } from '../types';
 
 export default function VenueDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const venue = mockVenues.find(v => v.id === id);
-  const courts = mockCourts.filter(c => c.venueId === id);
-
+  
+  const [venue, setVenue] = useState<Venue | null>(null);
+  const [courts, setCourts] = useState<Court[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCourt, setSelectedCourt] = useState<string | null>(null);
 
-  if (!venue) return <div>Venue not found</div>;
+  useEffect(() => {
+    const fetchVenueAndCourts = async () => {
+      if (!id) return;
+      try {
+        // Fetch Venue
+        const venueRef = doc(db, 'venues', id);
+        const venueSnap = await getDoc(venueRef);
+        if (venueSnap.exists()) {
+          setVenue(venueSnap.data() as Venue);
+        }
+
+        // Fetch Courts
+        const courtsQuery = query(collection(db, 'courts'), where('venueId', '==', id));
+        const courtsSnap = await getDocs(courtsQuery);
+        const courtsList = courtsSnap.docs.map(doc => doc.data() as Court);
+        setCourts(courtsList);
+      } catch (err) {
+        console.error('Error fetching venue details:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVenueAndCourts();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <span className="material-symbols-outlined animate-spin text-[48px] text-primary">sync</span>
+      </div>
+    );
+  }
+
+  if (!venue) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <span className="material-symbols-outlined text-[64px] text-error mb-4">error</span>
+        <h1 className="text-2xl font-bold text-on-background mb-4">Venue Not Found</h1>
+        <button onClick={() => navigate('/home')} className="bg-primary text-on-primary px-6 py-2.5 rounded-full font-semibold cursor-pointer">Back to Home</button>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -26,14 +71,14 @@ export default function VenueDetail() {
         <img src={venue.images[0]} alt={venue.name} className="w-full h-full object-cover" />
         
         <div className="absolute top-0 w-full flex justify-between items-center px-5 pt-6 h-[48px] z-20">
-          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
           <div className="flex gap-3">
-            <button className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors">
+            <button className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer">
               <span className="material-symbols-outlined">favorite_border</span>
             </button>
-            <button className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors">
+            <button className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer">
               <span className="material-symbols-outlined">share</span>
             </button>
           </div>
@@ -76,33 +121,37 @@ export default function VenueDetail() {
         {/* Court Type Selector */}
         <section className="mb-6">
           <h2 className="font-semibold text-[20px] text-on-background mb-4">Select Court</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {courts.map(court => {
-              const isSelected = selectedCourt === court.id;
-              return (
-                <button 
-                  key={court.id}
-                  onClick={() => setSelectedCourt(court.id)}
-                  className={`text-left relative overflow-hidden rounded-2xl p-4 transition-all ${
-                    isSelected 
-                      ? 'border-2 border-primary bg-primary/5' 
-                      : 'border border-outline-variant bg-surface-container-lowest hover:border-primary/50'
-                  }`}
-                >
-                  {isSelected && (
-                    <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[14px] text-on-primary font-bold">check</span>
-                    </div>
-                  )}
-                  <span className="material-symbols-outlined text-primary mb-3 text-[28px]">
-                    {venue.type === 'pickleball' ? 'sports_tennis' : 'sports_cricket'}
-                  </span>
-                  <h3 className="font-semibold text-[14px] text-on-background mb-1">{court.name}</h3>
-                  <p className="text-[14px] text-on-surface-variant">{court.surface}</p>
-                </button>
-              );
-            })}
-          </div>
+          {courts.length === 0 ? (
+            <p className="text-on-surface-variant text-[14px]">No courts configured for this venue.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {courts.map(court => {
+                const isSelected = selectedCourt === court.id;
+                return (
+                  <button 
+                    key={court.id}
+                    onClick={() => setSelectedCourt(court.id)}
+                    className={`text-left relative overflow-hidden rounded-2xl p-4 transition-all cursor-pointer ${
+                      isSelected 
+                        ? 'border-2 border-primary bg-primary/5' 
+                        : 'border border-outline-variant bg-surface-container-lowest hover:border-primary/50'
+                    }`}
+                  >
+                    {isSelected && (
+                      <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[14px] text-on-primary font-bold">check</span>
+                      </div>
+                    )}
+                    <span className="material-symbols-outlined text-primary mb-3 text-[28px]">
+                      {venue.type === 'pickleball' ? 'sports_tennis' : 'sports_cricket'}
+                    </span>
+                    <h3 className="font-semibold text-[14px] text-on-background mb-1">{court.name}</h3>
+                    <p className="text-[14px] text-on-surface-variant">{court.surface}</p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </section>
       </main>
 
@@ -123,7 +172,7 @@ export default function VenueDetail() {
                 navigate(`/venue/${venue.id}/court/${selectedCourt}/book`);
               }
             }}
-            className="bg-secondary-container text-on-secondary-container font-semibold text-[20px] px-8 py-3 rounded-full min-w-[160px] h-[56px] hover:opacity-90 transition-opacity active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+            className="bg-secondary-container text-on-secondary-container font-semibold text-[20px] px-8 py-3 rounded-full min-w-[160px] h-[56px] hover:opacity-90 transition-opacity active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             <span>Book Now</span>
             <span className="material-symbols-outlined text-[20px]">arrow_forward</span>

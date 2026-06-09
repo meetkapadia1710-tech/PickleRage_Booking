@@ -3,13 +3,13 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  // TODO: Replace with actual Firebase config
-  apiKey: "placeholder-api-key",
-  authDomain: "playhub-demo.firebaseapp.com",
-  projectId: "playhub-demo",
-  storageBucket: "playhub-demo.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456"
+  apiKey: "AIzaSyAAmtxcGciEF3-dSviuCuWM18qEllxAeug",
+  authDomain: "picklerage-booking.firebaseapp.com",
+  projectId: "picklerage-booking",
+  storageBucket: "picklerage-booking.firebasestorage.app",
+  messagingSenderId: "21785967034",
+  appId: "1:21785967034:web:49f2d11c7d44d551198583",
+  measurementId: "G-VDEKNH5N2P"
 };
 
 export const app = initializeApp(firebaseConfig);
