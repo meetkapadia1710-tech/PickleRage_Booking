@@ -97,11 +97,16 @@ export default function Friends() {
 
   // ── Search by phone ────────────────────────────────────────────────────────
   const handleSearch = async () => {
-    if (!searchQuery.trim() || !currentUser) return;
+    const trimmed = searchQuery.trim();
+    if (!trimmed || !currentUser) return;
+    if (!/^[6-9]\d{9}$/.test(trimmed)) {
+      setSearchResult('none');
+      return;
+    }
     setSearching(true);
     setSearchResult(null);
     try {
-      const q = query(collection(db, 'users'), where('phone', '==', searchQuery.trim()));
+      const q = query(collection(db, 'users'), where('phone', '==', trimmed));
       const snap = await getDocs(q);
       if (snap.empty || snap.docs[0].id === currentUser.uid) {
         setSearchResult('none');
