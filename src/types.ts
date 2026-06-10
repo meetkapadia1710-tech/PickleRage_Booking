@@ -9,6 +9,9 @@ export interface Venue {
   rating: number;
   amenities: string[];
   isPremium?: boolean;
+  /** Optional precise map coordinates. When absent, the address is geocoded by Google Maps. */
+  lat?: number;
+  lng?: number;
 }
 
 export interface Court {

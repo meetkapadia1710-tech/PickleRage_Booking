@@ -72,10 +72,23 @@ function AnimatedRoutes() {
   );
 }
 
+import { initPushNotifications } from './lib/notifications';
+
+function PushInit() {
+  const { currentUser } = useAuth();
+  React.useEffect(() => {
+    if (currentUser) {
+      initPushNotifications();
+    }
+  }, [currentUser]);
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <PushInit />
         <AnimatedRoutes />
         {/* Persistent nav lives outside the route transitions so the active pill slides between tabs */}
         <BottomNav />

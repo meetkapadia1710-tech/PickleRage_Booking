@@ -30,11 +30,11 @@ export default function TimeSlots() {
       try {
         const venueSnap = await getDoc(doc(db, 'venues', venueId));
         if (venueSnap.exists()) {
-          setVenue(venueSnap.data() as Venue);
+          setVenue({ ...(venueSnap.data() as Venue), id: venueSnap.id });
         }
         const courtSnap = await getDoc(doc(db, 'courts', courtId));
         if (courtSnap.exists()) {
-          setCourt(courtSnap.data() as Court);
+          setCourt({ ...(courtSnap.data() as Court), id: courtSnap.id });
         }
       } catch (err) {
         console.error("Error fetching slot details:", err);
@@ -321,7 +321,7 @@ export default function TimeSlots() {
                   onClick={async () => {
                     try {
                       await Haptics.impact({ style: ImpactStyle.Heavy });
-                    } catch (e) {
+                    } catch {
                       // ignore haptics error on web
                     }
                     
@@ -350,9 +350,9 @@ export default function TimeSlots() {
                       });
 
                       navigate(`/payment-success/${bookingRef.id}`);
-                    } catch (err: any) {
+                    } catch (err: unknown) {
                       console.error("Error creating booking:", err);
-                      alert(`Booking failed: ${err.message}`);
+                      alert(`Booking failed: ${err instanceof Error ? err.message : 'Please try again.'}`);
                     }
                   }}
                   className="w-full h-[48px] bg-secondary-container text-primary rounded-full font-semibold text-[14px] flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all mt-2 shadow-sm cursor-pointer"

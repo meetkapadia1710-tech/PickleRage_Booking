@@ -25,33 +25,35 @@ export default function MyBookings() {
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchBookings = async () => {
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
     if (!currentUser) return;
-    try {
-      const venuesSnap = await getDocs(collection(db, 'venues'));
-      setVenues(venuesSnap.docs.map(d => d.data() as Venue));
-
-      const courtsSnap = await getDocs(collection(db, 'courts'));
-      setCourts(courtsSnap.docs.map(d => d.data() as Court));
-
-      const bookingsSnap = await getDocs(query(
-        collection(db, 'bookings'),
-        where('userId', '==', currentUser.uid)
-      ));
-      setBookings(bookingsSnap.docs.map(d => d.data() as Booking));
-    } catch (err) {
-      console.error('Error fetching bookings:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchBookings(); }, [currentUser]);
+    let cancelled = false;
+    Promise.all([
+      getDocs(collection(db, 'venues')),
+      getDocs(collection(db, 'courts')),
+      getDocs(query(collection(db, 'bookings'), where('userId', '==', currentUser.uid))),
+    ])
+      .then(([venuesSnap, courtsSnap, bookingsSnap]) => {
+        if (cancelled) return;
+        setVenues(venuesSnap.docs.map(d => ({ ...(d.data() as Venue), id: d.id })));
+        setCourts(courtsSnap.docs.map(d => ({ ...(d.data() as Court), id: d.id })));
+        setBookings(bookingsSnap.docs.map(d => ({ ...(d.data() as Booking), id: d.id })));
+        setLoading(false);
+      })
+      .catch(err => {
+        if (cancelled) return;
+        console.error('Error fetching bookings:', err);
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [currentUser, reloadKey]);
 
   const handleCancelBooking = async (bookingId: string) => {
     try {
       await updateDoc(doc(db, 'bookings', bookingId), { status: 'cancelled' });
-      await fetchBookings();
+      setReloadKey(k => k + 1);
     } catch {
       alert('Failed to cancel booking. Please try again.');
     }
@@ -199,7 +201,7 @@ function BookingCard({ booking, venue, court, onCancel }: {
     const d = new Date(`${booking.date}T00:00:00`);
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    let dateStr = d.getTime() === today.getTime() ? 'Today'
+    const dateStr = d.getTime() === today.getTime() ? 'Today'
       : d.getTime() === tomorrow.getTime() ? 'Tomorrow'
       : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const [hour, min] = booking.startTime.split(':');
@@ -220,7 +222,7 @@ function BookingCard({ booking, venue, court, onCancel }: {
   }, [booking, venue, court]);
 
   return (
-    <div className="bg-surface-container-lowest rounded-[20px] p-4 shadow-[0_4px_12px_rgba(0,52,43,0.04)] border border-transparent hover:border-primary/20 transition-colors">
+    <div className="bg-surface-container-lowest rounded-[20px] p-4 shadow-[0_4px_16px_rgba(0,52,43,0.15)] border border-outline-variant/65 hover:border-primary/60 transition-colors">
       <div className="flex justify-between items-start mb-4">
         <div>
           <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md mb-2 ${isConfirmed ? 'bg-secondary-container/20 text-on-secondary-container' : 'bg-surface-container text-on-surface-variant'}`}>
@@ -267,7 +269,7 @@ function PastBookingCard({ booking, venue, court }: {
   const isCancelled = booking.status === 'cancelled';
 
   return (
-    <div className="bg-surface-container-lowest rounded-[20px] p-4 shadow-[0_4px_12px_rgba(0,52,43,0.04)] opacity-80">
+    <div className="bg-surface-container-lowest rounded-[20px] p-4 shadow-[0_4px_16px_rgba(0,52,43,0.15)] border border-outline-variant/65 opacity-80">
       <div className="flex justify-between items-start">
         <div>
           <div className="inline-flex items-center gap-1 text-on-surface-variant mb-2">
@@ -287,7 +289,7 @@ function PastBookingCard({ booking, venue, court }: {
 
 function BookingCardSkeleton() {
   return (
-    <div className="bg-surface-container-lowest rounded-[20px] p-4 shadow-[0_4px_12px_rgba(0,52,43,0.04)] animate-pulse">
+    <div className="bg-surface-container-lowest rounded-[20px] p-4 border border-outline-variant/65 shadow-[0_4px_16px_rgba(0,52,43,0.15)] animate-pulse">
       <div className="flex justify-between items-start mb-4">
         <div className="w-full">
           <div className="h-5 w-32 bg-surface-container-high rounded mb-3" />
