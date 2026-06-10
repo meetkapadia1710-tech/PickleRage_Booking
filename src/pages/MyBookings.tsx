@@ -441,7 +441,7 @@ function BookingCard({
                         <span className="material-symbols-outlined text-[15px] text-on-surface-variant">person</span>
                       </div>
                       <p className="flex-1 text-[12px] text-on-surface-variant">Awaiting payment…</p>
-                      <span className="text-[13px] font-semibold text-on-surface-variant">₹{booking.splitPayment.sharePerPlayer}</span>
+                      <span className="text-[13px] font-semibold text-on-surface-variant">₹{booking.splitPayment?.sharePerPlayer}</span>
                     </div>
                   ))}
 

@@ -356,7 +356,7 @@ export default function VenueDetail() {
                         <span className="text-[14px]">🏷️</span>
                         <span className="font-semibold text-[12px] text-green-700 dark:text-green-400">{offer.label}</span>
                       </div>
-                      <span className="text-[11px] text-green-600 dark:text-green-500 underline cursor-pointer">{offer.detail}</span>
+                      <span className="text-[11px] text-green-600 dark:text-green-500 underline cursor-pointer">{offer.couponCode || 'Details'}</span>
                     </div>
                   ))}
                 </div>

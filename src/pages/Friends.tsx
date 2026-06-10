@@ -192,7 +192,7 @@ export default function Friends() {
       exit={{ opacity: 0, x: -50 }}
       className="bg-background min-h-screen pb-[100px]"
     >
-      <AppHeader title="Friends" />
+      <AppHeader />
 
       <main className="max-w-lg mx-auto px-5 pt-4 flex flex-col gap-6">
 
