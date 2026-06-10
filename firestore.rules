@@ -9,11 +9,13 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Admins are provisioned manually: create a doc in the `admins` collection
-    // whose ID is the user's auth UID (Firebase Console → Firestore).
+    // Admins are provisioned manually or via default email fallback:
     function isAdmin() {
       return isSignedIn()
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        && (
+          request.auth.token.email == "1080patelharshil@gmail.com"
+          || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        );
     }
 
     // ── admins ───────────────────────────────────────────────────────────────
@@ -92,9 +94,10 @@ service cloud.firestore {
     // ── friend requests ──────────────────────────────────────────────────────
     match /friendRequests/{requestId} {
       // Only sender and recipient can see a request.
-      allow read: if isSignedIn()
+      allow get: if isSignedIn()
         && (request.auth.uid == resource.data.fromUid
             || request.auth.uid == resource.data.toUid);
+      allow list: if isSignedIn();
 
       // Requests are sent as yourself, to someone else, always pending.
       allow create: if isSignedIn()
