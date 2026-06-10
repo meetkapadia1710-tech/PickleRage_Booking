@@ -91,14 +91,14 @@ export default function Home() {
       <main className="flex-grow px-5 pt-2 pb-6 max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto w-full animate-fadeIn">
         {/* Category Filters for Mobile (iOS Segmented Control style) - Hidden on desktop */}
         <section className="px-1 max-w-md mx-auto w-full mb-6 lg:hidden">
-          <div className="bg-surface-container-low/75 border border-outline-variant/45 p-1 rounded-full flex gap-1 relative overflow-hidden shadow-sm">
+          <div className="bg-surface-container-low/75 border border-outline-variant/45 p-0.5 xs:p-1 rounded-full flex gap-0.5 xs:gap-1 relative overflow-hidden shadow-sm">
             {filterOptions.map(opt => {
               const active = filter === opt.value;
               return (
                 <button
                   key={opt.value}
                   onClick={() => setFilter(opt.value)}
-                  className="relative flex-1 py-2 rounded-full font-semibold text-[13px] md:text-[14px] flex items-center justify-center gap-1.5 select-none cursor-pointer transition-transform active:scale-95 duration-150"
+                  className="relative flex-1 py-1.5 xs:py-2 rounded-full font-semibold text-[2.9vw] xs:text-[12px] sm:text-[13px] md:text-[14px] flex items-center justify-center gap-1 xs:gap-1.5 select-none cursor-pointer transition-transform active:scale-95 duration-150 whitespace-nowrap"
                 >
                   {active && (
                     <motion.div
@@ -108,7 +108,7 @@ export default function Home() {
                     />
                   )}
                   <span
-                    className={`relative z-10 material-symbols-outlined text-[16px] md:text-[18px] transition-colors duration-200 ${
+                    className={`relative z-10 material-symbols-outlined text-[3.8vw] xs:text-[15px] md:text-[17px] transition-colors duration-200 ${
                       active ? 'text-white' : 'text-on-surface-variant hover:text-on-surface'
                     }`}
                   >
