@@ -32,3 +32,4 @@ public/wallet-config.json
 .env.*.local
 
 
+.vercel
