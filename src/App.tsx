@@ -12,12 +12,15 @@ import VenueDetail from './pages/VenueDetail';
 import TimeSlots from './pages/TimeSlots';
 import PaymentSuccess from './pages/PaymentSuccess';
 import MyBookings from './pages/MyBookings';
-import AdminDashboard from './pages/AdminDashboard';
 import Leaderboard from './pages/Leaderboard';
 import Friends from './pages/Friends';
 import SplitPayment from './pages/SplitPayment';
 import BottomNav from './components/BottomNav';
 import { AuthProvider, useAuth } from './context/AuthContext';
+
+// Admin console is heavy and only admins open it — keep it out of the main
+// bundle so regular app startup parses less JS.
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 
 const LoadingScreen = () => (
   <div className="min-h-screen bg-background flex items-center justify-center">
@@ -65,7 +68,16 @@ function AnimatedRoutes() {
         <Route path="/bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
         <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <React.Suspense fallback={<LoadingScreen />}>
+                <AdminDashboard />
+              </React.Suspense>
+            </ProtectedRoute>
+          }
+        />
         <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
         <Route path="/split/:token" element={<ProtectedRoute><SplitPayment /></ProtectedRoute>} />
       </Routes>

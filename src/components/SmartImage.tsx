@@ -71,6 +71,7 @@ export default function SmartImage({
               src={src}
               alt=""
               aria-hidden
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50"
             />
           )}
@@ -78,6 +79,7 @@ export default function SmartImage({
             src={src}
             alt={alt}
             loading="lazy"
+            decoding="async"
             onLoad={e => {
               const img = e.currentTarget;
               if (img.naturalWidth > 0 && img.naturalHeight > 0) {
