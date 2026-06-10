@@ -9,7 +9,11 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 // Initialize native Google Auth for web fallback environment if needed
 try {
-  GoogleAuth.initialize();
+  GoogleAuth.initialize({
+    clientId: '21785967034-v32c2s1gdnvnm9j8clnc2utg8gbd8ahn.apps.googleusercontent.com',
+    scopes: ['profile', 'email'],
+    grantOfflineAccess: true,
+  });
 } catch (e) {
   console.warn('GoogleAuth initialize warning:', e);
 }
