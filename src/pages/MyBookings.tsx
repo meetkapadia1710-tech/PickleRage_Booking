@@ -126,21 +126,27 @@ export default function MyBookings() {
     return { upcomingBookings: upcoming, pastBookings: past };
   }, [bookings]);
 
-  // Auto-expand/select first booking on desktop
+  // Auto-expand/select first booking on desktop only
   useEffect(() => {
-    const list = activeTab === 'upcoming' ? upcomingBookings : pastBookings;
-    if (list.length > 0 && !expandedId) {
-      setExpandedId(list[0].id);
+    if (window.innerWidth >= 1024) {
+      const list = activeTab === 'upcoming' ? upcomingBookings : pastBookings;
+      if (list.length > 0 && !expandedId) {
+        setExpandedId(list[0].id);
+      }
     }
   }, [bookings, activeTab, upcomingBookings, pastBookings, expandedId]);
 
   const handleTabChange = (tab: 'upcoming' | 'past') => {
     setActiveTab(tab);
-    const list = tab === 'upcoming' ? upcomingBookings : pastBookings;
-    if (list.length > 0) {
-      setExpandedId(list[0].id);
+    if (window.innerWidth >= 1024) {
+      const list = tab === 'upcoming' ? upcomingBookings : pastBookings;
+      if (list.length > 0) {
+        setExpandedId(list[0].id);
+      } else {
+        setExpandedId(null);
+      }
     } else {
-      setExpandedId(null);
+      setExpandedId(null); // Keep collapsed on mobile when switching tabs
     }
   };
 
