@@ -34,6 +34,13 @@ export interface Court {
   sport?: string;       // e.g. "Pickleball", "Box Cricket"
 }
 
+export interface PayerDetail {
+  uid: string;
+  name: string;
+  amount: number;
+  paidAt: string;   // ISO timestamp
+}
+
 export interface SplitPayment {
   enabled: boolean;
   groupSize: number;
@@ -42,6 +49,7 @@ export interface SplitPayment {
   paidPlayers: string[];       // userIds of players who paid
   invitedFriends: string[];    // userIds of invited friends
   paymentLinkToken: string;    // unique token used in /split/:token route
+  payerDetails?: PayerDetail[];// rich info: name + amount per payer
 }
 
 export interface Booking {
