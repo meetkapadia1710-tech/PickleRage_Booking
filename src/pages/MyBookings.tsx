@@ -58,15 +58,23 @@ export default function MyBookings() {
 
     // Own bookings
     const ownQ = query(collection(db, 'bookings'), where('userId', '==', currentUser.uid));
-    const unsubOwn = onSnapshot(ownQ, snap => {
-      snap.docs.forEach(d => bookingMap.set(d.id, { ...(d.data() as Booking), id: d.id }));
-      // Remove own bookings that were deleted
-      snap.docChanges().forEach(change => {
-        if (change.type === 'removed') bookingMap.delete(change.doc.id);
-      });
-      ownReady = true;
-      flush();
-    });
+    const unsubOwn = onSnapshot(
+      ownQ,
+      snap => {
+        snap.docs.forEach(d => bookingMap.set(d.id, { ...(d.data() as Booking), id: d.id }));
+        // Remove own bookings that were deleted
+        snap.docChanges().forEach(change => {
+          if (change.type === 'removed') bookingMap.delete(change.doc.id);
+        });
+        ownReady = true;
+        flush();
+      },
+      err => {
+        console.warn('MyBookings ownQ error:', err);
+        ownReady = true;
+        flush();
+      }
+    );
 
     // Teammate split bookings (where user is in paidPlayers)
     const splitQ = query(

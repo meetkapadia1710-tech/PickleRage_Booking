@@ -71,6 +71,8 @@ export interface UserProfile {
   displayName: string;
   phone: string;
   photoURL?: string;
+  email?: string;
+  createdAt?: string;
 }
 
 export interface FriendRequest {

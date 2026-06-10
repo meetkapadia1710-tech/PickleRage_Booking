@@ -28,7 +28,11 @@ export default function BottomNav() {
       where('toUid', '==', currentUser.uid),
       where('status', '==', 'pending'),
     );
-    return onSnapshot(q, snap => setPendingCount(snap.size));
+    return onSnapshot(
+      q,
+      snap => setPendingCount(snap.size),
+      err => console.warn('BottomNav friend requests query error:', err)
+    );
   }, [currentUser]);
 
   const handleTab = async (path: string, active: boolean) => {

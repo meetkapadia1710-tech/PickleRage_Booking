@@ -46,9 +46,13 @@ export default function Friends() {
       where('toUid', '==', currentUser.uid),
       where('status', '==', 'pending'),
     );
-    return onSnapshot(q, snap => {
-      setPendingIn(snap.docs.map(d => ({ id: d.id, ...d.data() } as FriendRequest)));
-    });
+    return onSnapshot(
+      q,
+      snap => {
+        setPendingIn(snap.docs.map(d => ({ id: d.id, ...d.data() } as FriendRequest)));
+      },
+      err => console.warn('Friends incoming requests error:', err)
+    );
   }, [currentUser]);
 
   // ── Real-time listener: outgoing pending requests ──────────────────────────
@@ -59,9 +63,13 @@ export default function Friends() {
       where('fromUid', '==', currentUser.uid),
       where('status', '==', 'pending'),
     );
-    return onSnapshot(q, snap => {
-      setPendingOut(snap.docs.map(d => d.data().toUid as string));
-    });
+    return onSnapshot(
+      q,
+      snap => {
+        setPendingOut(snap.docs.map(d => d.data().toUid as string));
+      },
+      err => console.warn('Friends outgoing requests error:', err)
+    );
   }, [currentUser]);
 
   // ── Real-time listener: friends list ──────────────────────────────────────
