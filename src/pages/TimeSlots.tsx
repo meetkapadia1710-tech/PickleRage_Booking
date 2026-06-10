@@ -5,6 +5,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { doc, getDoc, collection, query, where, onSnapshot, setDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import { useAndroidBackClose } from '../lib/backClose';
 import type { Venue, Court, Booking, UserProfile, PayerDetail } from '../types';
 import Avatar from '../components/Avatar';
 
@@ -25,6 +26,8 @@ export default function TimeSlots() {
   });
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
+  // Android back closes the confirmation sheet instead of leaving the page
+  useAndroidBackClose(isConfirming, () => setIsConfirming(false));
 
   // Split payment state
   const [splitEnabled, setSplitEnabled] = useState(false);
@@ -208,7 +211,7 @@ export default function TimeSlots() {
     >
       {/* TopAppBar */}
       <header className="bg-background w-full top-0 sticky z-40 pt-[env(safe-area-inset-top)] border-b border-surface-variant/10">
-        <div className="flex justify-between items-center px-5 h-[48px] w-full max-w-3xl mx-auto">
+        <div className="flex justify-between items-center px-5 h-[48px] w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto">
           <button onClick={() => navigate(-1)} className="flex items-center justify-center hover:bg-surface-container-high transition-colors rounded-full p-1 cursor-pointer text-primary">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
@@ -219,49 +222,65 @@ export default function TimeSlots() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto pb-[100px]">
-        <div className="max-w-3xl mx-auto px-5 pt-4">
-          {/* Context Header */}
-          <div className="mb-6">
-            <h2 className="font-bold text-[28px] text-primary mb-2">Select Time</h2>
-            <div className="flex items-center text-on-surface-variant gap-2 text-[14px]">
-              <span className="material-symbols-outlined text-[18px]">
-                {venue.type === 'pickleball' ? 'sports_tennis' : 'sports_cricket'}
-              </span>
-              <span>{venue.name.split(',')[0]} • {court.name}</span>
+      <main className="flex-1 overflow-y-auto pb-[100px] animate-fadeIn">
+        <div className="max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 pt-6">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start w-full">
+            {/* Left Column: Context Header & Date Selector */}
+            <div className="flex flex-col w-full lg:w-[320px] shrink-0 gap-5">
+              {/* Context Header Card */}
+              <div className="bg-surface-container-lowest border border-outline-variant/65 p-5 rounded-3xl shadow-[0_8px_30px_rgba(0,52,43,0.04)] flex flex-col gap-2">
+                <h2 className="font-extrabold text-[22px] text-on-background tracking-tight">Select Time</h2>
+                <div className="flex items-center text-on-surface-variant gap-2 text-[13px] font-semibold">
+                  <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    {venue.type === 'pickleball' ? 'sports_tennis' : 'sports_cricket'}
+                  </span>
+                  <span>{venue.name.split(',')[0]} • {court.name}</span>
+                </div>
+              </div>
+
+              {/* Date Selector Card */}
+              <div className="bg-surface-container-lowest border border-outline-variant/65 p-5 rounded-3xl shadow-[0_8px_30px_rgba(0,52,43,0.04)] flex flex-col gap-3">
+                <h3 className="font-extrabold text-[13px] uppercase tracking-wider text-on-surface-variant px-1 mb-1">Select Date</h3>
+                <div className="flex lg:flex-col overflow-x-auto lg:overflow-x-visible gap-3 pb-2 lg:pb-0 hide-scrollbar snap-x">
+                  {dates.map(d => {
+                    const isSelected = selectedDate === d.iso;
+                    return (
+                      <button
+                        key={d.iso}
+                        onClick={() => { setSelectedDate(d.iso); setSelectedSlot(null); }}
+                        className={`flex flex-col lg:flex-row items-center justify-center lg:justify-between min-w-[60px] lg:min-w-0 lg:w-full h-[72px] lg:h-[56px] px-2 lg:px-4 rounded-xl lg:rounded-2xl snap-start relative transition-colors cursor-pointer border ${
+                          isSelected
+                            ? 'bg-primary text-on-primary border-primary shadow-[0_4px_12px_rgba(0,52,43,0.15)]'
+                            : 'bg-surface-container-low text-on-surface border-transparent hover:bg-surface-container-high'
+                        }`}
+                      >
+                        <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-3 text-center lg:text-left">
+                          <span className="font-bold text-[12px] uppercase tracking-wider">{d.dayOfWeek}</span>
+                          <span className="font-extrabold text-[20px] lg:text-[17px] leading-none">{d.dayOfMonth}</span>
+                        </div>
+                        {isSelected && (
+                          <div className="absolute bottom-1 lg:static w-1.5 h-1.5 rounded-full bg-secondary-container lg:bg-on-primary" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Date Scroller */}
-          <div className="mb-6 flex overflow-x-auto gap-4 pb-2 hide-scrollbar snap-x">
-            {dates.map(d => {
-              const isSelected = selectedDate === d.iso;
-              return (
-                <button
-                  key={d.iso}
-                  onClick={() => { setSelectedDate(d.iso); setSelectedSlot(null); }}
-                  className={`flex flex-col items-center justify-center min-w-[60px] h-[72px] rounded-xl snap-start relative transition-colors cursor-pointer ${
-                    isSelected
-                      ? 'bg-primary text-on-primary shadow-[0_4px_12px_rgba(0,52,43,0.15)]'
-                      : 'bg-surface-container-low text-on-surface hover:bg-surface-container-high'
-                  }`}
-                >
-                  <span className="font-medium text-[12px] uppercase">{d.dayOfWeek}</span>
-                  <span className="font-semibold text-[20px] mt-1">{d.dayOfMonth}</span>
-                  {isSelected && <div className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-secondary-container" />}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Slots */}
-          <div className="space-y-6">
-            <SlotSection title="Morning" icon="light_mode" slots={["06:00","07:00","08:00","09:00","10:00","11:00"]}
-              selectedSlot={selectedSlot} isSlotAvailable={isSlotAvailable} handleSlotClick={handleSlotClick} />
-            <SlotSection title="Afternoon" icon="wb_sunny" slots={["12:00","13:00","14:00","15:00","16:00","17:00"]}
-              selectedSlot={selectedSlot} isSlotAvailable={isSlotAvailable} handleSlotClick={handleSlotClick} />
-            <SlotSection title="Evening" icon="nights_stay" slots={["18:00","19:00","20:00","21:00","22:00"]}
-              selectedSlot={selectedSlot} isSlotAvailable={isSlotAvailable} handleSlotClick={handleSlotClick} />
+            {/* Right Column: Time Slot Sections inside a Unified Card */}
+            <div className="bg-surface-container-lowest border border-outline-variant/65 p-6 rounded-3xl shadow-[0_8px_30px_rgba(0,52,43,0.04)] flex flex-col gap-6 w-full lg:flex-1">
+              <div className="space-y-6">
+                <SlotSection title="Morning Slots" icon="light_mode" slots={["06:00","07:00","08:00","09:00","10:00","11:00"]}
+                  selectedSlot={selectedSlot} isSlotAvailable={isSlotAvailable} handleSlotClick={handleSlotClick} />
+                <hr className="border-outline-variant/20" />
+                <SlotSection title="Afternoon Slots" icon="wb_sunny" slots={["12:00","13:00","14:00","15:00","16:00","17:00"]}
+                  selectedSlot={selectedSlot} isSlotAvailable={isSlotAvailable} handleSlotClick={handleSlotClick} />
+                <hr className="border-outline-variant/20" />
+                <SlotSection title="Evening Slots" icon="nights_stay" slots={["18:00","19:00","20:00","21:00","22:00"]}
+                  selectedSlot={selectedSlot} isSlotAvailable={isSlotAvailable} handleSlotClick={handleSlotClick} />
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -273,7 +292,7 @@ export default function TimeSlots() {
           animate={{ y: 0 }}
           className="fixed bottom-0 w-full z-50 bg-surface-container-lowest shadow-[0_-4px_20px_rgba(0,52,43,0.08)] pb-safe"
         >
-          <div className="max-w-3xl mx-auto px-5 py-4 flex justify-between items-center">
+          <div className="max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 py-4 flex justify-between items-center">
             <div>
               <p className="font-medium text-[12px] text-on-surface-variant">Selected</p>
               <p className="font-semibold text-[20px] text-primary">

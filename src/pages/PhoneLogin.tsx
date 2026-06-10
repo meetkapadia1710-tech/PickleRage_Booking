@@ -64,7 +64,7 @@ export default function PhoneLogin() {
         <div className="absolute bottom-[20%] -left-1/4 w-3/4 h-1/2 bg-[radial-gradient(circle_at_center,rgba(255,191,0,0.15)_0%,transparent_70%)]" />
       </div>
 
-      <div className="relative z-10 flex flex-col min-h-screen pt-[env(safe-area-inset-top)]">
+      <div className="relative z-10 flex flex-col min-h-screen pt-[env(safe-area-inset-top)] max-w-md mx-auto w-full">
 
         {/* ── Top green section ──────────────────────────────────────────────── */}
         <div className="flex flex-col px-6 pt-10 pb-8 flex-1">

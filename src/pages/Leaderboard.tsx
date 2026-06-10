@@ -215,38 +215,13 @@ export default function Leaderboard() {
       exit={{ opacity: 0 }}
       className="bg-background text-on-background min-h-screen pb-24 md:pb-6 antialiased font-sans flex flex-col"
     >
-      <AppHeader />
+      <AppHeader showBack={true} />
 
-      <main className="px-5 max-w-3xl mx-auto mt-6 flex flex-col gap-5 w-full">
+      <main className="px-5 max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto mt-6 flex flex-col gap-5 w-full animate-fadeIn">
         <div className="flex flex-col gap-4">
           <div>
             <h1 className="font-bold text-[28px] md:text-[30px] text-primary mb-1">Leaderboard</h1>
             <p className="text-[14px] text-on-surface-variant">See who rules the courts at PlayHub.</p>
-          </div>
-
-          {/* Period segmented control */}
-          <div className="flex bg-surface-container-low rounded-full p-1 border border-surface-variant/40 self-start">
-            {PERIODS.map(p => {
-              const active = period === p.id;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setPeriod(p.id)}
-                  className="relative px-4 py-1.5 rounded-full font-semibold text-[13px] cursor-pointer outline-none select-none"
-                >
-                  {active && (
-                    <motion.div
-                      layoutId="period-pill"
-                      transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-                      className="absolute inset-0 bg-primary rounded-full"
-                    />
-                  )}
-                  <span className={`relative z-10 transition-colors duration-200 ${active ? 'text-on-primary' : 'text-on-surface-variant'}`}>
-                    {p.label}
-                  </span>
-                </button>
-              );
-            })}
           </div>
         </div>
 
@@ -276,72 +251,103 @@ export default function Leaderboard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="flex flex-col gap-5"
+              className="flex flex-col lg:flex-row gap-8 items-start w-full"
             >
-              {/* Community stats */}
-              <section className="grid grid-cols-3 gap-3">
-                <StatCard icon="group" value={totals.players} label="Active Players" />
-                <StatCard icon="event_available" value={totals.bookings} label="Bookings" />
-                <StatCard icon="timer" value={`${totals.hours}h`} label="Court Hours" />
-              </section>
-
-              {/* Your standing */}
-              {currentUser && (me ? <MyStandingCard player={me} /> : <JoinBoardCard onBook={() => navigate('/home')} />)}
-
-              {ranked.length === 0 ? (
-                <div className="bg-surface-container-lowest rounded-[20px] p-8 text-center border border-dashed border-outline-variant/30 flex flex-col items-center gap-2">
-                  <span className="material-symbols-outlined text-[40px] text-outline">scoreboard</span>
-                  <p className="text-on-surface font-semibold">No games {period === 'all' ? 'yet' : PERIODS.find(p => p.id === period)?.label.toLowerCase()}</p>
-                  <p className="text-[13px] text-on-surface-variant">Book a slot and claim the top spot.</p>
+              {/* Left Column: Switcher, Stats, Your Standing */}
+              <div className="flex flex-col gap-5 w-full lg:w-1/3 shrink-0">
+                {/* Period segmented control */}
+                <div className="flex bg-surface-container-low rounded-full p-1 border border-surface-variant/40 self-start">
+                  {PERIODS.map(p => {
+                    const active = period === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => setPeriod(p.id)}
+                        className="relative px-4 py-1.5 rounded-full font-semibold text-[13px] cursor-pointer outline-none select-none"
+                      >
+                        {active && (
+                          <motion.div
+                            layoutId="period-pill"
+                            transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+                            className="absolute inset-0 bg-primary rounded-full"
+                          />
+                        )}
+                        <span className={`relative z-10 transition-colors duration-200 ${active ? 'text-on-primary' : 'text-on-surface-variant'}`}>
+                          {p.label}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-              ) : (
-                <>
-                  {/* Top 3 Podium */}
-                  <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-b from-primary via-[#00291f] to-[#001a14] p-6 pt-7 shadow-[0_16px_40px_rgba(0,52,43,0.30)]">
-                    {/* decorative glow */}
-                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full bg-secondary-container/20 blur-3xl pointer-events-none" />
-                    <div className="absolute -bottom-24 -right-16 w-56 h-56 rounded-full bg-tertiary-container/20 blur-3xl pointer-events-none" />
 
-                    <h2 className="relative font-bold text-[18px] text-white mb-6 flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined text-secondary-container" style={{ fontVariationSettings: "'FILL' 1" }}>trophy</span>
-                      Top Performers
-                    </h2>
+                {/* Community stats */}
+                <section className="grid grid-cols-3 gap-3 w-full">
+                  <StatCard icon="group" value={totals.players} label="Active Players" />
+                  <StatCard icon="event_available" value={totals.bookings} label="Bookings" />
+                  <StatCard icon="timer" value={`${totals.hours}h`} label="Court Hours" />
+                </section>
 
-                    <div className="relative flex items-end justify-center w-full max-w-md mx-auto gap-3">
-                      {topThree[1] && <PodiumItem player={topThree[1]} currentUid={currentUser?.uid} heightClass="h-24" />}
-                      {topThree[0] && <PodiumItem player={topThree[0]} currentUid={currentUser?.uid} heightClass="h-32" />}
-                      {topThree[2] && <PodiumItem player={topThree[2]} currentUid={currentUser?.uid} heightClass="h-20" />}
-                    </div>
-                  </section>
+                {/* Your standing */}
+                {currentUser && (me ? <MyStandingCard player={me} /> : <JoinBoardCard onBook={() => navigate('/home')} />)}
+              </div>
 
-                  {/* Ranks 4+ */}
-                  {remainingPlayers.length > 0 && (
-                    <section className="flex flex-col gap-3">
-                      <h3 className="font-semibold text-[16px] text-on-surface-variant px-1">Other Ranks</h3>
-                      <div className="flex flex-col gap-2">
-                        {remainingPlayers.map((player, index) => (
-                          <RankRow key={player.uid} player={player} index={index} isMe={player.uid === currentUser?.uid} />
-                        ))}
+              {/* Right Column: Podium and Ranks list */}
+              <div className="flex flex-col gap-5 w-full lg:flex-1">
+                {ranked.length === 0 ? (
+                  <div className="bg-surface-container-lowest rounded-[20px] p-8 text-center border border-dashed border-outline-variant/30 flex flex-col items-center gap-2">
+                    <span className="material-symbols-outlined text-[40px] text-outline">scoreboard</span>
+                    <p className="text-on-surface font-semibold">No games {period === 'all' ? 'yet' : PERIODS.find(p => p.id === period)?.label.toLowerCase()}</p>
+                    <p className="text-[13px] text-on-surface-variant">Book a slot and claim the top spot.</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Top 3 Podium */}
+                    <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-b from-primary via-[#00291f] to-[#001a14] p-6 pt-7 shadow-[0_16px_40px_rgba(0,52,43,0.30)] w-full">
+                      {/* decorative glow */}
+                      <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full bg-secondary-container/20 blur-3xl pointer-events-none" />
+                      <div className="absolute -bottom-24 -right-16 w-56 h-56 rounded-full bg-tertiary-container/20 blur-3xl pointer-events-none" />
+
+                      <h2 className="relative font-bold text-[18px] text-white mb-6 flex items-center justify-center gap-2">
+                        <span className="material-symbols-outlined text-secondary-container" style={{ fontVariationSettings: "'FILL' 1" }}>trophy</span>
+                        Top Performers
+                      </h2>
+
+                      <div className="relative flex items-end justify-center w-full max-w-md mx-auto gap-3">
+                        {topThree[1] && <PodiumItem player={topThree[1]} currentUid={currentUser?.uid} heightClass="h-24" />}
+                        {topThree[0] && <PodiumItem player={topThree[0]} currentUid={currentUser?.uid} heightClass="h-32" />}
+                        {topThree[2] && <PodiumItem player={topThree[2]} currentUid={currentUser?.uid} heightClass="h-20" />}
                       </div>
                     </section>
-                  )}
-                </>
-              )}
 
-              {/* Players without bookings in this period */}
-              {inactive.length > 0 && (
-                <section className="bg-surface-container-lowest rounded-2xl px-4 py-3.5 border border-outline-variant/10 flex items-center gap-3">
-                  <div className="flex -space-x-2 shrink-0">
-                    {inactive.slice(0, 5).map(p => (
-                      <Avatar key={p.uid} name={p.displayName} photoURL={p.photoURL} size={32} className="ring-2 ring-surface-container-lowest" />
-                    ))}
-                  </div>
-                  <p className="text-[13px] text-on-surface-variant leading-snug">
-                    <span className="font-semibold text-on-surface">{inactive.length} player{inactive.length > 1 ? 's' : ''}</span>{' '}
-                    waiting for their first booking{period !== 'all' ? ' this period' : ''}.
-                  </p>
-                </section>
-              )}
+                    {/* Ranks 4+ */}
+                    {remainingPlayers.length > 0 && (
+                      <section className="flex flex-col gap-3 w-full">
+                        <h3 className="font-semibold text-[16px] text-on-surface-variant px-1">Other Ranks</h3>
+                        <div className="flex flex-col gap-2">
+                          {remainingPlayers.map((player, index) => (
+                            <RankRow key={player.uid} player={player} index={index} isMe={player.uid === currentUser?.uid} />
+                          ))}
+                        </div>
+                      </section>
+                    )}
+                  </>
+                )}
+
+                {/* Players without bookings in this period */}
+                {inactive.length > 0 && (
+                  <section className="bg-surface-container-lowest rounded-2xl px-4 py-3.5 border border-outline-variant/10 flex items-center gap-3 w-full">
+                    <div className="flex -space-x-2 shrink-0">
+                      {inactive.slice(0, 5).map(p => (
+                        <Avatar key={p.uid} name={p.displayName} photoURL={p.photoURL} size={32} className="ring-2 ring-surface-container-lowest" />
+                      ))}
+                    </div>
+                    <p className="text-[13px] text-on-surface-variant leading-snug">
+                      <span className="font-semibold text-on-surface">{inactive.length} player{inactive.length > 1 ? 's' : ''}</span>{' '}
+                      waiting for their first booking{period !== 'all' ? ' this period' : ''}.
+                    </p>
+                  </section>
+                )}
+              </div>
             </motion.div>
           </AnimatePresence>
         )}

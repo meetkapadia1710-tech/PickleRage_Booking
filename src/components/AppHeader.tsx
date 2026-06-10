@@ -33,7 +33,7 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
             : 'bg-background/40 native:bg-background border-transparent shadow-none'
         }`}
       >
-        <div className="flex justify-between items-center px-5 h-[64px] w-full max-w-3xl mx-auto">
+        <div className="flex justify-between items-center px-5 h-[64px] w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto">
           <div className="flex items-center gap-2.5">
             {showBack && (
               <motion.button

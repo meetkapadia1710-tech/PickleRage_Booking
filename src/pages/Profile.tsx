@@ -526,54 +526,71 @@ export default function Profile() {
         {/* TopAppBar */}
         <AppHeader />
 
-        <main className="max-w-md mx-auto md:max-w-4xl px-5 pt-6">
-          {/* ── Profile Header ── */}
-          <section className="flex flex-col items-center mb-6 relative pt-10">
-            <div className="w-24 h-24 rounded-full bg-surface-container-high overflow-hidden shadow-sm mb-4 border-2 border-surface">
-              {photoURL ? (
-                <img alt="avatar" className="w-full h-full object-cover" src={photoURL} referrerPolicy="no-referrer" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-primary/5">
-                  <span className="material-symbols-outlined text-[48px] text-primary">person</span>
+        <main className="max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 pt-6 animate-fadeIn">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start w-full">
+            {/* Left Column: Profile Card & Stats */}
+            <div className="bg-surface-container-lowest border border-outline-variant/65 p-6 rounded-3xl shadow-[0_8px_30px_rgba(0,52,43,0.04)] w-full lg:w-[360px] shrink-0 flex flex-col items-center">
+              {/* ── Profile Header ── */}
+              <section className="flex flex-col items-center mb-6 relative pt-4 w-full">
+                <div className="w-24 h-24 rounded-full bg-surface-container-high overflow-hidden shadow-sm mb-4 border-2 border-surface">
+                  {photoURL ? (
+                    <img alt="avatar" className="w-full h-full object-cover" src={photoURL} referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-primary/5">
+                      <span className="material-symbols-outlined text-[48px] text-primary">person</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <h1 className="font-semibold text-[20px] text-on-background mb-1 truncate max-w-[280px] md:max-w-md px-2 text-center" title={displayName}>{displayName}</h1>
-            <p className="text-[14px] text-on-surface-variant truncate max-w-[280px] md:max-w-md px-2 text-center" title={email}>{email}</p>
-          </section>
+                <h1 className="font-extrabold text-[20px] text-on-background mb-1 truncate max-w-[280px] px-2 text-center" title={displayName}>{displayName}</h1>
+                <p className="text-[13px] text-on-surface-variant truncate max-w-[280px] px-2 text-center" title={email}>{email}</p>
+              </section>
 
-          {/* ── Stats ── */}
-          <section className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-surface-container-lowest p-4 rounded-[20px] border border-outline-variant/65 shadow-[0_4px_16px_rgba(0,52,43,0.15)] flex flex-col items-center">
-              <span className="font-bold text-[24px] text-primary mb-1">{bookingCount}</span>
-              <span className="font-medium text-[12px] text-on-surface-variant uppercase tracking-wider">Bookings</span>
-            </div>
-            <div className="bg-surface-container-lowest p-4 rounded-[20px] border border-outline-variant/65 shadow-[0_4px_16px_rgba(0,52,43,0.15)] flex flex-col items-center">
-              <span className="font-bold text-[24px] text-primary mb-1">{hoursPlayed}</span>
-              <span className="font-medium text-[12px] text-on-surface-variant uppercase tracking-wider">Hours Played</span>
-            </div>
-          </section>
+              <hr className="w-full border-outline-variant/20 mb-6" />
 
-          {/* ── Settings List (iOS Grouped Style) ── */}
-          <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/50 shadow-[0_4px_16px_rgba(0,52,43,0.1)] overflow-hidden">
-            <div className="flex flex-col">
-              <SettingItem icon="person" iconBg="bg-[#007aff]" title="Edit Profile" subtitle="Update your display name" onClick={() => setEditOpen(true)} />
-              <SettingItem icon="notifications" iconBg="bg-[#ff9500]" title="Notifications" subtitle="Manage your alert preferences" onClick={() => setNotifOpen(true)} />
-              <SettingItem icon="credit_card" iconBg="bg-[#34c759]" title="Payment Methods" subtitle="Cards and billing info" onClick={() => setPaymentOpen(true)} />
-              <SettingItem icon="help" iconBg="bg-[#5856d6]" title="Help & Support" subtitle="FAQs and contact options" onClick={() => setHelpOpen(true)} isLast />
+              {/* ── Stats ── */}
+              <section className="grid grid-cols-2 gap-4 w-full">
+                <div className="bg-surface-container-low/40 p-4 rounded-[20px] border border-outline-variant/40 flex flex-col items-center shadow-sm">
+                  <span className="font-extrabold text-[24px] text-primary mb-1">{bookingCount}</span>
+                  <span className="font-bold text-[11px] text-on-surface-variant uppercase tracking-wider text-center">Bookings</span>
+                </div>
+                <div className="bg-surface-container-low/40 p-4 rounded-[20px] border border-outline-variant/40 flex flex-col items-center shadow-sm">
+                  <span className="font-extrabold text-[24px] text-primary mb-1">{hoursPlayed}</span>
+                  <span className="font-bold text-[11px] text-on-surface-variant uppercase tracking-wider text-center">Hours Played</span>
+                </div>
+              </section>
             </div>
-          </section>
 
-          {/* ── Sign Out ── */}
-          <div className="mt-8 mb-12 flex justify-center">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setSignOutOpen(true)}
-              className="px-6 py-3 text-error font-semibold text-[14px] hover:bg-error-container/20 rounded-full transition-colors flex items-center gap-2 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[20px]">logout</span>
-              Sign Out
-            </motion.button>
+            {/* Right Column: Settings & Sign Out */}
+            <div className="flex flex-col w-full lg:flex-1 bg-surface-container-lowest rounded-3xl border border-outline-variant/65 p-6 shadow-[0_8px_30px_rgba(0,52,43,0.04)] gap-6">
+              <div>
+                <h2 className="font-extrabold text-[20px] text-on-background tracking-tight mb-1">Account Settings</h2>
+                <p className="text-[13px] text-on-surface-variant">Update credentials and local app settings.</p>
+              </div>
+
+              {/* ── Settings List (iOS Grouped Style) ── */}
+              <section className="bg-surface-container-low/30 rounded-2xl border border-outline-variant/50 overflow-hidden w-full">
+                <div className="flex flex-col">
+                  <SettingItem icon="person" iconBg="bg-[#007aff]" title="Edit Profile" subtitle="Update your display name" onClick={() => setEditOpen(true)} />
+                  <SettingItem icon="notifications" iconBg="bg-[#ff9500]" title="Notifications" subtitle="Manage your alert preferences" onClick={() => setNotifOpen(true)} />
+                  <SettingItem icon="credit_card" iconBg="bg-[#34c759]" title="Payment Methods" subtitle="Cards and billing info" onClick={() => setPaymentOpen(true)} />
+                  <SettingItem icon="help" iconBg="bg-[#5856d6]" title="Help & Support" subtitle="FAQs and contact options" onClick={() => setHelpOpen(true)} isLast />
+                </div>
+              </section>
+
+              <hr className="border-outline-variant/20" />
+
+              {/* ── Sign Out ── */}
+              <div className="flex justify-start w-full">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSignOutOpen(true)}
+                  className="px-6 py-3 bg-error/10 hover:bg-error/25 text-error font-bold text-[14px] rounded-2xl transition-colors flex items-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>logout</span>
+                  Sign Out of PlayHub
+                </motion.button>
+              </div>
+            </div>
           </div>
         </main>
       </motion.div>

@@ -10,6 +10,7 @@
  * import behind Capacitor.isNativePlatform().
  */
 import { App as CapacitorApp } from '@capacitor/app';
+import { closeTopOverlay } from '../lib/backClose';
 
 // Back from these screens should background the app (like native apps do),
 // never exit or bounce to the login flow behind them.
@@ -20,6 +21,10 @@ export async function registerAndroidBackButton(
   goHome: () => void,
 ): Promise<() => void> {
   const handle = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+    // An open sheet/dialog consumes the gesture: close it, stay on the page.
+    if (closeTopOverlay()) {
+      return;
+    }
     if (ROOT_PATHS.has(window.location.pathname)) {
       CapacitorApp.minimizeApp();
     } else if (canGoBack) {
