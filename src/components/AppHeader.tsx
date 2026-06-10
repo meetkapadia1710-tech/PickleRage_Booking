@@ -27,10 +27,10 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
   return (
     <>
       <header
-        className={`w-full z-40 sticky top-0 transition-all duration-300 pt-[env(safe-area-inset-top)] border-b backdrop-blur-[14px] ${
+        className={`w-full z-40 sticky top-0 transition-all duration-300 pt-[env(safe-area-inset-top)] border-b backdrop-blur-[14px] native:backdrop-blur-none ${
           scrolled
-            ? 'bg-surface-container-lowest/80 border-outline-variant/65 shadow-[0_8px_30px_rgba(0,52,43,0.06)]'
-            : 'bg-background/40 border-transparent shadow-none'
+            ? 'bg-surface-container-lowest/80 native:bg-surface-container-lowest border-outline-variant/65 shadow-[0_8px_30px_rgba(0,52,43,0.06)]'
+            : 'bg-background/40 native:bg-background border-transparent shadow-none'
         }`}
       >
         <div className="flex justify-between items-center px-5 h-[64px] w-full max-w-3xl mx-auto">

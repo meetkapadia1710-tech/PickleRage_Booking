@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
-import { auth, db } from '../firebase';
+import { db } from '../firebase';
+import { signOutUser } from '../auth/googleSignIn';
 import { useAuth } from '../context/AuthContext';
 import AppHeader from '../components/AppHeader';
 import Toast from '../components/Toast';
@@ -492,7 +493,7 @@ export default function Profile() {
 
   const handleSignOut = async () => {
     try {
-      await auth.signOut();
+      await signOutUser();
       navigate('/login');
     } catch (err) {
       console.error('Sign out error:', err);

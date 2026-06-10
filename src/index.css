@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* `native:` utilities apply only inside the APK (html.platform-native is
+   added in main.tsx). Use them to swap effects that are too slow for the
+   Android WebView, e.g. `native:backdrop-blur-none native:bg-primary`. */
+@custom-variant native (&:where(.platform-native, .platform-native *));
+
 @theme {
   --color-primary: #00342b;
   --color-on-primary: #ffffff;
@@ -51,6 +56,29 @@ body {
   background-color: var(--color-background);
   color: var(--color-on-background);
   -webkit-font-smoothing: antialiased;
+  /* No browser rubber-band/refresh glow when scrolling past the edge */
+  overscroll-behavior-y: none;
+}
+
+/* App-feel polish (helps web too, critical for the APK) */
+html {
+  /* Kill the gray flash that makes every tap feel like a webpage link */
+  -webkit-tap-highlight-color: transparent;
+}
+button, a, label {
+  /* No double-tap-zoom hesitation on interactive elements */
+  touch-action: manipulation;
+}
+
+/* APK only: long-press should not select UI text like a browser would */
+html.platform-native body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+html.platform-native input,
+html.platform-native textarea {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* Hide horizontal scrollbars on snap carousels */

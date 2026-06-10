@@ -53,7 +53,7 @@ export default function BottomNav() {
           animate={{ y: 0 }}
           exit={{ y: 96 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-3 right-3 max-w-lg mx-auto z-50 bg-primary/80 backdrop-blur-[14px] shadow-[0_8px_32px_rgba(0,52,43,0.24)] flex flex-col rounded-full border border-white/10"
+          className="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-3 right-3 max-w-lg mx-auto z-50 bg-primary/80 backdrop-blur-[14px] native:bg-primary native:backdrop-blur-none shadow-[0_8px_32px_rgba(0,52,43,0.24)] flex flex-col rounded-full border border-white/10"
         >
           <div className="flex items-stretch px-1.5 py-1">
             {tabs.map(tab => {

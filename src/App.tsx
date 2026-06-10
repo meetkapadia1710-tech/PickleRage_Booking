@@ -1,6 +1,7 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { Capacitor } from '@capacitor/core';
 
 import SplashScreen from './pages/SplashScreen';
 import PhoneLogin from './pages/PhoneLogin';
@@ -72,6 +73,36 @@ function AnimatedRoutes() {
   );
 }
 
+// APK only: makes the Android back gesture/button navigate instead of
+// closing the app. The website never loads the native module.
+function NativeBackHandler() {
+  const navigate = useNavigate();
+  const navigateRef = React.useRef(navigate);
+  React.useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
+
+  React.useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let disposed = false;
+    let dispose: (() => void) | undefined;
+    import('./native/androidBack').then(async (m) => {
+      const d = await m.registerAndroidBackButton(
+        () => navigateRef.current(-1),
+        () => navigateRef.current('/home', { replace: true }),
+      );
+      if (disposed) d();
+      else dispose = d;
+    });
+    return () => {
+      disposed = true;
+      dispose?.();
+    };
+  }, []);
+
+  return null;
+}
+
 import { initPushNotifications } from './lib/notifications';
 
 function PushInit() {
@@ -88,6 +119,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <NativeBackHandler />
         <PushInit />
         <AnimatedRoutes />
         <BottomNav />

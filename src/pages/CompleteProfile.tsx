@@ -54,8 +54,10 @@ export default function CompleteProfile() {
           className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: 'radial-gradient(circle, white 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }}
         />
-        <div className="absolute -top-1/2 -right-1/4 w-full h-full rounded-full bg-white/5 blur-[120px]" />
-        <div className="absolute bottom-0 -left-1/4 w-3/4 h-1/2 rounded-full bg-secondary-container/10 blur-[100px]" />
+        {/* Soft glows as radial gradients — filter:blur over areas this big is
+            too slow for the Android WebView and made page transitions jerky */}
+        <div className="absolute -top-1/2 -right-1/4 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)]" />
+        <div className="absolute bottom-0 -left-1/4 w-3/4 h-1/2 bg-[radial-gradient(circle_at_center,rgba(255,191,0,0.10)_0%,transparent_70%)]" />
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen pt-[env(safe-area-inset-top)]">
