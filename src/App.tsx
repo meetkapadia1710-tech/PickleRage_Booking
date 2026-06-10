@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 
 import SplashScreen from './pages/SplashScreen';
 import PhoneLogin from './pages/PhoneLogin';
+import CompleteProfile from './pages/CompleteProfile';
 import Profile from './pages/Profile';
 import Home from './pages/Home';
 import VenueDetail from './pages/VenueDetail';
@@ -17,39 +18,33 @@ import SplitPayment from './pages/SplitPayment';
 import BottomNav from './components/BottomNav';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
+const LoadingScreen = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <span className="material-symbols-outlined animate-spin text-[48px] text-primary">sync</span>
+  </div>
+);
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { currentUser, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <span className="material-symbols-outlined animate-spin text-[48px] text-primary">sync</span>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return <Navigate to="/login" replace />;
-  }
-
+  const { currentUser, loading, profileComplete } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (!currentUser) return <Navigate to="/login" replace />;
+  if (!profileComplete) return <Navigate to="/complete-profile" replace />;
   return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, profileComplete } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (currentUser) return <Navigate to={profileComplete ? '/home' : '/complete-profile'} replace />;
+  return <>{children}</>;
+}
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <span className="material-symbols-outlined animate-spin text-[48px] text-primary">sync</span>
-      </div>
-    );
-  }
-
-  if (currentUser) {
-    return <Navigate to="/home" replace />;
-  }
-
+// Accessible only when signed-in but profile is incomplete
+function CompleteProfileRoute({ children }: { children: React.ReactNode }) {
+  const { currentUser, loading, profileComplete } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (!currentUser) return <Navigate to="/login" replace />;
+  if (profileComplete) return <Navigate to="/home" replace />;
   return <>{children}</>;
 }
 
@@ -61,6 +56,7 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<SplashScreen />} />
         <Route path="/login" element={<PublicRoute><PhoneLogin /></PublicRoute>} />
+        <Route path="/complete-profile" element={<CompleteProfileRoute><CompleteProfile /></CompleteProfileRoute>} />
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/venue/:id" element={<ProtectedRoute><VenueDetail /></ProtectedRoute>} />
         <Route path="/venue/:id/court/:courtId/book" element={<ProtectedRoute><TimeSlots /></ProtectedRoute>} />
@@ -94,7 +90,6 @@ function App() {
       <BrowserRouter>
         <PushInit />
         <AnimatedRoutes />
-        {/* Persistent nav lives outside the route transitions so the active pill slides between tabs */}
         <BottomNav />
       </BrowserRouter>
     </AuthProvider>
