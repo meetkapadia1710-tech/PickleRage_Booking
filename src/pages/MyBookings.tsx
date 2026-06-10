@@ -318,10 +318,30 @@ function BookingCard({
               {chip.label}
             </span>
             {isSplit && (
-              <span className="text-[10px] font-semibold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                <span className="material-symbols-outlined text-[11px]">call_split</span>
-                {paidCount}/{groupSize} paid
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-semibold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full flex items-center gap-0.5 shrink-0">
+                  <span className="material-symbols-outlined text-[11px]">call_split</span>
+                  {paidCount}/{groupSize} paid
+                </span>
+                {payerDetails.length > 0 && (
+                  <div className="flex items-center -space-x-2 shrink-0">
+                    {payerDetails.slice(0, 4).map((payer) => (
+                      <Avatar
+                        key={payer.uid}
+                        name={payer.name}
+                        photoURL={payer.photoURL}
+                        size={20}
+                        className="ring-[1.5px] ring-surface-container-lowest"
+                      />
+                    ))}
+                    {payerDetails.length > 4 && (
+                      <div className="w-5 h-5 rounded-full bg-surface-container-high border-[1.5px] border-surface-container-lowest flex items-center justify-center text-[9px] font-bold text-on-surface-variant z-10 shrink-0 select-none">
+                        +{payerDetails.length - 4}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
           <h3 className="font-semibold text-[15px] text-on-surface truncate">
@@ -387,7 +407,7 @@ function BookingCard({
                   {/* Paid players */}
                   {payerDetails.map(payer => (
                     <div key={payer.uid} className="flex items-center gap-3 bg-primary/5 rounded-xl px-3 py-2.5">
-                      <Avatar name={payer.name} size={34} />
+                      <Avatar name={payer.name} photoURL={payer.photoURL} size={34} />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-[13px] text-on-surface truncate">
                           {payer.name}

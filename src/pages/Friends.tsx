@@ -119,6 +119,7 @@ export default function Friends() {
         toUid: toUser.uid,
         fromName: myData?.displayName ?? currentUser.displayName ?? 'Unknown',
         fromPhone: myData?.phone ?? '',
+        fromPhotoURL: myData?.photoURL ?? currentUser.photoURL ?? '',
         status: 'pending',
         createdAt: new Date().toISOString(),
       });
@@ -226,7 +227,7 @@ export default function Friends() {
                   </div>
                 ) : (
                   <div className="bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-3 border border-outline-variant/40 shadow-sm">
-                    <Avatar name={searchResult.displayName} size={44} />
+                    <Avatar name={searchResult.displayName} photoURL={searchResult.photoURL} size={44} />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-[15px] text-on-surface truncate">{searchResult.displayName}</p>
                       <p className="text-[12px] text-on-surface-variant">{searchResult.phone}</p>
@@ -267,7 +268,7 @@ export default function Friends() {
                   <motion.li key={req.id} variants={itemVariants}
                     className="bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-3 border border-outline-variant/40 shadow-sm"
                   >
-                    <Avatar name={req.fromName} size={44} />
+                    <Avatar name={req.fromName} photoURL={req.fromPhotoURL} size={44} />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-[15px] text-on-surface truncate">{req.fromName}</p>
                       <p className="text-[12px] text-on-surface-variant">{req.fromPhone}</p>
@@ -314,7 +315,7 @@ export default function Friends() {
                 <motion.li key={friend.uid} variants={itemVariants}
                   className="bg-surface-container-lowest rounded-2xl px-4 py-3 flex items-center gap-3 border border-outline-variant/40 shadow-sm"
                 >
-                  <Avatar name={friend.displayName} size={44} />
+                  <Avatar name={friend.displayName} photoURL={friend.photoURL} size={44} />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-[15px] text-on-surface truncate">{friend.displayName}</p>
                     <p className="text-[12px] text-on-surface-variant">{friend.phone}</p>

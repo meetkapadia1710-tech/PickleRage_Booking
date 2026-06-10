@@ -83,17 +83,21 @@ export default function SplitPayment() {
       const newPaid = [...(booking.splitPayment?.paidPlayers ?? []), currentUser.uid];
       const allNowPaid = newPaid.length >= groupSize;
 
-      // Fetch payer's display name from Firestore users collection
+      // Fetch payer's display name and photo from Firestore users collection
       const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
       const payerName = userSnap.exists()
         ? (userSnap.data().displayName as string) || currentUser.displayName || 'Player'
         : currentUser.displayName || 'Player';
+      const payerPhoto = userSnap.exists()
+        ? (userSnap.data().photoURL as string) || currentUser.photoURL || undefined
+        : currentUser.photoURL || undefined;
 
       const newPayerDetail: PayerDetail = {
         uid: currentUser.uid,
         name: payerName,
         amount: shareAmount,
         paidAt: new Date().toISOString(),
+        photoURL: payerPhoto,
       };
 
       await updateDoc(doc(db, 'bookings', booking.id), {
@@ -206,7 +210,7 @@ export default function SplitPayment() {
                 transition={{ delay: i * 0.05 }}
                 className="flex items-center gap-3 bg-primary/5 rounded-xl px-3 py-2.5"
               >
-                <Avatar name={payer.name} size={36} />
+                <Avatar name={payer.name} photoURL={payer.photoURL} size={36} />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-[13px] text-on-surface truncate">
                     {payer.name}

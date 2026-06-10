@@ -39,6 +39,7 @@ export interface PayerDetail {
   name: string;
   amount: number;
   paidAt: string;   // ISO timestamp
+  photoURL?: string;
 }
 
 export interface SplitPayment {
@@ -80,4 +81,5 @@ export interface FriendRequest {
   fromPhone: string;
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: string;
+  fromPhotoURL?: string;
 }

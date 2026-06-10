@@ -124,17 +124,21 @@ export default function TimeSlots() {
       const bookingRef = doc(collection(db, 'bookings'));
       const token = crypto.randomUUID();
 
-      // Fetch current user's display name for payer details
+      // Fetch current user's display name and photo for payer details
       const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
       const payerName = userSnap.exists()
         ? (userSnap.data().displayName as string) || currentUser.displayName || 'Player'
         : currentUser.displayName || 'Player';
+      const payerPhoto = userSnap.exists()
+        ? (userSnap.data().photoURL as string) || currentUser.photoURL || undefined
+        : currentUser.photoURL || undefined;
 
       const firstPayerDetail: PayerDetail = {
         uid: currentUser.uid,
         name: payerName,
         amount: splitEnabled ? Math.ceil((venue?.price ?? 0) / groupSize) : (venue?.price ?? 0),
         paidAt: new Date().toISOString(),
+        photoURL: payerPhoto,
       };
 
       const bookingData: Omit<Booking, 'id'> = {
@@ -448,7 +452,7 @@ export default function TimeSlots() {
                                       className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer"
                                     >
                                       <div className={`relative rounded-full transition-all ${selected ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
-                                        <Avatar name={f.displayName} size={48} />
+                                        <Avatar name={f.displayName} photoURL={f.photoURL} size={48} />
                                         {selected && (
                                           <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                                             <span className="material-symbols-outlined text-[12px] text-on-primary font-bold">check</span>
