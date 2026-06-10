@@ -196,6 +196,8 @@ function BookingCard({ booking, venue, court, onCancel }: {
   booking: Booking; venue: Venue | undefined; court: Court | undefined; onCancel: () => void;
 }) {
   const isConfirmed = booking.status === 'confirmed';
+  const isHold = booking.status === 'hold';
+  const isSplit = !!booking.splitPayment?.enabled;
 
   const formattedDate = useMemo(() => {
     const d = new Date(`${booking.date}T00:00:00`);
@@ -221,6 +223,8 @@ function BookingCard({ booking, venue, court, onCancel }: {
     fetchWalletUrl();
   }, [booking, venue, court]);
 
+  const [linkCopied, setLinkCopied] = useState(false);
+
   return (
     <div className="bg-surface-container-lowest rounded-[20px] p-4 shadow-[0_4px_16px_rgba(0,52,43,0.15)] border border-outline-variant/65 hover:border-primary/60 transition-colors">
       <div className="flex justify-between items-start mb-4">
@@ -232,13 +236,41 @@ function BookingCard({ booking, venue, court, onCancel }: {
           <h3 className="font-semibold text-[20px] text-primary">{venue?.name || booking.venueId}</h3>
           <p className="text-[14px] text-on-surface-variant">{court?.name || booking.courtId} • {court?.surface || 'Standard surface'}</p>
         </div>
-        <div className={`px-3 py-1 rounded-full font-medium text-[12px] capitalize shrink-0 ${isConfirmed ? 'bg-secondary text-on-secondary' : 'bg-surface-container text-on-surface-variant'}`}>
-          {booking.status}
+        <div className={`px-3 py-1 rounded-full font-medium text-[12px] capitalize shrink-0 ${
+          isConfirmed ? 'bg-secondary text-on-secondary'
+          : isHold ? 'bg-amber-100 text-amber-700'
+          : 'bg-surface-container text-on-surface-variant'
+        }`}>
+          {isHold ? '⏸ On Hold' : booking.status}
         </div>
       </div>
-      {isConfirmed && (
-        <div className="flex gap-2 mt-4 pt-4 border-t border-surface-container-high">
-          {walletUrl && (
+      {(isConfirmed || isHold) && (
+        <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-surface-container-high">
+          {/* Split payment info */}
+          {isSplit && booking.splitPayment && (
+            <div className="flex items-center justify-between bg-surface-container-low rounded-xl px-3 py-2">
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[15px] text-secondary">call_split</span>
+                <span className="text-[12px] font-semibold text-on-surface">
+                  {booking.splitPayment.paidPlayers.length}/{booking.splitPayment.groupSize} players paid
+                </span>
+              </div>
+              <button
+                onClick={async () => {
+                  const url = `${window.location.origin}/split/${booking.splitPayment!.paymentLinkToken}`;
+                  await navigator.clipboard.writeText(url);
+                  setLinkCopied(true);
+                  setTimeout(() => setLinkCopied(false), 2000);
+                }}
+                className="flex items-center gap-1 text-[11px] font-semibold text-primary cursor-pointer active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[13px]">{linkCopied ? 'check' : 'content_copy'}</span>
+                {linkCopied ? 'Copied!' : 'Copy Link'}
+              </button>
+            </div>
+          )}
+          <div className="flex gap-2">
+          {isConfirmed && walletUrl && (
             <a href={walletUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex justify-center items-center h-[48px]">
               <img src={googleWalletBadge} alt="Save to Google Wallet" className="h-[48px] object-contain" />
             </a>
@@ -250,6 +282,7 @@ function BookingCard({ booking, venue, court, onCancel }: {
           >
             Cancel Booking
           </motion.button>
+          </div>
         </div>
       )}
     </div>

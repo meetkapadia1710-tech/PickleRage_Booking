@@ -26,7 +26,15 @@ export default function VenueDetail() {
         const venueRef = doc(db, 'venues', id);
         const venueSnap = await getDoc(venueRef);
         if (venueSnap.exists()) {
-          setVenue({ ...(venueSnap.data() as Venue), id: venueSnap.id });
+          const data = venueSnap.data() as Venue;
+          const id = venueSnap.id;
+          if (id === 'venue_1') {
+            data.address = 'Picklerage, Shravan Chowkdi, Opposite Ganesh Township, Bholav, Bharuch 392001';
+          } else if (id === 'venue_3') {
+            data.name = 'SPORTS PLANET';
+            data.address = 'City Centre, Railway Station Rd, Moficer Jin Compound, Bharuch, Gujarat 392001';
+          }
+          setVenue({ ...data, id });
         }
 
         // Fetch Courts
@@ -154,8 +162,28 @@ export default function VenueDetail() {
       <main className="relative z-20 -mt-10 bg-background rounded-t-[32px] px-5 pt-8 min-h-[442px] shadow-[0_-8px_24px_rgba(0,52,43,0.08)]">
         {/* Title & Location Info */}
         <header className="mb-6">
-          <div className="flex justify-between items-start gap-4 mb-2">
-            <h1 className="font-bold text-[28px] leading-tight text-on-background flex-1 pr-4">{venue.name}</h1>
+          <h1 className="font-bold text-[28px] leading-tight text-on-background mb-1">{venue.name}</h1>
+          {/* Rating + Hours row */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px] text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+              <span className="font-semibold text-[13px] text-on-surface">{venue.rating}</span>
+              {venue.ratingCount && (
+                <span className="text-[12px] text-on-surface-variant">({venue.ratingCount} ratings)</span>
+              )}
+            </div>
+            {venue.openHours && (
+              <>
+                <span className="text-on-surface-variant text-[12px]">•</span>
+                <span className="text-[12px] text-on-surface-variant">{venue.openHours}</span>
+              </>
+            )}
+          </div>
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex items-start gap-1.5 text-on-surface-variant flex-1 min-w-0">
+              <span className="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">location_on</span>
+              <span className="text-[11px] leading-snug">{venue.address}</span>
+            </div>
             <button
               onClick={() => {
                 const reviewUrls: Record<string, string> = {
@@ -165,33 +193,15 @@ export default function VenueDetail() {
                 const targetUrl = reviewUrls[venue.id] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${venue.name} ${venue.address}`)}`;
                 openExternal(targetUrl);
               }}
-              className="bg-secondary-container/20 hover:bg-secondary-container/30 border border-secondary-container/30 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-[12px] font-semibold text-on-secondary-container transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
+              className="bg-secondary-container/20 hover:bg-secondary-container/30 border border-secondary-container/30 px-2 py-0.5 rounded-full flex items-center gap-0.5 text-[10px] font-semibold text-on-secondary-container transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
             >
-              <span className="material-symbols-outlined text-[14px] text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+              <span className="material-symbols-outlined text-[11px] text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
               Rate on Google
             </button>
-          </div>
-          <div className="flex items-center gap-2 text-on-surface-variant">
-            <span className="material-symbols-outlined text-primary text-[20px]">location_on</span>
-            <span className="text-[14px]">{venue.address}</span>
           </div>
         </header>
 
         <div className="h-px w-full bg-surface-variant mb-6"></div>
-
-        {/* Amenities */}
-        <section className="mb-6">
-          <h2 className="font-semibold text-[20px] text-on-background mb-4">Amenities</h2>
-          <div className="flex gap-5 overflow-x-auto pb-2 hide-scrollbar">
-            {venue.amenities.map(amenity => (
-              <div key={amenity} className="flex flex-col items-center gap-2 min-w-[64px]">
-                <div className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary shadow-sm">
-                  <span className="material-symbols-outlined">{amenity}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
 
         {/* Court Type Selector */}
         <section className="mb-6">
@@ -288,21 +298,28 @@ export default function VenueDetail() {
           <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-4">
             {/* Club Highlights */}
             <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/65 shadow-[0_4px_16px_rgba(0,52,43,0.06)] flex flex-col gap-4">
-              <h3 className="font-bold text-[18px] text-on-background pb-1 border-b-2 border-primary/10">Club Highlights</h3>
+              <h3 className="font-bold text-[18px] text-on-background pb-1 border-b-2 border-primary/10">Highlights</h3>
               <div className="flex gap-2">
                 <div className="flex-1 bg-surface-container-low px-3 py-2 rounded-xl text-center">
                   <span className="block text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">Hours</span>
-                  <span className="font-bold text-[12px] text-on-surface">6 AM - 11:59 PM</span>
+                  <span className="font-bold text-[12px] text-on-surface">{venue.openHours ?? '6 AM – 11:59 PM'}</span>
                 </div>
                 <div className="flex-1 bg-surface-container-low px-3 py-2 rounded-xl text-center">
                   <span className="block text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">Pricing</span>
                   <span className="font-bold text-[12px] text-on-surface">₹{venue.price} onwards</span>
                 </div>
               </div>
-              <div className="bg-primary-container/20 border border-primary/10 px-3.5 py-2.5 rounded-xl flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                <span className="font-semibold text-[12px] text-primary">Beginner Friendly (Free Paddles & Equipment)</span>
-              </div>
+              {/* Free Equipment highlight */}
+              {venue.highlights && venue.highlights.length > 0 && (
+                <div className="bg-primary-container/20 border border-primary/10 px-3.5 py-2.5 rounded-xl flex flex-wrap gap-x-3 gap-y-1">
+                  {venue.highlights.map(h => (
+                    <span key={h} className="font-semibold text-[12px] text-primary flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      {h}
+                    </span>
+                  ))}
+                </div>
+              )}
               <ul className="flex flex-col gap-2.5 text-[13px] text-on-surface-variant">
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
@@ -314,21 +331,36 @@ export default function VenueDetail() {
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
-                  <span>Pure Drinking Water Available</span>
+                  <span>Drinking Water Available</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
-                  <span>Tropical Cafe & Food Court</span>
+                  <span>Food Court</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
-                  <span>On-site Parking Available</span>
+                  <span>Parking Available</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
-                  <span>First Aid Station Available</span>
+                  <span>First Aid</span>
                 </li>
               </ul>
+              {/* Offers */}
+              {venue.offers && venue.offers.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-[13px] text-on-surface mb-2">Offers</h4>
+                  {venue.offers.map(offer => (
+                    <div key={offer.label} className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/40 px-3 py-2.5 rounded-xl flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[14px]">🏷️</span>
+                        <span className="font-semibold text-[12px] text-green-700 dark:text-green-400">{offer.label}</span>
+                      </div>
+                      <span className="text-[11px] text-green-600 dark:text-green-500 underline cursor-pointer">{offer.detail}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Venue Rules */}
@@ -338,8 +370,8 @@ export default function VenueDetail() {
                 <div className="flex gap-3">
                   <span className="text-[20px] shrink-0">⏰</span>
                   <div>
-                    <h4 className="font-bold text-[13px] text-on-surface">Arrive 15 Mins Early</h4>
-                    <p className="text-[12px] text-on-surface-variant mt-0.5 leading-snug">Arrive 15 minutes before your slot to ensure checking-in is seamless.</p>
+                    <h4 className="font-bold text-[13px] text-on-surface">Arrive 10 Mins Early</h4>
+                    <p className="text-[12px] text-on-surface-variant mt-0.5 leading-snug">Arrive min. 10 minutes before your booking time.</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -434,7 +466,7 @@ export default function VenueDetail() {
             <span className="font-medium text-[12px] text-on-surface-variant">Total Price</span>
             <div className="flex items-baseline gap-1">
               <span className="font-bold text-[30px] text-primary">₹{venue.price}</span>
-              <span className="text-[14px] text-on-surface-variant">/hr</span>
+              <span className="text-[14px] text-on-surface-variant">onwards</span>
             </div>
           </div>
           <button 

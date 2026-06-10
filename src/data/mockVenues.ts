@@ -6,11 +6,28 @@ export const mockVenues: Venue[] = [
     name: "PickleRage Pickleball at Shravan Chokdi",
     type: "pickleball",
     images: ["https://lh3.googleusercontent.com/aida-public/AB6AXuAfrKLO4vIYaVf-hotizWYDN9YXfbPDgdpxt0Uy8DynrBzcMOWRKE8ZeCzBVpXxMM2YTb_HhwcA4kUHTEYPd0x9aLRnTJTofK33R4_VOmg2d3EsReKk8ArQbkg5jLdAIP8fYaS73LlqNV5zPqQ3someJW9QxJ5mIxFdX3af_feF6FVRfwaE3TKw7VASQ0EAzeWO-Z7yQzTWWGnM1L5nLFZTmoEF-cILvtqduPgT9SzQkPF8aAyzP4dZNOo3Vc1NRTip4X0hEuCR_zU"],
-    price: 600,
-    address: "1200 Baseline Road, Downtown District",
+    price: 200,
+    address: "Picklerage, Shravan Chowkdi, Opposite Ganesh Township, Bholav, Bharuch 392001",
     distance: "1.2 mi",
-    rating: 4.9,
-    amenities: ["local_parking", "shower", "lock", "water_drop", "storefront"],
+    rating: 3.9,
+    ratingCount: 12,
+    openHours: "6:00 AM – 11:59 PM",
+    amenities: ["water_drop", "local_parking", "emergency", "wb_incandescent", "storefront", "sports_tennis"],
+    highlights: ["Free Equipment", "Free Paddles"],
+    offers: [
+      {
+        label: "20% off upto ₹75",
+        couponCode: "GJ@75",
+        validTill: "31st Dec, 2026",
+        terms: [
+          "The discount will be applicable on the buying price excluding taxes.",
+          "Minimum Cart value should be Rs 400 for the coupon application.",
+          "A maximum Discount of Rs. 75 can be availed on your first booking.",
+          "Coupon is valid till 31st Dec, 2026.",
+          "PickleRage reserves the rights to make changes or remove the coupon from the platform at any point of time."
+        ]
+      }
+    ],
     isPremium: true
   },
   {
@@ -27,11 +44,11 @@ export const mockVenues: Venue[] = [
   },
   {
     id: "venue_3",
-    name: "Sports Planet",
+    name: "SPORTS PLANET",
     type: "box cricket",
     images: ["https://lh3.googleusercontent.com/aida-public/AB6AXuCKFWDwUkJOC1ABRjsh3SwFIK6rFX_5A6kgUHwc1e7MZrgIh339YcdYsqPyQEsYjYj9pEPRHdY-CvtctpSe04An-dj9lFxEgix1ZZtzt79nJzhK_qofld5ufuawior8yrUeGEjegfByPbbaBRtlbCZp-_AjHSEZi025nGsYEOXXjqhq_PMWBzeR3aaJIMY5i8pXqBwW-zJpOMO-OEiYsLxAhapu6Y3Gvp8soyfttVQfJePJTY_lBLasjc2oGXZL8tZ5bXZZAhxzVNY"],
     price: 1000,
-    address: "45 Strike Zone, North Hub",
+    address: "City Centre, Railway Station Rd, Moficer Jin Compound, Bharuch, Gujarat 392001",
     distance: "3.0 mi",
     rating: 4.8,
     amenities: ["local_parking", "shower", "storefront"],
@@ -40,8 +57,8 @@ export const mockVenues: Venue[] = [
 ];
 
 export const mockCourts: Court[] = [
-  { id: "c1", venueId: "venue_1", name: "Court 1", surface: "Hard Court", isIndoor: true },
-  { id: "c2", venueId: "venue_1", name: "Court 2", surface: "Hard Court", isIndoor: true },
-  { id: "c3", venueId: "venue_2", name: "Court A", surface: "Outdoor", isIndoor: false },
-  { id: "c4", venueId: "venue_3", name: "Turf 1", surface: "Astro Turf", isIndoor: true },
+  { id: "c1", venueId: "venue_1", name: "Court 1", surface: "Hard Court", isIndoor: true, squadSize: "Full Court", sport: "Pickleball" },
+  { id: "c2", venueId: "venue_1", name: "Court 2", surface: "Hard Court", isIndoor: true, squadSize: "Full Court", sport: "Pickleball" },
+  { id: "c3", venueId: "venue_2", name: "Court A", surface: "Outdoor", isIndoor: false, squadSize: "Full Court", sport: "Pickleball" },
+  { id: "c4", venueId: "venue_3", name: "Turf 1", surface: "Astro Turf", isIndoor: true, squadSize: "Full Court", sport: "Box Cricket" },
 ];
