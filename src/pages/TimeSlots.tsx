@@ -19,7 +19,10 @@ export default function TimeSlots() {
   const [friends, setFriends] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  });
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
 
@@ -29,6 +32,7 @@ export default function TimeSlots() {
   const [splitMode, setSplitMode] = useState<'instant' | 'hold'>('hold');
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch venue and court details
   useEffect(() => {
@@ -113,7 +117,8 @@ export default function TimeSlots() {
   };
 
   const handleConfirmBooking = async () => {
-    if (!currentUser || !venue || !court || !selectedSlot) return;
+    if (!currentUser || !venue || !court || !selectedSlot || isSubmitting) return;
+    setIsSubmitting(true);
     try {
       await Haptics.impact({ style: ImpactStyle.Heavy });
     } catch { /* ignore */ }
@@ -171,6 +176,8 @@ export default function TimeSlots() {
     } catch (err: unknown) {
       console.error('Error creating booking:', err);
       alert(`Booking failed: ${err instanceof Error ? err.message : 'Please try again.'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -317,7 +324,7 @@ export default function TimeSlots() {
                 {/* Venue Summary Card */}
                 <div className="flex gap-4 bg-surface p-2 rounded-[16px] border border-outline-variant/30">
                   <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-surface-variant">
-                    <img src={venue.images[0]} alt={venue.name} className="w-full h-full object-cover" />
+                    <img src={venue.images[0] ?? ''} alt={venue.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex flex-col justify-center">
                     <h3 className="font-semibold text-[14px] text-on-surface mb-1">{venue.name}</h3>
@@ -546,14 +553,17 @@ export default function TimeSlots() {
                 {/* Action Button */}
                 <button
                   onClick={handleConfirmBooking}
-                  className="w-full h-[52px] bg-secondary-container text-primary rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-sm cursor-pointer"
+                  disabled={isSubmitting}
+                  className={`w-full h-[52px] bg-secondary-container text-primary rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-95 transition-all shadow-sm cursor-pointer ${isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
                 >
-                  <span className="material-symbols-outlined">{splitEnabled ? 'call_split' : 'lock'}</span>
-                  {splitEnabled
-                    ? splitMode === 'hold'
-                      ? `Pay ₹${sharePerPlayer} & Hold Slot`
-                      : `Pay ₹${sharePerPlayer} & Confirm`
-                    : 'Pay & Book'}
+                  {isSubmitting
+                    ? <span className="material-symbols-outlined animate-spin">sync</span>
+                    : <span className="material-symbols-outlined">{splitEnabled ? 'call_split' : 'lock'}</span>}
+                  {isSubmitting
+                    ? 'Processing…'
+                    : splitEnabled
+                      ? splitMode === 'hold' ? `Pay ₹${sharePerPlayer} & Hold Slot` : `Pay ₹${sharePerPlayer} & Confirm`
+                      : 'Pay & Book'}
                 </button>
 
                 <p className="text-center font-medium text-[12px] text-on-surface-variant">

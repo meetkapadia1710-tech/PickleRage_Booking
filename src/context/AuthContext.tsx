@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       userRef.current = user;
       setCurrentUser(user);
@@ -41,11 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       getDoc(doc(db, 'users', user.uid))
-        .then(snap => setProfileComplete(snap.exists() && !!(snap.data()?.phone)))
-        .catch(() => setProfileComplete(false))
-        .finally(() => setLoading(false));
+        .then(snap => { if (!cancelled) setProfileComplete(snap.exists() && !!(snap.data()?.phone)); })
+        .catch(() => { if (!cancelled) setProfileComplete(false); })
+        .finally(() => { if (!cancelled) setLoading(false); });
     });
-    return unsubscribe;
+    return () => { cancelled = true; unsubscribe(); };
   }, []);
 
   return (
