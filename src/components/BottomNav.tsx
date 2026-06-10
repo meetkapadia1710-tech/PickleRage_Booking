@@ -1,18 +1,36 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { useEffect, useState } from 'react';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from '../context/AuthContext';
 
 const tabs = [
-  { path: '/home', icon: 'home', label: 'Home' },
-  { path: '/leaderboard', icon: 'leaderboard', label: 'Leaderboard' },
-  { path: '/bookings', icon: 'event_available', label: 'Bookings' },
-  { path: '/profile', icon: 'person', label: 'Profile' },
+  { path: '/home',        icon: 'home',            label: 'Home' },
+  { path: '/friends',     icon: 'group',           label: 'Friends' },
+  { path: '/bookings',    icon: 'event_available', label: 'Bookings' },
+  { path: '/leaderboard', icon: 'leaderboard',     label: 'Leaderboard' },
+  { path: '/profile',     icon: 'person',          label: 'Profile' },
 ];
 
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const visible = tabs.some(t => t.path === location.pathname);
+
+  // Pending friend request badge count
+  const [pendingCount, setPendingCount] = useState(0);
+  useEffect(() => {
+    if (!currentUser) return;
+    const q = query(
+      collection(db, 'friendRequests'),
+      where('toUid', '==', currentUser.uid),
+      where('status', '==', 'pending'),
+    );
+    return onSnapshot(q, snap => setPendingCount(snap.size));
+  }, [currentUser]);
 
   const handleTab = async (path: string, active: boolean) => {
     if (active) return;
@@ -27,21 +45,22 @@ export default function BottomNav() {
   return (
     <AnimatePresence>
       {visible && (
-         <motion.nav
+        <motion.nav
           initial={{ y: 96 }}
           animate={{ y: 0 }}
           exit={{ y: 96 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-5 right-5 max-w-lg mx-auto z-50 bg-primary/80 backdrop-blur-[14px] shadow-[0_8px_32px_rgba(0,52,43,0.24)] flex flex-col rounded-full border border-white/10"
+          className="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-3 right-3 max-w-lg mx-auto z-50 bg-primary/80 backdrop-blur-[14px] shadow-[0_8px_32px_rgba(0,52,43,0.24)] flex flex-col rounded-full border border-white/10"
         >
-          <div className="flex items-stretch px-2.5 py-1">
+          <div className="flex items-stretch px-1.5 py-1">
             {tabs.map(tab => {
               const active = location.pathname === tab.path;
+              const hasBadge = tab.path === '/friends' && pendingCount > 0;
               return (
                 <button
                   key={tab.path}
                   onClick={() => handleTab(tab.path, active)}
-                  className="relative flex flex-col items-center justify-center flex-1 h-[58px] outline-none"
+                  className="relative flex flex-col items-center justify-center flex-1 h-[54px] outline-none"
                   aria-current={active ? 'page' : undefined}
                 >
                   {active && (
@@ -51,18 +70,25 @@ export default function BottomNav() {
                       className="absolute inset-x-1 inset-y-1 bg-secondary-container rounded-full"
                     />
                   )}
-                  <motion.span
-                    animate={{ scale: active ? 1.08 : 1 }}
-                    transition={{ type: 'spring', damping: 14, stiffness: 400 }}
-                    className={`relative z-10 material-symbols-outlined transition-colors duration-200 ${
-                      active ? 'text-on-secondary-container' : 'text-white/75'
-                    }`}
-                    style={{ fontVariationSettings: `'FILL' ${active ? 1 : 0}` }}
-                  >
-                    {tab.icon}
-                  </motion.span>
+                  <div className="relative z-10">
+                    <motion.span
+                      animate={{ scale: active ? 1.08 : 1 }}
+                      transition={{ type: 'spring', damping: 14, stiffness: 400 }}
+                      className={`material-symbols-outlined transition-colors duration-200 text-[22px] ${
+                        active ? 'text-on-secondary-container' : 'text-white/75'
+                      }`}
+                      style={{ fontVariationSettings: `'FILL' ${active ? 1 : 0}` }}
+                    >
+                      {tab.icon}
+                    </motion.span>
+                    {hasBadge && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-error rounded-full flex items-center justify-center text-[9px] font-bold text-white">
+                        {pendingCount > 9 ? '9+' : pendingCount}
+                      </span>
+                    )}
+                  </div>
                   <span
-                    className={`relative z-10 font-medium text-[10px] mt-0.5 whitespace-nowrap transition-colors duration-200 ${
+                    className={`relative z-10 font-medium text-[9px] mt-0.5 whitespace-nowrap transition-colors duration-200 ${
                       active ? 'text-on-secondary-container' : 'text-white/60'
                     }`}
                   >

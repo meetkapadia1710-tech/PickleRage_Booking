@@ -7,8 +7,17 @@ export interface Venue {
   address: string;
   distance: string;
   rating: number;
+  ratingCount?: number;
   amenities: string[];
   isPremium?: boolean;
+  openHours?: string;
+  highlights?: string[];
+  offers?: {
+    label: string;
+    couponCode?: string;
+    validTill?: string;
+    terms?: string[];
+  }[];
   /** Optional precise map coordinates. When absent, the address is geocoded by Google Maps. */
   lat?: number;
   lng?: number;
@@ -21,6 +30,18 @@ export interface Court {
   surface: string;
   isIndoor: boolean;
   priceModifier?: number;
+  squadSize?: string;   // e.g. "Full Court", "Half Court"
+  sport?: string;       // e.g. "Pickleball", "Box Cricket"
+}
+
+export interface SplitPayment {
+  enabled: boolean;
+  groupSize: number;
+  mode: 'instant' | 'hold';
+  sharePerPlayer: number;
+  paidPlayers: string[];       // userIds of players who paid
+  invitedFriends: string[];    // userIds of invited friends
+  paymentLinkToken: string;    // unique token used in /split/:token route
 }
 
 export interface Booking {
@@ -28,8 +49,27 @@ export interface Booking {
   userId: string;
   venueId: string;
   courtId: string;
-  date: string; // YYYY-MM-DD
-  startTime: string; // HH:mm
-  endTime: string; // HH:mm
-  status: "confirmed" | "cancelled";
+  date: string;       // YYYY-MM-DD
+  startTime: string;  // HH:mm
+  endTime: string;    // HH:mm
+  status: "confirmed" | "cancelled" | "hold";
+  createdAt?: string;
+  splitPayment?: SplitPayment;
+}
+
+export interface UserProfile {
+  uid: string;
+  displayName: string;
+  phone: string;
+  photoURL?: string;
+}
+
+export interface FriendRequest {
+  id: string;
+  fromUid: string;
+  toUid: string;
+  fromName: string;
+  fromPhone: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
 }

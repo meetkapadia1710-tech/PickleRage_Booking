@@ -38,7 +38,17 @@ export default function Home() {
       .then(snap => {
         if (cancelled) return;
         // Merge in the document id — venues created from the admin panel don't store one in their data.
-        setVenues(snap.docs.map(d => ({ ...(d.data() as Venue), id: d.id })));
+        setVenues(snap.docs.map(d => {
+          const data = d.data() as Venue;
+          const id = d.id;
+          if (id === 'venue_1') {
+            data.address = 'nr Shravan Chowkdi, Link Rd, opp. Ganesh Township, PickleRage, Bharuch, Gujarat 392001';
+          } else if (id === 'venue_3') {
+            data.name = 'SPORTS PLANET';
+            data.address = 'City Centre, Railway Station Rd, Moficer Jin Compound, Bharuch, Gujarat 392001';
+          }
+          return { ...data, id };
+        }));
         setLoading(false);
       })
       .catch(err => {

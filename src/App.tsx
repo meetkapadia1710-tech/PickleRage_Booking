@@ -12,6 +12,8 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import MyBookings from './pages/MyBookings';
 import AdminDashboard from './pages/AdminDashboard';
 import Leaderboard from './pages/Leaderboard';
+import Friends from './pages/Friends';
+import SplitPayment from './pages/SplitPayment';
 import BottomNav from './components/BottomNav';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -67,6 +69,8 @@ function AnimatedRoutes() {
         <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
+        <Route path="/split/:token" element={<ProtectedRoute><SplitPayment /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );
