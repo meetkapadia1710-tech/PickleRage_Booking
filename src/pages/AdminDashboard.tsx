@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  collection, getDocs, doc, updateDoc, deleteDoc, addDoc,
+  collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc,
   query, where, deleteField
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useAuth } from '../context/AuthContext';
 import type { Venue, Court, Booking, UserProfile } from '../types';
 import Avatar from '../components/Avatar';
 
@@ -698,6 +699,16 @@ function UserEditor({
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!currentUser) { setIsAdmin(false); return; }
+    getDoc(doc(db, 'admins', currentUser.uid))
+      .then(snap => setIsAdmin(snap.exists()))
+      .catch(() => setIsAdmin(false));
+  }, [currentUser]);
+
   const [activeTab, setActiveTab] = useState<'bookings' | 'venues' | 'users'>('bookings');
 
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -746,6 +757,34 @@ export default function AdminDashboard() {
     { id: 'venues',   icon: 'stadium',        label: 'Venues' },
     { id: 'users',    icon: 'group',          label: 'Users' },
   ];
+
+  if (isAdmin === null) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <span className="material-symbols-outlined animate-spin text-[48px] text-primary">sync</span>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-error/10 flex items-center justify-center mb-2">
+          <span className="material-symbols-outlined text-[40px] text-error">lock</span>
+        </div>
+        <h1 className="font-bold text-[24px] text-on-background">Access Denied</h1>
+        <p className="text-[14px] text-on-surface-variant max-w-xs">
+          You don't have permission to access the admin dashboard.
+        </p>
+        <button
+          onClick={() => navigate('/home')}
+          className="mt-2 h-[48px] px-8 bg-primary text-on-primary rounded-full font-semibold text-[15px] cursor-pointer hover:opacity-90 transition-opacity"
+        >
+          Go Home
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface text-on-surface min-h-screen flex flex-col md:flex-row antialiased">
