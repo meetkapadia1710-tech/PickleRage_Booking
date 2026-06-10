@@ -97,7 +97,9 @@ service cloud.firestore {
       allow get: if isSignedIn()
         && (request.auth.uid == resource.data.fromUid
             || request.auth.uid == resource.data.toUid);
-      allow list: if isSignedIn();
+      allow list: if isSignedIn()
+        && (request.auth.uid == resource.data.fromUid
+            || request.auth.uid == resource.data.toUid);
 
       // Requests are sent as yourself, to someone else, always pending.
       allow create: if isSignedIn()
