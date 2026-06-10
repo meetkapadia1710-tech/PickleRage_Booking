@@ -30,9 +30,11 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create, update: if isSignedIn()
-        && request.auth.uid == userId
-        && (!('uid' in request.resource.data) || request.resource.data.uid == userId);
-      allow delete: if false;
+        && (
+          isAdmin()
+          || (request.auth.uid == userId && (!('uid' in request.resource.data) || request.resource.data.uid == userId))
+        );
+      allow delete: if isAdmin();
     }
 
     // ── venues & courts ──────────────────────────────────────────────────────

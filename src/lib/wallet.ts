@@ -40,8 +40,7 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
     .replace(/-----BEGIN PRIVATE KEY-----/, '')
     .replace(/-----END PRIVATE KEY-----/, '')
     .replace(/\\n/g, '')
-    .replace(/["']/g, '')
-    .replace(/\s/g, '');
+    .replace(/[^A-Za-z0-9+/=]/g, '');
   
   const binaryStr = atob(b64);
   const len = binaryStr.length;

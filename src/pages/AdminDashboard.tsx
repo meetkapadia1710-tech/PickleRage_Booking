@@ -6,7 +6,8 @@ import {
   query, where, deleteField
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { Venue, Court, Booking } from '../types';
+import type { Venue, Court, Booking, UserProfile } from '../types';
+import Avatar from '../components/Avatar';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 
@@ -541,17 +542,171 @@ function VenueEditor({
   );
 }
 
+// ─── User detail editor modal ──────────────────────────────────────────────────
+
+function UserEditor({
+  user,
+  onClose,
+  onSaved,
+}: {
+  user: UserProfile;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [displayName, setDisplayName] = useState(user.displayName || '');
+  const [phone, setPhone] = useState(user.phone || '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSaveUser = async () => {
+    if (!displayName.trim()) {
+      setError('Name is required.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        displayName: displayName.trim(),
+        phone: phone.trim(),
+      });
+      onSaved();
+    } catch (err: any) {
+      console.error('Error updating user:', err);
+      setError('Failed to update user profile. Permission denied or database error.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex justify-end">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/45 backdrop-blur-[3px]"
+        />
+
+        {/* Panel */}
+        <motion.div
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+          className="relative w-full max-w-md bg-surface-container-lowest h-full shadow-2xl flex flex-col pt-safe border-l border-surface-variant/40"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-surface-variant/50">
+            <div>
+              <h2 className="font-bold text-[20px] text-on-surface">Edit User Profile</h2>
+              <p className="text-[12px] text-on-surface-variant">UID: {user.uid.slice(0, 12)}...</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          {/* Form Content */}
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
+            {error && (
+              <div className="p-3.5 bg-error-container/20 border border-error/25 text-error rounded-xl text-[13px] font-medium">
+                {error}
+              </div>
+            )}
+
+            <div className="flex justify-center mb-4">
+              <Avatar name={displayName} photoURL={user.photoURL} size={80} />
+            </div>
+
+            <Field label="Display Name">
+              <TextInput value={displayName} onChange={setDisplayName} placeholder="e.g. John Doe" />
+            </Field>
+
+            <Field label="Phone Number">
+              <TextInput value={phone} onChange={setPhone} placeholder="e.g. +91 9876543210" />
+            </Field>
+
+            {user.email && (
+              <Field label="Email Address">
+                <input
+                  type="text"
+                  value={user.email}
+                  disabled
+                  className="h-[44px] px-3 border-[1.5px] border-outline-variant rounded-xl bg-surface-container/30 text-on-surface-variant text-[15px] focus:outline-none w-full cursor-not-allowed"
+                />
+              </Field>
+            )}
+
+            {user.createdAt && (
+              <Field label="Joined Date">
+                <input
+                  type="text"
+                  value={new Date(user.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                  disabled
+                  className="h-[44px] px-3 border-[1.5px] border-outline-variant rounded-xl bg-surface-container/30 text-on-surface-variant text-[15px] focus:outline-none w-full cursor-not-allowed"
+                />
+              </Field>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="p-6 border-t border-surface-variant/50 flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 h-[48px] rounded-full border border-outline-variant text-on-surface font-semibold text-[14px] hover:bg-surface-container transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              onClick={handleSaveUser}
+              disabled={saving}
+              className="flex-1 h-[48px] rounded-full bg-primary text-on-primary font-semibold text-[14px] flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60 cursor-pointer"
+            >
+              {saving ? (
+                <>
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                    className="material-symbols-outlined"
+                  >
+                    sync
+                  </motion.span>{' '}
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined">save</span> Save Changes
+                </>
+              )}
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'venues'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'venues' | 'users'>('bookings');
 
   const [venues, setVenues] = useState<Venue[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [editingVenue, setEditingVenue] = useState<Venue | null | 'new'>(null);
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
 
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -560,11 +715,13 @@ export default function AdminDashboard() {
     Promise.all([
       getDocs(collection(db, 'venues')),
       getDocs(collection(db, 'bookings')),
+      getDocs(collection(db, 'users')),
     ])
-      .then(([venuesSnap, bookingsSnap]) => {
+      .then(([venuesSnap, bookingsSnap, usersSnap]) => {
         if (cancelled) return;
         setVenues(venuesSnap.docs.map(d => ({ ...d.data(), id: d.id } as Venue)));
         setBookings(bookingsSnap.docs.map(d => ({ ...d.data(), id: d.id } as Booking)));
+        setUsers(usersSnap.docs.map(d => ({ ...d.data(), uid: d.id } as UserProfile)));
         setLoading(false);
       })
       .catch(err => {
@@ -584,9 +741,10 @@ export default function AdminDashboard() {
   const confirmedBookings = bookings.filter(b => b.status === 'confirmed').length;
   const cancelledBookings = bookings.filter(b => b.status === 'cancelled').length;
 
-  const navItems: { id: 'bookings' | 'venues'; icon: string; label: string }[] = [
+  const navItems: { id: 'bookings' | 'venues' | 'users'; icon: string; label: string }[] = [
     { id: 'bookings', icon: 'calendar_today', label: 'Bookings' },
     { id: 'venues',   icon: 'stadium',        label: 'Venues' },
+    { id: 'users',    icon: 'group',          label: 'Users' },
   ];
 
   return (
@@ -777,6 +935,84 @@ export default function AdminDashboard() {
               )}
             </motion.div>
           )}
+
+          {/* ── Users tab ── */}
+          {activeTab === 'users' && (
+            <motion.div key="users" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <h1 className="font-bold text-[28px] text-on-background mb-6">Manage Users</h1>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                {[
+                  { label: 'Total Users', value: users.length, color: 'text-primary' },
+                  { label: 'Active Profiles', value: users.filter(u => u.displayName).length, color: 'text-secondary' },
+                  { label: 'Missing Phone', value: users.filter(u => !u.phone).length, color: 'text-error' },
+                ].map(stat => (
+                  <div key={stat.label} className="bg-surface-container-lowest p-5 rounded-xl border border-surface-variant shadow-sm">
+                    <p className="text-[13px] text-on-surface-variant font-medium mb-1">{stat.label}</p>
+                    <p className={`text-[32px] font-bold ${stat.color}`}>{loading ? '—' : stat.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center py-12"><span className="material-symbols-outlined animate-spin text-[36px] text-primary">sync</span></div>
+              ) : users.length === 0 ? (
+                <div className="bg-surface-container-lowest rounded-xl border border-surface-variant p-8 text-center text-on-surface-variant">No users found.</div>
+              ) : (
+                <div className="bg-surface-container-lowest rounded-xl border border-surface-variant shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-surface-container-low border-b border-surface-variant text-[13px] text-on-surface-variant">
+                          <th className="p-4 font-semibold">User</th>
+                          <th className="p-4 font-semibold">Email</th>
+                          <th className="p-4 font-semibold">Phone</th>
+                          <th className="p-4 font-semibold">Joined Date</th>
+                          <th className="p-4 font-semibold">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map(u => (
+                          <tr key={u.uid} className="border-b border-surface-variant/50 hover:bg-surface-container-low/60 text-[14px] transition-colors">
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                <Avatar name={u.displayName || 'Anonymous'} photoURL={u.photoURL} size={36} />
+                                <span className="font-semibold text-on-surface">{u.displayName || 'Anonymous'}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-on-surface-variant">{u.email || '—'}</td>
+                            <td className="p-4">
+                              {u.phone ? (
+                                <span className="font-medium text-on-surface">{u.phone}</span>
+                              ) : (
+                                <span className="text-error font-medium bg-error/5 px-2 py-0.5 rounded-full text-[12px] border border-error/15">Missing</span>
+                              )}
+                            </td>
+                            <td className="p-4 text-on-surface-variant">
+                              {u.createdAt
+                                ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                                : '—'
+                              }
+                            </td>
+                            <td className="p-4">
+                              <motion.button
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setEditingUser(u)}
+                                className="h-[32px] px-3.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-[13px] flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                <span className="material-symbols-outlined text-[15px]">edit</span>
+                                Edit
+                              </motion.button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 
@@ -788,6 +1024,17 @@ export default function AdminDashboard() {
             isNew={editingVenue === 'new'}
             onClose={() => setEditingVenue(null)}
             onSaved={() => { setEditingVenue(null); refreshData(); }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── User Editor panel ── */}
+      <AnimatePresence>
+        {editingUser !== null && (
+          <UserEditor
+            user={editingUser}
+            onClose={() => setEditingUser(null)}
+            onSaved={() => { setEditingUser(null); refreshData(); }}
           />
         )}
       </AnimatePresence>
