@@ -5,7 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Booking, Venue, Court } from '../types';
 import { formatDate, formatTime } from '../lib/format';
-import { generateGoogleWalletUrl } from '../lib/wallet';
+import { getWalletPassUrl } from '../lib/wallet';
 import googleWalletBadge from '../assets/add-to-google-wallet-badge.svg';
 
 export default function PaymentSuccess() {
@@ -16,10 +16,17 @@ export default function PaymentSuccess() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [venue, setVenue] = useState<Venue | null>(null);
   const [court, setCourt] = useState<Court | null>(null);
+  const [walletUrl, setWalletUrl] = useState<string>('');
 
-  const walletUrl = (booking && venue && court)
-    ? generateGoogleWalletUrl(booking, venue, court)
-    : '';
+  useEffect(() => {
+    const fetchWalletUrl = async () => {
+      if (booking && venue && court) {
+        const url = await getWalletPassUrl(booking, venue, court);
+        setWalletUrl(url);
+      }
+    };
+    fetchWalletUrl();
+  }, [booking, venue, court]);
 
   useEffect(() => {
     const fetchDetails = async () => {

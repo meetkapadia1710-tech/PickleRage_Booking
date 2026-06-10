@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "21785967034",
+    "project_id": "picklerage-booking",
+    "storage_bucket": "picklerage-booking.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:21785967034:android:5187203d5a6e7ebb198583",
+        "android_client_info": {
+          "package_name": "com.playhub.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "21785967034-9c5ohngup70sbp0at8o43cmlksjgr65h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.playhub.app",
+            "certificate_hash": "9f3ff15481b069a1c4f2dda3744b7f6e11653335"
+          }
+        },
+        {
+          "client_id": "21785967034-v32c2s1gdnvnm9j8clnc2utg8gbd8ahn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCE7iYkzAtGOBXc3dICzux3Kby4z0osC8g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "21785967034-v32c2s1gdnvnm9j8clnc2utg8gbd8ahn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

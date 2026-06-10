@@ -1,9 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCredential } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+
+// Initialize native Google Auth for web fallback environment if needed
+try {
+  GoogleAuth.initialize();
+} catch (e) {
+  console.warn('GoogleAuth initialize warning:', e);
+}
 
 export default function PhoneLogin() {
   const navigate = useNavigate();
@@ -48,13 +57,35 @@ export default function PhoneLogin() {
     setLoading(true);
     setError(null);
     try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      // Use signInWithRedirect to avoid pop-up blockers and COOP policy restrictions
-      await signInWithRedirect(auth, provider);
+      if (Capacitor.isNativePlatform()) {
+        // Trigger native Google Sign-In prompt
+        const googleUser = await GoogleAuth.signIn();
+        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
+        const result = await signInWithCredential(auth, credential);
+        
+        const user = result.user;
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            uid: user.uid,
+            displayName: user.displayName || 'Anonymous Player',
+            email: user.email || '',
+            photoURL: googleUser.imageUrl || user.photoURL || '',
+            createdAt: new Date().toISOString(),
+          });
+        }
+        navigate('/home');
+      } else {
+        // Web fallback
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        await signInWithRedirect(auth, provider);
+      }
     } catch (err: any) {
-      console.error('Error initiating Google Sign-in:', err);
-      setError(err.message || 'An error occurred initiating authentication.');
+      console.error('Google Sign-in failed:', err);
+      setError(err.message || 'An error occurred during authentication.');
       setLoading(false);
     }
   };

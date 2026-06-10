@@ -5,7 +5,7 @@ import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import type { Booking, Venue, Court } from '../types';
 import AppHeader from '../components/AppHeader';
-import { generateGoogleWalletUrl } from '../lib/wallet';
+import { getWalletPassUrl } from '../lib/wallet';
 import googleWalletBadge from '../assets/add-to-google-wallet-badge.svg';
 
 const listVariants = {
@@ -207,7 +207,17 @@ function BookingCard({ booking, venue, court, onCancel }: {
     return `${dateStr}, ${h % 12 || 12}:${min} ${h >= 12 ? 'PM' : 'AM'}`;
   }, [booking.date, booking.startTime]);
 
-  const walletUrl = useMemo(() => venue && court ? generateGoogleWalletUrl(booking, venue, court) : '', [booking, venue, court]);
+  const [walletUrl, setWalletUrl] = useState<string>('');
+
+  useEffect(() => {
+    const fetchWalletUrl = async () => {
+      if (venue && court) {
+        const url = await getWalletPassUrl(booking, venue, court);
+        setWalletUrl(url);
+      }
+    };
+    fetchWalletUrl();
+  }, [booking, venue, court]);
 
   return (
     <div className="bg-surface-container-lowest rounded-[20px] p-4 shadow-[0_4px_12px_rgba(0,52,43,0.04)] border border-transparent hover:border-primary/20 transition-colors">

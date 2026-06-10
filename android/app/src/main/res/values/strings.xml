@@ -4,4 +4,5 @@
     <string name="title_activity_main">playhub</string>
     <string name="package_name">com.playhub.app</string>
     <string name="custom_url_scheme">com.playhub.app</string>
+    <string name="server_client_id">21785967034-v32c2s1gdnvnm9j8clnc2utg8gbd8ahn.apps.googleusercontent.com</string>
 </resources>
