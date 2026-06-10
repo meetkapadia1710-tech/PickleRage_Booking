@@ -1,73 +1,95 @@
-# React + TypeScript + Vite
+# PlayHub - Premium Court & Venue Booking Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+PlayHub is a premium, feature-rich court booking application designed for mobile (native Android/iOS via Capacitor) and web (Progressive Web App). It provides real-time court availability, seamless booking confirmation, secure Google Login, a competitive leaderboard, and Google Wallet integration.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Key Features
 
-## React Compiler
+### 1. Booking & Payment Flow
+* **Live Slot Grid**: Instant booking grid listening to Firestore updates in real-time.
+* **Confirmation Sheets**: Smooth slide-up bottom sheets built with `framer-motion`.
+* **Confetti Success Page**: A premium checkout success screen featuring overlay confetti canvas animations.
+* **Booking Records**: Comprehensive status categorization ("Confirmed", "Pending", "Cancelled") in the "My Bookings" menu.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. Native Mobile Integration (Capacitor)
+* **Google Wallet Passes**: Save booked tickets directly into your Google Wallet. It uses a custom **Web Crypto API RS256 JWT signer** to allow signing passes on the Firebase Spark (free) plan without requiring Cloud Functions.
+* **Native Google Sign-In**: Uses native Android prompts (`@codetrix-studio/capacitor-google-auth`) instead of in-app web views to prevent Google's "Disallowed User-Agent" security block.
+* **Haptic Feedback**: Integrates `@capacitor/haptics` to deliver physical controller vibrations on critical UI actions (like payment approval).
+* **StatusBar Control**: Configures native device bezel and status bar colors to match PlayHub's signature deep teal theme.
 
-## Expanding the ESLint configuration
+### 3. Competitions & Community
+* **Leaderboards**: Automatically aggregates Firestore booking metrics per user to rank players.
+* **Winners Podium**: An interactive podium layout displaying avatars and animated trophies for the top 3 players.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 4. Admin Operations
+* **Dashboard Console**: Desktop-responsive sidebar control panels displaying core KPI metrics and table lists for booking records.
+* **Database Seeder**: Quick-start setup buttons to auto-populate Firestore collections with default venues and court configurations.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🛠️ Tech Stack
+* **Frontend**: React 19, TypeScript, Tailwind CSS, Framer Motion
+* **Bundler & Tooling**: Vite, Vite-plugin-PWA, ESLint
+* **Backend**: Firebase Authentication, Firestore Database
+* **Hybrid Core**: Capacitor CLI (@capacitor/android, @capacitor/core)
+* **Security & Keys**: Native Web Crypto API (SubtleCrypto)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## ⚙️ Project Setup & Installation
+
+### 1. Clone & Install Dependencies
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 2. Configure Environment Variables
+Create a `.env` file in the root directory:
+```env
+# Google Wallet Service Account Configurations
+VITE_WALLET_ISSUER_ID="3388000000023155636"
+VITE_WALLET_CLIENT_EMAIL="google-wallet-signer@picklerage-booking-499009.iam.gserviceaccount.com"
+VITE_WALLET_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_NEWLINES_ESCAPED\n-----END PRIVATE KEY-----\n"
 ```
+
+### 3. Run Development Server
+To launch the dev server locally:
+```bash
+npm run dev
+```
+Open **`http://localhost:5001`** in your browser. Use the mock test credentials on the login screen to sign in instantly:
+* **Test Email**: `testplayer@playhub.com`
+* **Test Password**: `password123`
+
+---
+
+## 📱 Native Android Build Instructions
+
+### 1. Compile Web Assets & Sync Capacitor
+```bash
+npm run build
+npx cap sync
+```
+
+### 2. Place Configuration Files
+Make sure the `google-services.json` file is present in your native project:
+* Path: `android/app/google-services.json`
+
+### 3. Compile the APK
+To build the debug APK using the local JetBrains OpenJDK toolchain:
+```powershell
+$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
+cd android
+./gradlew assembleDebug
+```
+The compiled output is saved at:
+👉 `android/app/build/outputs/apk/debug/app-debug.apk`
+
+---
+
+## 🔒 Production Guidelines for Release
+
+1. **Google Wallet Publishing Access**: Go to Google Pay & Wallet Developer Console and switch your Issuer ID from **Demo Mode** to **Live Mode**.
+2. **Move JWT Signer to Backend**: Prior to publishing publicly, migrate the private key signing logic in `src/lib/wallet.ts` to a secure server or serverless endpoint (e.g. Vercel, Render) to protect your GCP credentials.
+3. **Register Release Fingerprints**: In Google Play Console, copy the release SHA-1 signature and add it to your Firebase Project Settings to authorize production OAuth requests.
