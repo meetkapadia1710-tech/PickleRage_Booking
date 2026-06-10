@@ -60,53 +60,53 @@ export default function NotificationsPanel({ open, onClose }: { open: boolean; o
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[110]">
+        <div className="fixed inset-0 z-[110] px-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-on-background/30 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
           />
           <motion.div
-            initial={{ y: '-100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '-100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="relative w-full bg-surface-container-lowest rounded-b-[28px] shadow-[0_8px_32px_rgba(0,52,43,0.15)] pb-4"
-            style={{ paddingTop: 'env(safe-area-inset-top)' }}
+            initial={{ y: -150, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -150, opacity: 0 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 240 }}
+            className="relative mt-[calc(1rem+env(safe-area-inset-top))] w-full max-w-md mx-auto bg-[#002019]/90 backdrop-blur-[18px] border border-white/10 shadow-[0_16px_40px_rgba(0,0,0,0.35)] rounded-3xl pb-4 overflow-hidden"
           >
-            <div className="flex justify-between items-center px-5 pt-5 pb-3">
-              <h2 className="font-semibold text-[20px] text-on-surface">Notifications</h2>
+            <div className="flex justify-between items-center px-5 pt-4 pb-2 border-b border-white/5">
+              <h2 className="font-bold text-[18px] text-white">Notifications</h2>
               <motion.button
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-variant transition-colors text-on-surface-variant"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-white/80 hover:bg-white/20 transition-all cursor-pointer"
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined text-[18px]">close</span>
               </motion.button>
             </div>
 
-            <motion.ul variants={listVariants} initial="hidden" animate="visible" className="px-3 flex flex-col gap-1">
+            <motion.ul variants={listVariants} initial="hidden" animate="visible" className="px-3 pt-2 flex flex-col gap-1 max-h-[60vh] overflow-y-auto hide-scrollbar">
               {notifications.map(n => (
                 <motion.li
                   key={n.id}
                   variants={itemVariants}
-                  className="flex items-start gap-3 p-3 rounded-2xl hover:bg-surface-container-low transition-colors"
+                  className="flex items-start gap-3 p-3 rounded-2xl hover:bg-white/5 transition-colors"
                 >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${n.accent ? 'bg-secondary-container/30 text-on-secondary-container' : 'bg-primary/5 text-primary'}`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${n.accent ? 'bg-secondary-container/20 text-secondary-container border border-secondary-container/10' : 'bg-white/5 text-white/80 border border-white/5'}`}>
                     <span className="material-symbols-outlined text-[20px]">{n.icon}</span>
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-[14px] text-on-surface">{n.title}</p>
-                    <p className="text-[13px] text-on-surface-variant truncate">{n.body}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-[14px] text-white leading-tight">{n.title}</p>
+                    <p className="text-[13px] text-white/70 mt-1 leading-snug">{n.body}</p>
                   </div>
                 </motion.li>
               ))}
             </motion.ul>
 
-            <div className="w-full flex justify-center pt-3">
-              <div className="w-12 h-1.5 bg-surface-variant rounded-full" />
+            <div className="w-full flex justify-center pt-3 border-t border-white/5 mt-2">
+              <div className="w-12 h-1.5 bg-white/20 rounded-full" />
             </div>
           </motion.div>
         </div>

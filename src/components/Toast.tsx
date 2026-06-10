@@ -1,17 +1,22 @@
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function Toast({ message }: { message: string | null }) {
+export default function Toast({ message, icon }: { message: string | null; icon?: string }) {
   return (
     <AnimatePresence>
       {message && (
         <motion.div
-          initial={{ opacity: 0, y: 16, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 8, scale: 0.95 }}
-          transition={{ type: 'spring', damping: 24, stiffness: 350 }}
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[120] bg-on-background text-background px-5 py-3 rounded-full font-medium text-[14px] shadow-[0_8px_24px_rgba(0,0,0,0.25)] whitespace-nowrap"
+          initial={{ opacity: 0, y: -40, scale: 0.8, x: '-50%' }}
+          animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
+          exit={{ opacity: 0, y: -30, scale: 0.85, x: '-50%' }}
+          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+          className="fixed top-6 left-1/2 z-[200] max-w-sm w-[90%] bg-primary/90 backdrop-blur-[16px] text-white px-5 py-3.5 rounded-full border border-white/10 shadow-[0_8px_32px_rgba(0,52,43,0.25)] flex items-center justify-center gap-2.5"
         >
-          {message}
+          {icon && (
+            <span className="material-symbols-outlined text-[18px] text-secondary-container shrink-0">
+              {icon}
+            </span>
+          )}
+          <span className="font-semibold text-[13px] tracking-wide text-center">{message}</span>
         </motion.div>
       )}
     </AnimatePresence>

@@ -6,6 +6,7 @@ import { updateProfile } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import AppHeader from '../components/AppHeader';
+import Toast from '../components/Toast';
 
 // ─── Sheet backdrop + slide-up wrapper ───────────────────────────────────────
 function Sheet({ open, onClose, title, children }: {
@@ -18,29 +19,30 @@ function Sheet({ open, onClose, title, children }: {
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-on-background/30 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-black/45 backdrop-blur-[3px]"
           />
           <motion.div
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 240 }}
-            className="relative bg-surface-container-lowest rounded-t-[28px] md:rounded-2xl shadow-[0_-8px_32px_rgba(0,52,43,0.12)] pb-10 max-h-[90vh] flex flex-col w-full md:max-w-md md:mx-auto md:mb-6"
+            transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+            className="relative bg-surface-container-lowest rounded-t-[32px] md:rounded-2xl shadow-[0_-12px_36px_rgba(0,52,43,0.18)] pb-safe max-h-[85vh] flex flex-col w-full md:max-w-md md:mx-auto md:mb-6 z-10 border-t border-outline-variant/40"
           >
-            {/* Drag handle */}
+            {/* Drag handle / Grabber */}
             <div className="flex justify-center pt-3 pb-1 shrink-0">
-              <div className="w-10 h-1 rounded-full bg-surface-variant" />
+              <div className="w-12 h-1.5 rounded-full bg-outline-variant/60" />
             </div>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3 shrink-0 border-b border-surface-variant/40">
-              <h2 className="font-semibold text-[18px] text-on-surface">{title}</h2>
+            <div className="flex items-center justify-between px-5 py-3 shrink-0 border-b border-outline-variant/30">
+              <h2 className="font-bold text-[18px] text-on-surface">{title}</h2>
               <motion.button
-                whileTap={{ scale: 0.85 }} onClick={onClose}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-variant text-on-surface-variant transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.9 }} onClick={onClose}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container-low hover:bg-surface-container border border-outline-variant/40 text-on-surface-variant transition-all cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[20px]">close</span>
+                <span className="material-symbols-outlined text-[18px]">close</span>
               </motion.button>
             </div>
             {/* Scrollable body */}
-            <div className="overflow-y-auto flex-1 px-5 pt-4">{children}</div>
+            <div className="overflow-y-auto flex-1 px-5 pt-4 pb-6">{children}</div>
           </motion.div>
         </div>
       )}
@@ -49,7 +51,7 @@ function Sheet({ open, onClose, title, children }: {
 }
 
 // ─── Edit Profile sheet ───────────────────────────────────────────────────────
-function EditProfileSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+function EditProfileSheet({ open, onClose, showToast }: { open: boolean; onClose: () => void; showToast: (msg: string, icon?: string) => void }) {
   const { currentUser } = useAuth();
   const [name, setName] = useState(currentUser?.displayName ?? '');
   const [saving, setSaving] = useState(false);
@@ -71,6 +73,7 @@ function EditProfileSheet({ open, onClose }: { open: boolean; onClose: () => voi
         // users doc may not exist yet — that's fine
       }
       setSaved(true);
+      showToast('Profile updated!', 'person');
       setTimeout(() => { setSaved(false); onClose(); }, 1200);
     } catch (err) {
       console.error('Failed to update profile:', err);
@@ -103,14 +106,14 @@ function EditProfileSheet({ open, onClose }: { open: boolean; onClose: () => voi
             onChange={e => setName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSave()}
             placeholder="Your name"
-            className="h-[48px] px-4 border-[1.5px] border-outline-variant rounded-xl bg-surface-container-lowest text-on-surface text-[16px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+            className="h-[48px] px-4 border-[1.5px] border-outline-variant/75 rounded-xl bg-surface-container-lowest text-on-surface text-[16px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
           />
         </div>
 
         {/* Email (read-only) */}
         <div className="flex flex-col gap-1.5">
           <label className="font-medium text-[13px] text-on-surface-variant uppercase tracking-wider">Email</label>
-          <div className="h-[48px] px-4 border-[1.5px] border-outline-variant/50 rounded-xl bg-surface-container-low text-on-surface-variant text-[16px] flex items-center">
+          <div className="h-[48px] px-4 border-[1.5px] border-outline-variant/65 rounded-xl bg-surface-container-low text-on-surface-variant text-[16px] flex items-center">
             {currentUser?.email ?? 'Not available'}
           </div>
           <p className="text-[12px] text-on-surface-variant">Email is managed by Google and cannot be changed here.</p>
@@ -147,13 +150,15 @@ function defaultPrefs() {
   return { bookingConfirm: true, bookingReminder: true, cancellation: true, promos: false };
 }
 
-function NotificationsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+function NotificationsSheet({ open, onClose, showToast }: { open: boolean; onClose: () => void; showToast: (msg: string, icon?: string) => void }) {
   const [prefs, setPrefs] = useState(loadPrefs);
 
   const toggle = (key: keyof ReturnType<typeof defaultPrefs>) => {
     const next = { ...prefs, [key]: !prefs[key] };
     setPrefs(next);
     localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(next));
+    const label = items.find(item => item.key === key)?.title ?? 'Setting';
+    showToast(`${label} ${next[key] ? 'enabled' : 'disabled'}`, next[key] ? 'notifications_active' : 'notifications_off');
   };
 
   const items: { key: keyof ReturnType<typeof defaultPrefs>; icon: string; title: string; subtitle: string }[] = [
@@ -183,9 +188,9 @@ function NotificationsSheet({ open, onClose }: { open: boolean; onClose: () => v
               role="switch"
             >
               <motion.span
-                animate={{ x: prefs[item.key] ? 20 : 2 }}
+                animate={{ x: prefs[item.key] ? 24 : 4 }}
                 transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-                className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm"
+                className="absolute left-0 top-1 w-4 h-4 rounded-full bg-white shadow-sm"
               />
             </button>
           </div>
@@ -205,7 +210,7 @@ function loadCards(): SavedCard[] {
   try { return JSON.parse(localStorage.getItem(CARDS_KEY) ?? '[]'); } catch { return []; }
 }
 
-function PaymentSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+function PaymentSheet({ open, onClose, showToast }: { open: boolean; onClose: () => void; showToast: (msg: string, icon?: string) => void }) {
   const [cards, setCards] = useState<SavedCard[]>(loadCards);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ number: '', expiry: '', cvv: '', brand: 'Visa' });
@@ -233,6 +238,7 @@ function PaymentSheet({ open, onClose }: { open: boolean; onClose: () => void })
     const next = [...cards, newCard];
     setCards(next);
     localStorage.setItem(CARDS_KEY, JSON.stringify(next));
+    showToast('Card saved successfully!', 'credit_card');
     setAdding(false);
     setForm({ number: '', expiry: '', cvv: '', brand: 'Visa' });
   };
@@ -241,6 +247,7 @@ function PaymentSheet({ open, onClose }: { open: boolean; onClose: () => void })
     const next = cards.filter(c => c.id !== id);
     setCards(next);
     localStorage.setItem(CARDS_KEY, JSON.stringify(next));
+    showToast('Card removed.', 'delete');
   };
 
   return (
@@ -285,21 +292,21 @@ function PaymentSheet({ open, onClose }: { open: boolean; onClose: () => void })
                 placeholder="Card number"
                 value={form.number}
                 onChange={e => setForm(f => ({ ...f, number: formatNumber(e.target.value) }))}
-                className="h-[44px] px-3 border-[1.5px] border-outline-variant rounded-xl bg-surface-container-lowest text-on-surface text-[15px] focus:outline-none focus:border-primary transition-colors"
+                className="h-[44px] px-3 border-[1.5px] border-outline-variant/75 rounded-xl bg-surface-container-lowest text-on-surface text-[15px] focus:outline-none focus:border-primary transition-colors"
               />
               <div className="grid grid-cols-2 gap-3">
                 <input
                   placeholder="MM/YY"
                   value={form.expiry}
                   onChange={e => setForm(f => ({ ...f, expiry: formatExpiry(e.target.value) }))}
-                  className="h-[44px] px-3 border-[1.5px] border-outline-variant rounded-xl bg-surface-container-lowest text-on-surface text-[15px] focus:outline-none focus:border-primary transition-colors"
+                  className="h-[44px] px-3 border-[1.5px] border-outline-variant/75 rounded-xl bg-surface-container-lowest text-on-surface text-[15px] focus:outline-none focus:border-primary transition-colors"
                 />
                 <input
                   placeholder="CVV"
                   value={form.cvv}
                   maxLength={4}
                   onChange={e => setForm(f => ({ ...f, cvv: e.target.value.replace(/\D/g, '') }))}
-                  className="h-[44px] px-3 border-[1.5px] border-outline-variant rounded-xl bg-surface-container-lowest text-on-surface text-[15px] focus:outline-none focus:border-primary transition-colors"
+                  className="h-[44px] px-3 border-[1.5px] border-outline-variant/75 rounded-xl bg-surface-container-lowest text-on-surface text-[15px] focus:outline-none focus:border-primary transition-colors"
                 />
               </div>
               {error && <p className="text-[13px] text-error">{error}</p>}
@@ -424,7 +431,7 @@ function SignOutDialog({ open, onClose, onConfirm }: { open: boolean; onClose: (
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 8 }}
             transition={{ type: 'spring', damping: 24, stiffness: 320 }}
-            className="relative w-full max-w-sm bg-surface-container-lowest rounded-[24px] p-6 shadow-[0_16px_48px_rgba(0,52,43,0.2)]"
+            className="relative w-full max-w-sm bg-surface-container-lowest rounded-[24px] p-6 shadow-[0_16px_48px_rgba(0,52,43,0.30)]"
           >
             <div className="w-12 h-12 rounded-full bg-error-container flex items-center justify-center mb-4 mx-auto">
               <span className="material-symbols-outlined text-on-error-container">logout</span>
@@ -496,6 +503,17 @@ export default function Profile() {
   const email = currentUser?.email || 'No email associated';
   const photoURL = currentUser?.photoURL ?? undefined;
 
+  // Toast State
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [toastIcon, setToastIcon] = useState<string | undefined>(undefined);
+  const showToast = (msg: string, icon?: string) => {
+    setToastMsg(msg);
+    setToastIcon(icon);
+    setTimeout(() => {
+      setToastMsg(null);
+    }, 2200);
+  };
+
   return (
     <>
       <motion.div
@@ -521,31 +539,27 @@ export default function Profile() {
             </div>
             <h1 className="font-semibold text-[20px] text-on-background mb-1 truncate max-w-[280px] md:max-w-md px-2 text-center" title={displayName}>{displayName}</h1>
             <p className="text-[14px] text-on-surface-variant truncate max-w-[280px] md:max-w-md px-2 text-center" title={email}>{email}</p>
-            <span className="mt-4 px-4 py-1 rounded-full bg-secondary-container text-on-secondary-container font-medium text-[12px] flex items-center gap-1">
-              <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
-              Pro Member
-            </span>
           </section>
 
           {/* ── Stats ── */}
           <section className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-surface-container-lowest p-4 rounded-[20px] shadow-[0_4px_12px_rgba(0,52,43,0.04)] flex flex-col items-center">
+            <div className="bg-surface-container-lowest p-4 rounded-[20px] border border-outline-variant/65 shadow-[0_4px_16px_rgba(0,52,43,0.15)] flex flex-col items-center">
               <span className="font-bold text-[24px] text-primary mb-1">{bookingCount}</span>
               <span className="font-medium text-[12px] text-on-surface-variant uppercase tracking-wider">Bookings</span>
             </div>
-            <div className="bg-surface-container-lowest p-4 rounded-[20px] shadow-[0_4px_12px_rgba(0,52,43,0.04)] flex flex-col items-center">
+            <div className="bg-surface-container-lowest p-4 rounded-[20px] border border-outline-variant/65 shadow-[0_4px_16px_rgba(0,52,43,0.15)] flex flex-col items-center">
               <span className="font-bold text-[24px] text-primary mb-1">{hoursPlayed}</span>
               <span className="font-medium text-[12px] text-on-surface-variant uppercase tracking-wider">Hours Played</span>
             </div>
           </section>
 
-          {/* ── Settings List ── */}
-          <section className="bg-surface-container-lowest rounded-[20px] shadow-[0_4px_12px_rgba(0,52,43,0.04)] overflow-hidden">
+          {/* ── Settings List (iOS Grouped Style) ── */}
+          <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/50 shadow-[0_4px_16px_rgba(0,52,43,0.1)] overflow-hidden">
             <div className="flex flex-col">
-              <SettingItem icon="person" title="Edit Profile" subtitle="Update your display name" onClick={() => setEditOpen(true)} />
-              <SettingItem icon="notifications" title="Notifications" subtitle="Manage your alert preferences" onClick={() => setNotifOpen(true)} />
-              <SettingItem icon="credit_card" title="Payment Methods" subtitle="Cards and billing info" onClick={() => setPaymentOpen(true)} />
-              <SettingItem icon="help" title="Help & Support" subtitle="FAQs and contact options" onClick={() => setHelpOpen(true)} isLast />
+              <SettingItem icon="person" iconBg="bg-[#007aff]" title="Edit Profile" subtitle="Update your display name" onClick={() => setEditOpen(true)} />
+              <SettingItem icon="notifications" iconBg="bg-[#ff9500]" title="Notifications" subtitle="Manage your alert preferences" onClick={() => setNotifOpen(true)} />
+              <SettingItem icon="credit_card" iconBg="bg-[#34c759]" title="Payment Methods" subtitle="Cards and billing info" onClick={() => setPaymentOpen(true)} />
+              <SettingItem icon="help" iconBg="bg-[#5856d6]" title="Help & Support" subtitle="FAQs and contact options" onClick={() => setHelpOpen(true)} isLast />
             </div>
           </section>
 
@@ -564,33 +578,36 @@ export default function Profile() {
       </motion.div>
 
       {/* ── Sheets & dialogs ── */}
-      <EditProfileSheet open={editOpen} onClose={() => setEditOpen(false)} />
-      <NotificationsSheet open={notifOpen} onClose={() => setNotifOpen(false)} />
-      <PaymentSheet open={paymentOpen} onClose={() => setPaymentOpen(false)} />
+      <EditProfileSheet open={editOpen} onClose={() => setEditOpen(false)} showToast={showToast} />
+      <NotificationsSheet open={notifOpen} onClose={() => setNotifOpen(false)} showToast={showToast} />
+      <PaymentSheet open={paymentOpen} onClose={() => setPaymentOpen(false)} showToast={showToast} />
       <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
       <SignOutDialog open={signOutOpen} onClose={() => setSignOutOpen(false)} onConfirm={handleSignOut} />
+
+      {/* Dynamic Island style Toast */}
+      <Toast message={toastMsg} icon={toastIcon} />
     </>
   );
 }
 
-// ─── Shared SettingItem ───────────────────────────────────────────────────────
-function SettingItem({ icon, title, subtitle, onClick, isLast = false }: {
-  icon: string; title: string; subtitle: string; onClick: () => void; isLast?: boolean;
+// ─── Shared SettingItem (iOS Grouped Style) ───────────────────────────────────
+function SettingItem({ icon, iconBg, title, subtitle, onClick, isLast = false }: {
+  icon: string; iconBg: string; title: string; subtitle: string; onClick: () => void; isLast?: boolean;
 }) {
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`w-full flex items-center p-4 hover:bg-surface-container-low transition-colors cursor-pointer text-left ${!isLast ? 'border-b border-surface-variant/50' : ''}`}
+      className={`w-full flex items-center px-4 py-3 hover:bg-surface-container-low transition-all cursor-pointer text-left ${!isLast ? 'border-b border-outline-variant/30' : ''}`}
     >
-      <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center mr-4 text-primary shrink-0">
-        <span className="material-symbols-outlined">{icon}</span>
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 text-white shrink-0 ${iconBg} shadow-sm`}>
+        <span className="material-symbols-outlined text-[18px] font-medium" style={{ fontVariationSettings: "'wght' 500" }}>{icon}</span>
       </div>
-      <div className="flex-1">
-        <h3 className="font-semibold text-[14px] text-on-background">{title}</h3>
-        <p className="text-[14px] text-on-surface-variant mt-0.5">{subtitle}</p>
+      <div className="flex-1 min-w-0">
+        <h3 className="font-semibold text-[14px] text-on-surface leading-tight">{title}</h3>
+        <p className="text-[12px] text-on-surface-variant mt-0.5 truncate">{subtitle}</p>
       </div>
-      <span className="material-symbols-outlined text-outline">chevron_right</span>
+      <span className="material-symbols-outlined text-outline-variant/80 text-[20px] ml-2 shrink-0">chevron_right</span>
     </motion.button>
   );
 }

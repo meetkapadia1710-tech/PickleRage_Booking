@@ -27,14 +27,14 @@ export default function BottomNav() {
   return (
     <AnimatePresence>
       {visible && (
-        <motion.nav
+         <motion.nav
           initial={{ y: 96 }}
           animate={{ y: 0 }}
           exit={{ y: 96 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="md:hidden bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(0,52,43,0.04)] fixed bottom-0 w-full z-50 flex flex-col rounded-t-xl border-t border-surface-variant/50"
+          className="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-5 right-5 max-w-lg mx-auto z-50 bg-primary/80 backdrop-blur-[14px] shadow-[0_8px_32px_rgba(0,52,43,0.24)] flex flex-col rounded-full border border-white/10"
         >
-          <div className="flex items-stretch px-2 pt-1">
+          <div className="flex items-stretch px-2.5 py-1">
             {tabs.map(tab => {
               const active = location.pathname === tab.path;
               return (
@@ -55,7 +55,7 @@ export default function BottomNav() {
                     animate={{ scale: active ? 1.08 : 1 }}
                     transition={{ type: 'spring', damping: 14, stiffness: 400 }}
                     className={`relative z-10 material-symbols-outlined transition-colors duration-200 ${
-                      active ? 'text-on-secondary-container' : 'text-on-surface-variant'
+                      active ? 'text-on-secondary-container' : 'text-white/75'
                     }`}
                     style={{ fontVariationSettings: `'FILL' ${active ? 1 : 0}` }}
                   >
@@ -63,7 +63,7 @@ export default function BottomNav() {
                   </motion.span>
                   <span
                     className={`relative z-10 font-medium text-[10px] mt-0.5 whitespace-nowrap transition-colors duration-200 ${
-                      active ? 'text-on-secondary-container' : 'text-on-surface-variant'
+                      active ? 'text-on-secondary-container' : 'text-white/60'
                     }`}
                   >
                     {tab.label}
@@ -72,8 +72,6 @@ export default function BottomNav() {
               );
             })}
           </div>
-          {/* Safe area spacer for home indicator / gesture bar */}
-          <div style={{ height: 'env(safe-area-inset-bottom)' }} />
         </motion.nav>
       )}
     </AnimatePresence>

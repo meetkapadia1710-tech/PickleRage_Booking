@@ -13,6 +13,9 @@ const config: CapacitorConfig = {
       scopes: ['profile', 'email'],
       serverClientId: '21785967034-v32c2s1gdnvnm9j8clnc2utg8gbd8ahn.apps.googleusercontent.com',
       forceCodeForRefreshToken: true
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"]
     }
   }
 };

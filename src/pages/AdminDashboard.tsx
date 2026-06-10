@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   collection, getDocs, doc, updateDoc, deleteDoc, addDoc,
-  query, where
+  query, where, deleteField
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Venue, Court, Booking } from '../types';
@@ -148,7 +148,8 @@ function VenueEditor({
   const [form, setForm] = useState<Omit<Venue, 'id'>>(
     venue ? { name: venue.name, type: venue.type, images: [...venue.images], price: venue.price,
                address: venue.address, distance: venue.distance, rating: venue.rating,
-               amenities: [...venue.amenities], isPremium: venue.isPremium ?? false }
+               amenities: [...venue.amenities], isPremium: venue.isPremium ?? false,
+               lat: venue.lat, lng: venue.lng }
           : { ...BLANK_VENUE }
   );
 
@@ -164,11 +165,11 @@ function VenueEditor({
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm(f => ({ ...f, [key]: value }));
 
-  // Fetch courts for existing venue
+  // Fetch courts for existing venue (loadingCourts already starts false when isNew)
   useEffect(() => {
-    if (isNew || !venue) { setLoadingCourts(false); return; }
+    if (isNew || !venue) return;
     getDocs(query(collection(db, 'courts'), where('venueId', '==', venue.id)))
-      .then(snap => setCourts(snap.docs.map(d => ({ id: d.id, ...d.data() } as Court))))
+      .then(snap => setCourts(snap.docs.map(d => ({ ...d.data(), id: d.id } as Court))))
       .catch(console.error)
       .finally(() => setLoadingCourts(false));
   }, [venue, isNew]);
@@ -180,11 +181,24 @@ function VenueEditor({
     }
     setSaving(true); setError('');
     try {
-      const clean = { ...form, images: form.images.filter(u => u.trim()) };
+      const clean: Record<string, unknown> = { ...form, images: form.images.filter(u => u.trim()) };
+      // Coordinates are only stored as a valid pair; Firestore rejects `undefined` values.
+      const hasCoords =
+        typeof form.lat === 'number' && !Number.isNaN(form.lat) &&
+        typeof form.lng === 'number' && !Number.isNaN(form.lng);
+      if (!hasCoords) {
+        delete clean.lat;
+        delete clean.lng;
+      }
       if (isNew) {
         await addDoc(collection(db, 'venues'), clean);
       } else if (venue) {
-        await updateDoc(doc(db, 'venues', venue.id), clean as Record<string, unknown>);
+        if (!hasCoords) {
+          // Clearing the fields in the editor removes stale coordinates.
+          clean.lat = deleteField();
+          clean.lng = deleteField();
+        }
+        await updateDoc(doc(db, 'venues', venue.id), clean);
       }
       onSaved();
     } catch (e: unknown) {
@@ -307,26 +321,33 @@ function VenueEditor({
                 </Field>
 
                 <div className="grid grid-cols-2 gap-3">
+                  <Field label="Latitude (optional)">
+                    <TextInput
+                      value={form.lat ?? ''}
+                      onChange={v => set('lat', v.trim() === '' ? undefined : Number(v))}
+                      type="number"
+                      placeholder="22.3072"
+                    />
+                  </Field>
+                  <Field label="Longitude (optional)">
+                    <TextInput
+                      value={form.lng ?? ''}
+                      onChange={v => set('lng', v.trim() === '' ? undefined : Number(v))}
+                      type="number"
+                      placeholder="73.1812"
+                    />
+                  </Field>
+                </div>
+                <p className="text-[12px] text-on-surface-variant -mt-1">
+                  Powers the venue map &amp; directions. Leave blank to locate by address.
+                </p>
+
+                <div className="grid grid-cols-2 gap-3">
                   <Field label="Distance">
                     <TextInput value={form.distance} onChange={v => set('distance', v)} placeholder="e.g. 1.2 mi" />
                   </Field>
                   <Field label="Price / hr (₹)">
                     <TextInput value={form.price} onChange={v => set('price', Number(v))} type="number" placeholder="600" />
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Rating (0–5)">
-                    <TextInput value={form.rating} onChange={v => set('rating', Math.min(5, Math.max(0, Number(v))))} type="number" placeholder="4.5" />
-                  </Field>
-                  <Field label="Premium Badge">
-                    <button
-                      onClick={() => set('isPremium', !form.isPremium)}
-                      className={`h-[44px] rounded-xl font-medium text-[14px] border-[1.5px] transition-colors cursor-pointer flex items-center justify-center gap-2 ${form.isPremium ? 'border-secondary-container bg-secondary-container/20 text-on-secondary-container' : 'border-outline-variant text-on-surface-variant hover:border-primary/40'}`}
-                    >
-                      <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: `'FILL' ${form.isPremium ? 1 : 0}` }}>workspace_premium</span>
-                      {form.isPremium ? 'Premium' : 'Standard'}
-                    </button>
                   </Field>
                 </div>
               </div>
@@ -532,23 +553,32 @@ export default function AdminDashboard() {
 
   const [editingVenue, setEditingVenue] = useState<Venue | null | 'new'>(null);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [venuesSnap, bookingsSnap] = await Promise.all([
-        getDocs(collection(db, 'venues')),
-        getDocs(collection(db, 'bookings')),
-      ]);
-      setVenues(venuesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Venue)));
-      setBookings(bookingsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Booking)));
-    } catch (err) {
-      console.error('Admin data fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [reloadKey, setReloadKey] = useState(0);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      getDocs(collection(db, 'venues')),
+      getDocs(collection(db, 'bookings')),
+    ])
+      .then(([venuesSnap, bookingsSnap]) => {
+        if (cancelled) return;
+        setVenues(venuesSnap.docs.map(d => ({ ...d.data(), id: d.id } as Venue)));
+        setBookings(bookingsSnap.docs.map(d => ({ ...d.data(), id: d.id } as Booking)));
+        setLoading(false);
+      })
+      .catch(err => {
+        if (cancelled) return;
+        console.error('Admin data fetch error:', err);
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [reloadKey]);
+
+  const refreshData = () => {
+    setLoading(true);
+    setReloadKey(k => k + 1);
+  };
 
   const totalBookings = bookings.length;
   const confirmedBookings = bookings.filter(b => b.status === 'confirmed').length;
@@ -720,23 +750,15 @@ export default function AdminDashboard() {
                         <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[12px] font-semibold capitalize text-on-surface">
                           {venue.type}
                         </div>
-                        {venue.isPremium && (
-                          <div className="absolute top-2 right-2 bg-secondary-container/90 backdrop-blur-sm px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[12px] text-on-secondary-container" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
-                            <span className="text-[11px] font-semibold text-on-secondary-container">Premium</span>
-                          </div>
-                        )}
                       </div>
                       <div className="p-4 flex-1 flex flex-col gap-1">
                         <h3 className="font-bold text-[16px] text-on-surface leading-tight">{venue.name}</h3>
                         <p className="text-[13px] text-on-surface-variant line-clamp-1">{venue.address}</p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="flex items-center gap-1 text-[13px] text-on-surface-variant">
-                            <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                            {venue.rating}
-                          </span>
-                          <span className="text-[13px] text-on-surface-variant">{venue.distance}</span>
-                        </div>
+                        {venue.distance && (
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-[13px] text-on-surface-variant">{venue.distance}</span>
+                          </div>
+                        )}
                       </div>
                       <div className="px-4 pb-4 flex items-center justify-between border-t border-surface-variant/50 pt-3">
                         <span className="font-bold text-[16px] text-primary">₹{venue.price}<span className="font-normal text-[13px] text-on-surface-variant">/hr</span></span>
@@ -765,7 +787,7 @@ export default function AdminDashboard() {
             venue={editingVenue === 'new' ? null : editingVenue}
             isNew={editingVenue === 'new'}
             onClose={() => setEditingVenue(null)}
-            onSaved={() => { setEditingVenue(null); fetchData(); }}
+            onSaved={() => { setEditingVenue(null); refreshData(); }}
           />
         )}
       </AnimatePresence>

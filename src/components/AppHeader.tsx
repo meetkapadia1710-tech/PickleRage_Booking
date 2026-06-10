@@ -27,48 +27,59 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
   return (
     <>
       <header
-        className={`bg-background w-full z-40 sticky top-0 transition-shadow duration-300 pt-[env(safe-area-inset-top)] border-b border-surface-variant/20 ${
-          scrolled ? 'shadow-[0_2px_16px_rgba(0,52,43,0.08)]' : 'shadow-none'
+        className={`w-full z-40 sticky top-0 transition-all duration-300 pt-[env(safe-area-inset-top)] border-b backdrop-blur-[14px] ${
+          scrolled
+            ? 'bg-surface-container-lowest/80 border-outline-variant/65 shadow-[0_8px_30px_rgba(0,52,43,0.06)]'
+            : 'bg-background/40 border-transparent shadow-none'
         }`}
       >
-        <div className="flex justify-between items-center px-5 h-[56px] w-full max-w-3xl mx-auto">
-          <div className="flex items-center gap-2 text-primary">
+        <div className="flex justify-between items-center px-5 h-[64px] w-full max-w-3xl mx-auto">
+          <div className="flex items-center gap-2.5">
             {showBack && (
               <motion.button
-                whileTap={{ scale: 0.85 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => navigate(-1)}
-                className="flex items-center justify-center hover:bg-surface-container-high transition-colors rounded-full p-1 -ml-2 mr-1"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-outline-variant/50 bg-surface-container-low/40 text-on-surface hover:bg-surface-container-high transition-all duration-300 -ml-1 mr-0.5 cursor-pointer"
               >
-                <span className="material-symbols-outlined">arrow_back</span>
+                <span className="material-symbols-outlined text-[20px]">arrow_back</span>
               </motion.button>
             )}
-            <motion.span
-              initial={{ rotate: -90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              transition={{ type: 'spring', damping: 16, stiffness: 200 }}
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              sports_tennis
-            </motion.span>
-            <span className="font-bold text-[24px]">PlayHub</span>
+            <div className="flex items-center gap-2">
+              <motion.div
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                transition={{ type: 'spring', damping: 16, stiffness: 200 }}
+                className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary-container/20 border border-primary/10 shadow-[0_2px_8px_rgba(0,52,43,0.05)]"
+              >
+                <span
+                  className="material-symbols-outlined text-primary text-[20px]"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  sports_tennis
+                </span>
+              </motion.div>
+              <span className="font-extrabold text-[22px] tracking-tight bg-gradient-to-r from-primary via-primary/95 to-[#005e4e] bg-clip-text text-transparent">
+                PlayHub
+              </span>
+            </div>
           </div>
-
+ 
           {/* Desktop Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-1 bg-surface-container-low p-1 rounded-full border border-surface-variant/30">
+          <nav className="hidden md:flex items-center gap-1 bg-surface-container-low/50 backdrop-blur-md p-1.5 rounded-full border border-outline-variant/35 hover:border-outline-variant/60 transition-colors duration-300">
             {tabs.map(tab => {
               const active = location.pathname === tab.path;
               return (
                 <Link
                   key={tab.path}
                   to={tab.path}
-                  className="relative px-4 py-1.5 rounded-full font-semibold text-[13px] flex items-center gap-1.5 outline-none select-none cursor-pointer"
+                  className="relative px-4 py-1.5 rounded-full font-semibold text-[13px] flex items-center gap-1.5 outline-none select-none cursor-pointer transition-transform duration-200 active:scale-95"
                 >
                   {active && (
                     <motion.div
                       layoutId="desktop-nav-pill"
                       transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-                      className="absolute inset-0 bg-primary rounded-full"
+                      className="absolute inset-0 bg-gradient-to-r from-primary to-[#004d40] shadow-[0_2px_10px_rgba(0,52,43,0.2)] rounded-full"
                     />
                   )}
                   <span
@@ -91,24 +102,23 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
           </nav>
 
           <motion.button
-            whileTap={{ scale: 0.85 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => {
               setNotifOpen(true);
               setHasUnread(false);
             }}
-            className="relative text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-full p-2"
+            className="relative flex items-center justify-center w-10 h-10 rounded-full border border-outline-variant/50 bg-surface-container-low/40 text-on-surface hover:bg-surface-container-high transition-all duration-300 cursor-pointer"
             aria-label="Notifications"
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>
+            <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 0" }}>
               notifications
             </span>
             {hasUnread && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', damping: 12, stiffness: 400, delay: 0.4 }}
-                className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-error"
-              />
+              <span className="absolute top-2.5 right-2.5 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+              </span>
             )}
           </motion.button>
         </div>

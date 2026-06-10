@@ -27,7 +27,7 @@ export const mockVenues: Venue[] = [
   },
   {
     id: "venue_3",
-    name: "City Center Box Cricket",
+    name: "Sports Planet",
     type: "box cricket",
     images: ["https://lh3.googleusercontent.com/aida-public/AB6AXuCKFWDwUkJOC1ABRjsh3SwFIK6rFX_5A6kgUHwc1e7MZrgIh339YcdYsqPyQEsYjYj9pEPRHdY-CvtctpSe04An-dj9lFxEgix1ZZtzt79nJzhK_qofld5ufuawior8yrUeGEjegfByPbbaBRtlbCZp-_AjHSEZi025nGsYEOXXjqhq_PMWBzeR3aaJIMY5i8pXqBwW-zJpOMO-OEiYsLxAhapu6Y3Gvp8soyfttVQfJePJTY_lBLasjc2oGXZL8tZ5bXZZAhxzVNY"],
     price: 1000,

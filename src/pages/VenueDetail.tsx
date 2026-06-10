@@ -4,31 +4,35 @@ import { motion } from 'framer-motion';
 import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Venue, Court } from '../types';
+import { getMapEmbedUrl, getDirectionsUrl, hasLocation, openExternal } from '../lib/maps';
+import { isFavorite, toggleFavorite } from '../lib/store';
+import Toast from '../components/Toast';
 
 export default function VenueDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [venue, setVenue] = useState<Venue | null>(null);
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourt, setSelectedCourt] = useState<string | null>(null);
+  const [fav, setFav] = useState(() => (id ? isFavorite(id) : false));
 
   useEffect(() => {
     const fetchVenueAndCourts = async () => {
       if (!id) return;
       try {
-        // Fetch Venue
+        // Fetch Venue (merge in doc id — admin-created venues don't store one in data)
         const venueRef = doc(db, 'venues', id);
         const venueSnap = await getDoc(venueRef);
         if (venueSnap.exists()) {
-          setVenue(venueSnap.data() as Venue);
+          setVenue({ ...(venueSnap.data() as Venue), id: venueSnap.id });
         }
 
         // Fetch Courts
         const courtsQuery = query(collection(db, 'courts'), where('venueId', '==', id));
         const courtsSnap = await getDocs(courtsQuery);
-        const courtsList = courtsSnap.docs.map(doc => doc.data() as Court);
+        const courtsList = courtsSnap.docs.map(d => ({ ...(d.data() as Court), id: d.id }));
         setCourts(courtsList);
       } catch (err) {
         console.error('Error fetching venue details:', err);
@@ -39,6 +43,44 @@ export default function VenueDetail() {
 
     fetchVenueAndCourts();
   }, [id]);
+
+  // Toast State
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [toastIcon, setToastIcon] = useState<string | undefined>(undefined);
+  const showToast = (msg: string, icon?: string) => {
+    setToastMsg(msg);
+    setToastIcon(icon);
+    setTimeout(() => {
+      setToastMsg(null);
+    }, 2200);
+  };
+
+  const handleToggleFavorite = () => {
+    if (id) {
+      const nextFav = toggleFavorite(id);
+      setFav(nextFav);
+      showToast(nextFav ? 'Added to Favorites' : 'Removed from Favorites', nextFav ? 'favorite' : 'favorite_border');
+    }
+  };
+
+  const handleShare = async () => {
+    if (!venue) return;
+    const shareData = {
+      title: venue.name,
+      text: `Check out ${venue.name} on PlayHub — ₹${venue.price}/hr`,
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+        showToast('Link copied to clipboard!', 'content_copy');
+      }
+    } catch {
+      // user dismissed the share sheet — nothing to do
+    }
+  };
 
   if (loading) {
     return (
@@ -68,19 +110,42 @@ export default function VenueDetail() {
       {/* Hero Image & Navigation */}
       <div className="relative w-full h-[340px] md:h-[420px]">
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10"></div>
-        <img src={venue.images[0]} alt={venue.name} className="w-full h-full object-cover" />
-        
+        {venue.images?.[0] ? (
+          <img src={venue.images[0]} alt={venue.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-b from-primary to-[#001a14] flex items-center justify-center">
+            <span className="material-symbols-outlined text-[72px] text-white/30">
+              {venue.type === 'pickleball' ? 'sports_tennis' : 'sports_cricket'}
+            </span>
+          </div>
+        )}
+
         <div className="absolute top-0 left-0 right-0 max-w-3xl mx-auto w-full flex justify-between items-center px-5 pt-[calc(1.5rem+env(safe-area-inset-top))] h-auto z-20">
           <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
           <div className="flex gap-3">
-            <button className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer">
-              <span className="material-symbols-outlined">favorite_border</span>
-            </button>
-            <button className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer">
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={handleToggleFavorite}
+              aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
+              className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer"
+            >
+              <span
+                className={`material-symbols-outlined transition-colors ${fav ? 'text-red-400' : ''}`}
+                style={{ fontVariationSettings: `'FILL' ${fav ? 1 : 0}` }}
+              >
+                favorite
+              </span>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={handleShare}
+              aria-label="Share venue"
+              className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer"
+            >
               <span className="material-symbols-outlined">share</span>
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
@@ -89,12 +154,22 @@ export default function VenueDetail() {
       <main className="relative z-20 -mt-10 bg-background rounded-t-[32px] px-5 pt-8 min-h-[442px] shadow-[0_-8px_24px_rgba(0,52,43,0.08)]">
         {/* Title & Location Info */}
         <header className="mb-6">
-          <div className="flex justify-between items-start mb-2">
-            <h1 className="font-bold text-[28px] leading-tight text-on-background pr-4">{venue.name}</h1>
-            <div className="flex items-center gap-1 bg-secondary-container/20 px-2.5 py-1 rounded-lg shrink-0">
-              <span className="material-symbols-outlined text-secondary text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-              <span className="font-semibold text-[14px] text-on-secondary-container">{venue.rating}</span>
-            </div>
+          <div className="flex justify-between items-start gap-4 mb-2">
+            <h1 className="font-bold text-[28px] leading-tight text-on-background flex-1 pr-4">{venue.name}</h1>
+            <button
+              onClick={() => {
+                const reviewUrls: Record<string, string> = {
+                  venue_1: 'https://maps.app.goo.gl/5rKScgBhtYwhYk35A',
+                  venue_3: 'https://maps.app.goo.gl/hJXz5AXDQkpCL5Uj8',
+                };
+                const targetUrl = reviewUrls[venue.id] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${venue.name} ${venue.address}`)}`;
+                openExternal(targetUrl);
+              }}
+              className="bg-secondary-container/20 hover:bg-secondary-container/30 border border-secondary-container/30 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-[12px] font-semibold text-on-secondary-container transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
+            >
+              <span className="material-symbols-outlined text-[14px] text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+              Rate on Google
+            </button>
           </div>
           <div className="flex items-center gap-2 text-on-surface-variant">
             <span className="material-symbols-outlined text-primary text-[20px]">location_on</span>
@@ -124,9 +199,63 @@ export default function VenueDetail() {
           {courts.length === 0 ? (
             <p className="text-on-surface-variant text-[14px]">No courts configured for this venue.</p>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {courts.map(court => {
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {courts.map((court, idx) => {
                 const isSelected = selectedCourt === court.id;
+                const isPickleball = venue.type === 'pickleball';
+                const courtDetails = isPickleball
+                  ? idx === 0
+                    ? {
+                        badge: 'Court A',
+                        title: 'Professional Grade Court',
+                        desc: 'Features state-of-the-art shock-absorbing cushion layers, precise markings, and high-intensity glare-free LED floodlights for perfect night play.',
+                        img: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=600&auto=format&fit=crop',
+                      }
+                    : {
+                        badge: 'Court B',
+                        title: 'Tropical Oasis Court',
+                        desc: 'Play surrounded by our signature lush vertical plant walls and hanging greenery, delivering a scenic and relaxing resort-style athletic escape.',
+                        img: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=600&auto=format&fit=crop',
+                      }
+                  : null;
+
+                if (courtDetails) {
+                  return (
+                    <button
+                      key={court.id}
+                      onClick={() => setSelectedCourt(court.id)}
+                      className={`text-left relative overflow-hidden rounded-[24px] h-[220px] transition-all cursor-pointer border-2 ${
+                        isSelected 
+                          ? 'border-primary ring-2 ring-primary/20 scale-[1.01]' 
+                          : 'border-transparent hover:scale-[1.005]'
+                      }`}
+                    >
+                      {/* Image & Overlay */}
+                      <img src={courtDetails.img} alt={courtDetails.title} className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20 z-10" />
+
+                      {/* Selection Check */}
+                      {isSelected && (
+                        <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-primary flex items-center justify-center z-20 shadow-md">
+                          <span className="material-symbols-outlined text-[15px] text-on-primary font-bold">check</span>
+                        </div>
+                      )}
+
+                      {/* Content */}
+                      <div className="absolute inset-0 p-5 flex flex-col justify-between z-20 text-white">
+                        <span className="self-start px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-secondary-container text-on-secondary-container shadow-sm">
+                          {courtDetails.badge}
+                        </span>
+                        <div>
+                          <h3 className="font-bold text-[18px] mb-1.5">{courtDetails.title}</h3>
+                          <p className="text-[12px] text-white/85 leading-relaxed line-clamp-3">{courtDetails.desc}</p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                }
+
+                // Fallback for Box Cricket
                 return (
                   <button 
                     key={court.id}
@@ -143,7 +272,7 @@ export default function VenueDetail() {
                       </div>
                     )}
                     <span className="material-symbols-outlined text-primary mb-3 text-[28px]">
-                      {venue.type === 'pickleball' ? 'sports_tennis' : 'sports_cricket'}
+                      sports_cricket
                     </span>
                     <h3 className="font-semibold text-[14px] text-on-background mb-1">{court.name}</h3>
                     <p className="text-[14px] text-on-surface-variant">{court.surface}</p>
@@ -153,10 +282,153 @@ export default function VenueDetail() {
             </div>
           )}
         </section>
+
+        {/* Info Cards (iOS style highlights, rules, policies) */}
+        {venue.type === 'pickleball' && (
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-4">
+            {/* Club Highlights */}
+            <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/65 shadow-[0_4px_16px_rgba(0,52,43,0.06)] flex flex-col gap-4">
+              <h3 className="font-bold text-[18px] text-on-background pb-1 border-b-2 border-primary/10">Club Highlights</h3>
+              <div className="flex gap-2">
+                <div className="flex-1 bg-surface-container-low px-3 py-2 rounded-xl text-center">
+                  <span className="block text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">Hours</span>
+                  <span className="font-bold text-[12px] text-on-surface">6 AM - 11:59 PM</span>
+                </div>
+                <div className="flex-1 bg-surface-container-low px-3 py-2 rounded-xl text-center">
+                  <span className="block text-[10px] uppercase tracking-wider text-on-surface-variant font-medium">Pricing</span>
+                  <span className="font-bold text-[12px] text-on-surface">₹{venue.price} onwards</span>
+                </div>
+              </div>
+              <div className="bg-primary-container/20 border border-primary/10 px-3.5 py-2.5 rounded-xl flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                <span className="font-semibold text-[12px] text-primary">Beginner Friendly (Free Paddles & Equipment)</span>
+              </div>
+              <ul className="flex flex-col gap-2.5 text-[13px] text-on-surface-variant">
+                <li className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
+                  <span>Floodlit Courts (Professional LED Lighting)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
+                  <span>Online Booking (Instant Phone Confirmation)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
+                  <span>Pure Drinking Water Available</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
+                  <span>Tropical Cafe & Food Court</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
+                  <span>On-site Parking Available</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-primary font-bold">check</span>
+                  <span>First Aid Station Available</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Venue Rules */}
+            <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/65 shadow-[0_4px_16px_rgba(0,52,43,0.06)] flex flex-col gap-4">
+              <h3 className="font-bold text-[18px] text-on-background pb-1 border-b-2 border-primary/10">Venue Rules</h3>
+              <div className="flex flex-col gap-4">
+                <div className="flex gap-3">
+                  <span className="text-[20px] shrink-0">⏰</span>
+                  <div>
+                    <h4 className="font-bold text-[13px] text-on-surface">Arrive 15 Mins Early</h4>
+                    <p className="text-[12px] text-on-surface-variant mt-0.5 leading-snug">Arrive 15 minutes before your slot to ensure checking-in is seamless.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-[20px] shrink-0">🚭</span>
+                  <div>
+                    <h4 className="font-bold text-[13px] text-on-surface">No Smoking</h4>
+                    <p className="text-[12px] text-on-surface-variant mt-0.5 leading-snug">Strictly non-smoking facility inside the playing and dining zones.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-[20px] shrink-0">📹</span>
+                  <div>
+                    <h4 className="font-bold text-[13px] text-on-surface">CCTV Security</h4>
+                    <p className="text-[12px] text-on-surface-variant mt-0.5 leading-snug">The entire premise is monitored continuously for play safety.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-[20px] shrink-0">☔</span>
+                  <div>
+                    <h4 className="font-bold text-[13px] text-on-surface">Rain & Weather Policy</h4>
+                    <p className="text-[12px] text-on-surface-variant mt-0.5 leading-snug">Matches can be rescheduled if rain halts play. Not liable for injuries.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Booking Policies */}
+            <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-outline-variant/65 shadow-[0_4px_16px_rgba(0,52,43,0.06)] flex flex-col justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-[18px] text-on-background pb-1 border-b-2 border-primary/10 mb-3">Booking Policies</h3>
+                
+                <div className="mb-3">
+                  <h4 className="font-bold text-[13px] text-on-surface mb-1">Cancellation</h4>
+                  <ul className="list-disc pl-4 flex flex-col gap-1 text-[12px] text-on-surface-variant">
+                    <li><strong className="text-on-surface">100% Refundable:</strong> Cancel 24+ hours before the slot.</li>
+                    <li><strong className="text-on-surface">Non-Refundable:</strong> Cancel less than 24 hours from slot.</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-bold text-[13px] text-on-surface mb-1">Rescheduling</h4>
+                  <ul className="list-disc pl-4 flex flex-col gap-1 text-[12px] text-on-surface-variant">
+                    <li><strong className="text-on-surface">Flexi-Reschedule:</strong> Move slots before start time.</li>
+                    <li>Adjusted easily according to target slot pricing differences.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-surface-container-low p-3.5 rounded-xl text-center">
+                <span className="font-semibold text-[12px] text-on-surface flex items-center justify-center gap-1.5 leading-snug">
+                  <span>🛍</span> Easily cancel or reschedule bookings directly inside the PlayHub app.
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Location & Directions */}
+        {hasLocation(venue) && (
+          <section className="mb-6">
+            <h2 className="font-semibold text-[20px] text-on-background mb-4">Location</h2>
+            <div className="rounded-2xl overflow-hidden border border-outline-variant/65 bg-surface-container-low shadow-sm">
+              <iframe
+                title={`Map of ${venue.name}`}
+                src={getMapEmbedUrl(venue)}
+                className="w-full h-[200px] md:h-[260px] border-0 block"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+              <div className="flex items-center gap-3 p-4">
+                <span className="material-symbols-outlined text-primary text-[22px] shrink-0">location_on</span>
+                <p className="text-[13px] text-on-surface-variant flex-1 min-w-0 leading-snug">{venue.address}</p>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => openExternal(getDirectionsUrl(venue))}
+                  className="bg-primary text-on-primary px-4 py-2.5 rounded-full font-semibold text-[13px] flex items-center gap-1.5 cursor-pointer hover:opacity-90 transition-opacity shrink-0"
+                >
+                  <span className="material-symbols-outlined text-[16px]">directions</span>
+                  Get Directions
+                </motion.button>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       {/* Floating Action Bar */}
-      <div className="fixed bottom-0 w-full bg-surface-container-lowest pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] px-5 z-50 shadow-[0_-8px_20px_0_rgba(0,52,43,0.06)] rounded-t-2xl border-t border-surface-variant/50">
+      <div className="fixed bottom-0 w-full bg-surface-container-lowest pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] px-5 z-50 shadow-[0_-8px_24px_rgba(0,52,43,0.15)] rounded-t-2xl border-t border-outline-variant/65">
         <div className="flex justify-between items-center max-w-md mx-auto">
           <div className="flex flex-col">
             <span className="font-medium text-[12px] text-on-surface-variant">Total Price</span>
@@ -179,6 +451,9 @@ export default function VenueDetail() {
           </button>
         </div>
       </div>
+
+      {/* Dynamic Island style Toast */}
+      <Toast message={toastMsg} icon={toastIcon} />
     </motion.div>
   );
 }
