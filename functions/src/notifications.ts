@@ -1,16 +1,12 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 
-/**
- * Triggered when a new booking is created.
- * Sends a push notification to the user's registered FCM tokens.
- */
 export const sendBookingConfirmation = functions.firestore
   .document('bookings/{bookingId}')
   .onCreate(async (snap, context) => {
     const bookingData = snap.data();
-    const userId = bookingData.userId;
-    const bookingId = context.params.bookingId;
+    const userId  = bookingData['userId']  as string | undefined;
+    const bookingId = context.params['bookingId'] as string;
 
     if (!userId) {
       console.log('No user ID found for booking', bookingId);
@@ -18,47 +14,58 @@ export const sendBookingConfirmation = functions.firestore
     }
 
     try {
-      // Get the user's FCM tokens
-      const userDoc = await admin.firestore().collection('users').doc(userId).get();
+      const userDoc  = await admin.firestore().collection('users').doc(userId).get();
       const userData = userDoc.data();
 
-      if (!userData || !userData.fcmTokens || userData.fcmTokens.length === 0) {
+      if (!userData) {
+        console.log('User document not found for', userId);
+        return null;
+      }
+
+      // Support both the current array field and the legacy singular string field.
+      let tokens: string[] = [];
+      if (Array.isArray(userData['fcmTokens'])) {
+        tokens = userData['fcmTokens'] as string[];
+      } else if (typeof userData['fcmToken'] === 'string' && userData['fcmToken']) {
+        tokens = [userData['fcmToken'] as string];
+      }
+
+      if (tokens.length === 0) {
         console.log('No FCM tokens found for user', userId);
         return null;
       }
 
-      // Construct the message payload
-      const payload = {
+      const response = await admin.messaging().sendEachForMulticast({
+        tokens,
         notification: {
           title: 'Booking Confirmed! 🎾',
-          body: `Your court is locked in for ${bookingData.date} at ${bookingData.startTime}.`,
+          body: `Your court is locked in for ${bookingData['date'] as string} at ${bookingData['startTime'] as string}.`,
         },
-        data: {
-          bookingId: bookingId,
-          click_action: 'FLUTTER_NOTIFICATION_CLICK', // standard pattern if migrating to native or PWA
-        }
-      };
+        data: { bookingId },
+      });
 
-      // Send to all registered tokens for this user
-      const response = await admin.messaging().sendToDevice(userData.fcmTokens, payload);
-      
-      console.log(`Successfully sent ${response.successCount} messages. Failed: ${response.failureCount}`);
+      console.log(`Sent: ${response.successCount}, Failed: ${response.failureCount}`);
+
+      // Prune any tokens that were reported as invalid to keep the list clean.
+      const staleTokens = response.responses
+        .map((r, i) => (!r.success ? tokens[i] : null))
+        .filter((t): t is string => t !== null);
+      if (staleTokens.length > 0) {
+        await admin.firestore().collection('users').doc(userId).update({
+          fcmTokens: admin.firestore.FieldValue.arrayRemove(...staleTokens),
+        });
+      }
+
       return null;
     } catch (error) {
-      console.error('Error sending booking confirmation notification:', error);
+      console.error('Error sending booking confirmation:', error);
       return null;
     }
   });
 
-/**
- * Scheduled job to run every hour.
- * Scans for bookings occurring in the next 24 hours and sends a reminder.
- */
 export const sendBookingReminder = functions.pubsub
   .schedule('every 1 hours')
-  .onRun(async (context) => {
-    // Note: In a production environment, you would query bookings for the exact time window.
-    // This is a scaffold.
+  .onRun(async () => {
     console.log('Running scheduled booking reminder scan...');
     return null;
   });
