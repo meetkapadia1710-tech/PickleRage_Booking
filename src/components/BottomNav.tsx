@@ -7,11 +7,10 @@ import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 
 const tabs = [
-  { path: '/home',        icon: 'home',            label: 'Home' },
-  { path: '/friends',     icon: 'group',           label: 'Friends' },
-  { path: '/bookings',    icon: 'event_available', label: 'Bookings' },
-  { path: '/leaderboard', icon: 'leaderboard',     label: 'Leaderboard' },
-  { path: '/profile',     icon: 'person',          label: 'Profile' },
+  { path: '/home',     icon: 'home',            label: 'Home' },
+  { path: '/friends',  icon: 'group',           label: 'Friends' },
+  { path: '/bookings', icon: 'event_available', label: 'Bookings' },
+  { path: '/profile',  icon: 'person',          label: 'Profile' },
 ];
 
 export default function BottomNav() {

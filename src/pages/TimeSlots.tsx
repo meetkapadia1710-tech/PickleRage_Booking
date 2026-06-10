@@ -5,7 +5,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { doc, getDoc, collection, query, where, onSnapshot, setDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import type { Venue, Court, Booking, UserProfile } from '../types';
+import type { Venue, Court, Booking, UserProfile, PayerDetail } from '../types';
 import Avatar from '../components/Avatar';
 
 export default function TimeSlots() {
@@ -124,6 +124,19 @@ export default function TimeSlots() {
       const bookingRef = doc(collection(db, 'bookings'));
       const token = crypto.randomUUID();
 
+      // Fetch current user's display name for payer details
+      const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+      const payerName = userSnap.exists()
+        ? (userSnap.data().displayName as string) || currentUser.displayName || 'Player'
+        : currentUser.displayName || 'Player';
+
+      const firstPayerDetail: PayerDetail = {
+        uid: currentUser.uid,
+        name: payerName,
+        amount: splitEnabled ? Math.ceil((venue?.price ?? 0) / groupSize) : (venue?.price ?? 0),
+        paidAt: new Date().toISOString(),
+      };
+
       const bookingData: Omit<Booking, 'id'> = {
         userId: currentUser.uid,
         venueId: venue.id,
@@ -143,6 +156,7 @@ export default function TimeSlots() {
                 paidPlayers: [currentUser.uid],
                 invitedFriends: selectedFriends,
                 paymentLinkToken: token,
+                payerDetails: [firstPayerDetail],
               },
             }
           : {}),

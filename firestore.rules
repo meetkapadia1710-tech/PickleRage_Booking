@@ -2,28 +2,124 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
     }
-    
-    // Venues collection
+
+    // Admins are provisioned manually: create a doc in the `admins` collection
+    // whose ID is the user's auth UID (Firebase Console → Firestore).
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ── admins ───────────────────────────────────────────────────────────────
+    // Console-managed only; users may check their own admin status.
+    match /admins/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // ── users ────────────────────────────────────────────────────────────────
+    // Read by any signed-in user: leaderboard, friend search by phone,
+    // split-payment payer names, friend profiles.
+    // Writes only to your own profile, and the stored uid can't be spoofed.
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.auth.uid == userId
+        && (!('uid' in request.resource.data) || request.resource.data.uid == userId);
+      allow delete: if false;
+    }
+
+    // ── venues & courts ──────────────────────────────────────────────────────
+    // Publicly readable (share links, logged-out browsing); admin-managed.
     match /venues/{venueId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
-    
-    // Courts collection
+
     match /courts/{courtId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
-    
-    // Bookings collection
+
+    // ── bookings ─────────────────────────────────────────────────────────────
     match /bookings/{bookingId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+
+      // Teammate paying their share via a split link: may only add their own
+      // uid to paidPlayers / their payer details, and optionally flip the
+      // status to 'confirmed' once everyone has paid.
+      function isSplitShareUpdate() {
+        return resource.data.splitPayment != null
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['splitPayment', 'status'])
+          && request.resource.data.splitPayment.diff(resource.data.splitPayment).affectedKeys()
+               .hasOnly(['paidPlayers', 'payerDetails'])
+          && request.resource.data.splitPayment.paidPlayers.toSet()
+               .difference(resource.data.splitPayment.paidPlayers.toSet())
+               .hasOnly([request.auth.uid])
+          && (request.resource.data.status == resource.data.status
+              || request.resource.data.status == 'confirmed');
+      }
+
+      // Signed-in users see bookings: slot availability, leaderboard,
+      // split-payment lookups by link token.
+      allow read: if isSignedIn();
+
+      // You can only create bookings for yourself, with a sane status.
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status in ['confirmed', 'hold'];
+
+      // Owners manage their booking (e.g. cancel) but can't reassign it;
+      // teammates may only record their own split-share payment.
+      allow update: if isSignedIn()
+        && (
+          (request.auth.uid == resource.data.userId
+            && request.resource.data.userId == resource.data.userId)
+          || isSplitShareUpdate()
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    // ── friend requests ──────────────────────────────────────────────────────
+    match /friendRequests/{requestId} {
+      // Only sender and recipient can see a request.
+      allow read: if isSignedIn()
+        && (request.auth.uid == resource.data.fromUid
+            || request.auth.uid == resource.data.toUid);
+
+      // Requests are sent as yourself, to someone else, always pending.
+      allow create: if isSignedIn()
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.toUid is string
+        && request.resource.data.toUid != request.auth.uid
+        && request.resource.data.status == 'pending';
+
+      // Only the recipient resolves a pending request, touching status alone.
+      allow update: if isSignedIn()
+        && request.auth.uid == resource.data.toUid
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['accepted', 'rejected'];
+
+      // Sender may retract their own request.
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.fromUid;
+    }
+
+    // ── friends lists ────────────────────────────────────────────────────────
+    // friends/{userId}/list/{friendId} — accepting a request writes BOTH
+    // sides' lists from the accepter's client, and removing a friend deletes
+    // both sides, so the list owner or the named friend may write an entry.
+    match /friends/{userId}/list/{friendId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create, update, delete: if isSignedIn()
+        && (request.auth.uid == userId || request.auth.uid == friendId);
     }
   }
 }

@@ -101,26 +101,48 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
             })}
           </nav>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => {
-              setNotifOpen(true);
-              setHasUnread(false);
-            }}
-            className="relative flex items-center justify-center w-10 h-10 rounded-full border border-outline-variant/50 bg-surface-container-low/40 text-on-surface hover:bg-surface-container-high transition-all duration-300 cursor-pointer"
-            aria-label="Notifications"
-          >
-            <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 0" }}>
-              notifications
-            </span>
-            {hasUnread && (
-              <span className="absolute top-2.5 right-2.5 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+          {/* Right action buttons */}
+          <div className="flex items-center gap-2">
+            {/* Leaderboard shortcut */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate('/leaderboard')}
+              className={`relative flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-300 cursor-pointer ${
+                location.pathname === '/leaderboard'
+                  ? 'border-primary/40 bg-primary/10 text-primary'
+                  : 'border-outline-variant/50 bg-surface-container-low/40 text-on-surface hover:bg-surface-container-high'
+              }`}
+              aria-label="Leaderboard"
+            >
+              <span className="material-symbols-outlined text-[22px]"
+                style={{ fontVariationSettings: `'FILL' ${location.pathname === '/leaderboard' ? 1 : 0}` }}>
+                leaderboard
               </span>
-            )}
-          </motion.button>
+            </motion.button>
+
+            {/* Notifications */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                setNotifOpen(true);
+                setHasUnread(false);
+              }}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full border border-outline-variant/50 bg-surface-container-low/40 text-on-surface hover:bg-surface-container-high transition-all duration-300 cursor-pointer"
+              aria-label="Notifications"
+            >
+              <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 0" }}>
+                notifications
+              </span>
+              {hasUnread && (
+                <span className="absolute top-2.5 right-2.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+                </span>
+              )}
+            </motion.button>
+          </div>
         </div>
       </header>
 
