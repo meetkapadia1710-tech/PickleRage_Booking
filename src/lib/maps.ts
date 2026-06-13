@@ -5,6 +5,10 @@ function destinationQuery(venue: Pick<Venue, 'lat' | 'lng' | 'address' | 'name'>
   if (typeof venue.lat === 'number' && typeof venue.lng === 'number') {
     return `${venue.lat},${venue.lng}`;
   }
+  // Prevent overly long query string for PickleRage from breaking the Maps pin
+  if (venue.address && venue.address.includes('Picklerage, Shravan Chowkdi')) {
+    return 'PickleRage, Bharuch';
+  }
   // Anchor the address with the venue name so geocoding is less ambiguous.
   return [venue.name, venue.address].filter(Boolean).join(', ');
 }

@@ -71,11 +71,7 @@ export default function Home() {
     : venues.filter(v => v.type === filter);
 
   const handleViewMap = () => {
-    const query =
-      filter === 'pickleball' ? 'Pickleball courts near me'
-      : filter === 'box cricket' ? 'Box cricket near me'
-      : 'Sports courts near me';
-    openExternal(getMapSearchUrl(query));
+    navigate('/map');
   };
 
   return (

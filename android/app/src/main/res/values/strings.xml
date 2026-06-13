@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">playhub</string>
-    <string name="title_activity_main">playhub</string>
+    <string name="app_name">Pickle Rage 01</string>
+    <string name="title_activity_main">Pickle Rage 01</string>
     <string name="package_name">com.playhub.app</string>
     <string name="custom_url_scheme">com.playhub.app</string>
     <string name="server_client_id">21785967034-v32c2s1gdnvnm9j8clnc2utg8gbd8ahn.apps.googleusercontent.com</string>

@@ -128,7 +128,7 @@ export default function VenueDetail() {
           </div>
         )}
 
-        <div className="absolute top-0 left-0 right-0 max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto w-full flex justify-between items-center px-5 pt-[calc(1.5rem+env(safe-area-inset-top))] h-auto z-20">
+        <div className="fixed top-0 left-0 right-0 max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto w-full flex justify-between items-center px-5 pt-[calc(1.5rem+env(safe-area-inset-top))] h-auto z-50">
           <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
@@ -187,7 +187,7 @@ export default function VenueDetail() {
             <button
               onClick={() => {
                 const reviewUrls: Record<string, string> = {
-                  venue_1: 'https://maps.app.goo.gl/5rKScgBhtYwhYk35A',
+                  venue_1: 'https://maps.app.goo.gl/vyqx9GV1a1Qt8Ua47',
                   venue_3: 'https://maps.app.goo.gl/hJXz5AXDQkpCL5Uj8',
                 };
                 const targetUrl = reviewUrls[venue.id] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${venue.name} ${venue.address}`)}`;
@@ -210,7 +210,7 @@ export default function VenueDetail() {
           <div className="w-full lg:flex-1 flex flex-col gap-6">
             {/* Court Type Selector */}
             <section>
-              <h2 className="font-extrabold text-[20px] text-on-background mb-4 tracking-tight">Select Court Option</h2>
+              <h2 className="font-extrabold text-[20px] text-on-background mb-4 tracking-tight">Select a court to book</h2>
               {courts.length === 0 ? (
                 <p className="text-on-surface-variant text-[14px]">No courts configured for this venue.</p>
               ) : (
@@ -222,15 +222,11 @@ export default function VenueDetail() {
                       ? idx === 0
                         ? {
                             badge: 'Court A',
-                            title: 'Professional Grade Court',
-                            desc: 'Features state-of-the-art shock-absorbing cushion layers, precise markings, and high-intensity glare-free LED floodlights for perfect night play.',
-                            img: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=600&auto=format&fit=crop',
+                            img: '/court-a.jpg',
                           }
                         : {
                             badge: 'Court B',
-                            title: 'Tropical Oasis Court',
-                            desc: 'Play surrounded by our signature lush vertical plant walls and hanging greenery, delivering a scenic and relaxing resort-style athletic escape.',
-                            img: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=600&auto=format&fit=crop',
+                            img: '/court-b.jpg',
                           }
                       : null;
 
@@ -246,8 +242,8 @@ export default function VenueDetail() {
                           }`}
                         >
                           {/* Image & Overlay */}
-                          <img src={courtDetails.img} alt={courtDetails.title} className="absolute inset-0 w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20 z-10" />
+                          <img src={courtDetails.img} alt={courtDetails.badge} className="absolute inset-0 w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/10 z-10" />
 
                           {/* Selection Check */}
                           {isSelected && (
@@ -261,10 +257,6 @@ export default function VenueDetail() {
                             <span className="self-start px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-secondary-container text-on-secondary-container shadow-sm">
                               {courtDetails.badge}
                             </span>
-                            <div>
-                              <h3 className="font-bold text-[18px] mb-1.5">{courtDetails.title}</h3>
-                              <p className="text-[12px] text-white/85 leading-relaxed line-clamp-3">{courtDetails.desc}</p>
-                            </div>
                           </div>
                         </button>
                       );
@@ -303,20 +295,29 @@ export default function VenueDetail() {
               <section>
                 <h2 className="font-extrabold text-[20px] text-on-background mb-4 tracking-tight">Location Details</h2>
                 <div className="rounded-[24px] overflow-hidden border border-outline-variant/65 bg-surface-container-low shadow-sm">
-                  <iframe
-                    title={`Map of ${venue.name}`}
-                    src={getMapEmbedUrl(venue)}
-                    className="w-full h-[200px] md:h-[260px] border-0 block"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    allowFullScreen
-                  />
+                  <div className="relative w-full h-[200px] md:h-[260px] overflow-hidden">
+                    <iframe
+                      title={`Map of ${venue.name}`}
+                      src={getMapEmbedUrl(venue)}
+                      className="absolute -top-[55px] -left-[80px] w-[calc(100%+160px)] h-[calc(100%+95px)] border-0 block"
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      allowFullScreen
+                    />
+                  </div>
                   <div className="flex items-center gap-3 p-4 bg-surface-container-lowest border-t border-outline-variant/30">
                     <span className="material-symbols-outlined text-primary text-[22px] shrink-0">location_on</span>
                     <p className="text-[13px] text-on-surface-variant flex-1 min-w-0 leading-snug font-medium">{venue.address}</p>
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => openExternal(getDirectionsUrl(venue))}
+                      onClick={() => {
+                        const customLinks: Record<string, string> = {
+                          venue_1: 'https://maps.app.goo.gl/vyqx9GV1a1Qt8Ua47',
+                          venue_3: 'https://maps.app.goo.gl/hJXz5AXDQkpCL5Uj8',
+                        };
+                        const targetUrl = customLinks[venue.id] || getDirectionsUrl(venue);
+                        openExternal(targetUrl);
+                      }}
                       className="bg-primary text-on-primary px-4 py-2.5 rounded-full font-bold text-[13px] flex items-center gap-1.5 cursor-pointer hover:opacity-90 transition-opacity shrink-0 shadow-[0_4px_12px_rgba(0,82,68,0.15)]"
                     >
                       <span className="material-symbols-outlined text-[16px]">directions</span>

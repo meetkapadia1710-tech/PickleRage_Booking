@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 
 import SplashScreen from './pages/SplashScreen';
 import PhoneLogin from './pages/PhoneLogin';
+import MapExplore from './pages/MapExplore';
 import CompleteProfile from './pages/CompleteProfile';
 import Profile from './pages/Profile';
 import Home from './pages/Home';
@@ -62,6 +63,7 @@ function AnimatedRoutes() {
         <Route path="/login" element={<PublicRoute><PhoneLogin /></PublicRoute>} />
         <Route path="/complete-profile" element={<CompleteProfileRoute><CompleteProfile /></CompleteProfileRoute>} />
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/map" element={<ProtectedRoute><MapExplore /></ProtectedRoute>} />
         <Route path="/venue/:id" element={<ProtectedRoute><VenueDetail /></ProtectedRoute>} />
         <Route path="/venue/:id/court/:courtId/book" element={<ProtectedRoute><TimeSlots /></ProtectedRoute>} />
         <Route path="/payment-success/:bookingId" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
