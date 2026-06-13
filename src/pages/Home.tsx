@@ -6,7 +6,7 @@ import { db } from '../firebase';
 import type { Venue } from '../types';
 import AppHeader from '../components/AppHeader';
 import SmartImage from '../components/SmartImage';
-import { getMapSearchUrl, openExternal } from '../lib/maps';
+
 
 const cardVariants = {
   hidden: { opacity: 0, y: 18 },
