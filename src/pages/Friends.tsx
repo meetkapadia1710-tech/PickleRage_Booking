@@ -194,157 +194,171 @@ export default function Friends() {
     >
       <AppHeader />
 
-      <main className="max-w-lg mx-auto px-5 pt-4 flex flex-col gap-6">
+      <main className="max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 pt-6 flex flex-col gap-6 animate-fadeIn">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start w-full">
+          {/* Left Column: Search & Requests */}
+          <div className="flex flex-col gap-5 w-full lg:w-[380px] shrink-0">
 
-        {/* ── Search ─────────────────────────────────────────────────────── */}
-        <section>
-          <h2 className="font-semibold text-[18px] text-on-background mb-3">Find Players</h2>
-          <div className="flex gap-2">
-            <div className="flex-1 flex items-center gap-2 bg-surface-container-low rounded-2xl px-4 h-[48px] border border-outline-variant/40">
-              <span className="material-symbols-outlined text-[20px] text-on-surface-variant">phone</span>
-              <input
-                type="tel"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                placeholder="Search by phone number"
-                className="flex-1 bg-transparent text-[14px] text-on-surface outline-none placeholder:text-on-surface-variant"
-              />
-              {searchQuery && (
-                <button onClick={() => { setSearchQuery(''); setSearchResult(null); }} className="cursor-pointer text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[18px]">close</span>
+            {/* ── Search ─────────────────────────────────────────────────────── */}
+            <section className="bg-surface-container-lowest border border-outline-variant/65 p-5 rounded-3xl shadow-[0_8px_30px_rgba(0,52,43,0.04)] flex flex-col gap-4">
+              <h2 className="font-extrabold text-[15px] uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-primary">person_search</span>
+                Find Players
+              </h2>
+              <div className="flex gap-2">
+                <div className="flex-1 flex items-center gap-2 bg-surface-container-low rounded-2xl px-4 h-[48px] border border-outline-variant/40">
+                  <span className="material-symbols-outlined text-[20px] text-on-surface-variant">phone</span>
+                  <input
+                    type="tel"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                    placeholder="Search by phone number"
+                    className="flex-1 bg-transparent text-[14px] text-on-surface outline-none placeholder:text-on-surface-variant"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => { setSearchQuery(''); setSearchResult(null); }} className="cursor-pointer text-on-surface-variant">
+                      <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={handleSearch}
+                  disabled={!searchQuery.trim() || searching}
+                  className="h-[48px] px-5 bg-primary text-on-primary rounded-2xl font-bold text-[14px] disabled:opacity-50 cursor-pointer active:scale-95 transition-all shadow-[0_4px_12px_rgba(0,82,68,0.2)]"
+                >
+                  {searching ? <span className="material-symbols-outlined animate-spin text-[18px]">sync</span> : 'Search'}
                 </button>
+              </div>
+
+              {/* Search Result */}
+              <AnimatePresence>
+                {searchResult && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="mt-1"
+                  >
+                    {searchResult === 'none' ? (
+                      <div className="bg-surface-container-low rounded-2xl p-4 text-center text-on-surface-variant text-[13px] font-medium border border-outline-variant/30">
+                        No player found with that number.
+                      </div>
+                    ) : (
+                      <div className="bg-surface-container-low/40 rounded-2xl p-4 flex items-center gap-3 border border-outline-variant/50">
+                        <Avatar name={searchResult.displayName} photoURL={searchResult.photoURL} size={44} />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-[15px] text-on-surface truncate">{searchResult.displayName}</p>
+                          <p className="text-[12px] text-on-surface-variant">{searchResult.phone}</p>
+                        </div>
+                        {isFriendAlready(searchResult.uid) ? (
+                          <span className="text-[12px] font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">Friends</span>
+                        ) : isPendingOut(searchResult.uid) ? (
+                          <span className="text-[12px] font-bold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-full">Pending</span>
+                        ) : (
+                          <button
+                            onClick={() => sendRequest(searchResult as UserProfile)}
+                            className="bg-secondary-container text-on-secondary-container px-3 py-1.5 rounded-full text-[12px] font-bold cursor-pointer active:scale-95 transition-all"
+                          >
+                            Add Friend
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </section>
+
+            {/* ── Pending Requests ───────────────────────────────────────────── */}
+            <AnimatePresence>
+              {pendingIn.length > 0 && (
+                <motion.section
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="bg-surface-container-lowest border border-outline-variant/65 p-5 rounded-3xl shadow-[0_8px_30px_rgba(0,52,43,0.04)] flex flex-col gap-4"
+                >
+                  <h2 className="font-extrabold text-[15px] uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-primary">notifications_active</span>
+                    Requests
+                    <span className="bg-error text-on-error text-[11px] font-bold px-2 py-0.5 rounded-full">{pendingIn.length}</span>
+                  </h2>
+                  <motion.ul variants={listVariants} initial="hidden" animate="visible" className="flex flex-col gap-3">
+                    {pendingIn.map(req => (
+                      <motion.li key={req.id} variants={itemVariants}
+                        className="bg-surface-container-low/40 rounded-2xl p-4 flex items-center gap-3 border border-outline-variant/40"
+                      >
+                        <Avatar name={req.fromName} photoURL={req.fromPhotoURL} size={44} />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-[15px] text-on-surface truncate">{req.fromName}</p>
+                          <p className="text-[12px] text-on-surface-variant">{req.fromPhone}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => acceptRequest(req)}
+                            className="bg-primary text-on-primary px-3 py-1.5 rounded-full text-[12px] font-bold cursor-pointer active:scale-95 transition-all shadow-sm"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => declineRequest(req)}
+                            className="bg-surface-container-high text-on-surface-variant px-3 py-1.5 rounded-full text-[12px] font-bold cursor-pointer active:scale-95 transition-all"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      </motion.li>
+                    ))}
+                  </motion.ul>
+                </motion.section>
               )}
-            </div>
-            <button
-              onClick={handleSearch}
-              disabled={!searchQuery.trim() || searching}
-              className="h-[48px] px-5 bg-primary text-on-primary rounded-2xl font-semibold text-[14px] disabled:opacity-50 cursor-pointer active:scale-95 transition-all"
-            >
-              {searching ? <span className="material-symbols-outlined animate-spin text-[18px]">sync</span> : 'Search'}
-            </button>
+            </AnimatePresence>
           </div>
 
-          {/* Search Result */}
-          <AnimatePresence>
-            {searchResult && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="mt-3"
-              >
-                {searchResult === 'none' ? (
-                  <div className="bg-surface-container-low rounded-2xl p-4 text-center text-on-surface-variant text-[14px]">
-                    No player found with that number.
-                  </div>
-                ) : (
-                  <div className="bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-3 border border-outline-variant/40 shadow-sm">
-                    <Avatar name={searchResult.displayName} photoURL={searchResult.photoURL} size={44} />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-[15px] text-on-surface truncate">{searchResult.displayName}</p>
-                      <p className="text-[12px] text-on-surface-variant">{searchResult.phone}</p>
-                    </div>
-                    {isFriendAlready(searchResult.uid) ? (
-                      <span className="text-[12px] font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">Friends ✓</span>
-                    ) : isPendingOut(searchResult.uid) ? (
-                      <span className="text-[12px] font-semibold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-full">Pending</span>
-                    ) : (
-                      <button
-                        onClick={() => sendRequest(searchResult as UserProfile)}
-                        className="bg-secondary-container text-on-secondary-container px-3 py-1.5 rounded-full text-[12px] font-semibold cursor-pointer active:scale-95 transition-all"
-                      >
-                        Add Friend
-                      </button>
-                    )}
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
-
-        {/* ── Pending Requests ───────────────────────────────────────────── */}
-        <AnimatePresence>
-          {pendingIn.length > 0 && (
-            <motion.section
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <h2 className="font-semibold text-[18px] text-on-background mb-3 flex items-center gap-2">
-                Requests
-                <span className="bg-error text-on-error text-[11px] font-bold px-2 py-0.5 rounded-full">{pendingIn.length}</span>
+          {/* Right Column: Friends List */}
+          <div className="flex flex-col gap-6 w-full lg:flex-1">
+            {/* ── Friends List ───────────────────────────────────────────────── */}
+            <section className="bg-surface-container-lowest border border-outline-variant/65 p-6 rounded-3xl shadow-[0_8px_30px_rgba(0,52,43,0.04)] flex flex-col gap-4 w-full">
+              <h2 className="font-extrabold text-[20px] text-on-background tracking-tight">
+                My Friends {friends.length > 0 && <span className="text-on-surface-variant font-normal text-[14px]">({friends.length})</span>}
               </h2>
-              <motion.ul variants={listVariants} initial="hidden" animate="visible" className="flex flex-col gap-3">
-                {pendingIn.map(req => (
-                  <motion.li key={req.id} variants={itemVariants}
-                    className="bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-3 border border-outline-variant/40 shadow-sm"
-                  >
-                    <Avatar name={req.fromName} photoURL={req.fromPhotoURL} size={44} />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-[15px] text-on-surface truncate">{req.fromName}</p>
-                      <p className="text-[12px] text-on-surface-variant">{req.fromPhone}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => acceptRequest(req)}
-                        className="bg-primary text-on-primary px-3 py-1.5 rounded-full text-[12px] font-semibold cursor-pointer active:scale-95 transition-all"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => declineRequest(req)}
-                        className="bg-surface-container text-on-surface-variant px-3 py-1.5 rounded-full text-[12px] font-semibold cursor-pointer active:scale-95 transition-all"
-                      >
-                        Decline
-                      </button>
-                    </div>
-                  </motion.li>
-                ))}
-              </motion.ul>
-            </motion.section>
-          )}
-        </AnimatePresence>
 
-        {/* ── Friends List ───────────────────────────────────────────────── */}
-        <section>
-          <h2 className="font-semibold text-[18px] text-on-background mb-3">
-            My Friends {friends.length > 0 && <span className="text-on-surface-variant font-normal text-[14px]">({friends.length})</span>}
-          </h2>
-
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <span className="material-symbols-outlined animate-spin text-[36px] text-primary">sync</span>
-            </div>
-          ) : friends.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-10 text-center text-on-surface-variant">
-              <span className="material-symbols-outlined text-[56px] opacity-30">group</span>
-              <p className="text-[14px]">No friends yet. Search by phone number above!</p>
-            </div>
-          ) : (
-            <motion.ul variants={listVariants} initial="hidden" animate="visible" className="flex flex-col gap-3">
-              {friends.map(friend => (
-                <motion.li key={friend.uid} variants={itemVariants}
-                  className="bg-surface-container-lowest rounded-2xl px-4 py-3 flex items-center gap-3 border border-outline-variant/40 shadow-sm"
-                >
-                  <Avatar name={friend.displayName} photoURL={friend.photoURL} size={44} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[15px] text-on-surface truncate">{friend.displayName}</p>
-                    <p className="text-[12px] text-on-surface-variant">{friend.phone}</p>
-                  </div>
-                  <button
-                    onClick={() => removeFriend(friend.uid)}
-                    className="w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error/10 hover:text-error transition-colors cursor-pointer"
-                    aria-label="Remove friend"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">person_remove</span>
-                  </button>
-                </motion.li>
-              ))}
-            </motion.ul>
-          )}
-        </section>
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <span className="material-symbols-outlined animate-spin text-[36px] text-primary">sync</span>
+                </div>
+              ) : friends.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-10 text-center text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[56px] text-primary/30">group</span>
+                  <p className="text-[14px] font-semibold">No Friends Added Yet</p>
+                  <p className="text-[12px] max-w-xs leading-relaxed">Search for players by their mobile phone number on the left sidebar to add them to your friends directory.</p>
+                </div>
+              ) : (
+                <motion.ul variants={listVariants} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {friends.map(friend => (
+                    <motion.li key={friend.uid} variants={itemVariants}
+                      className="bg-surface-container-low/40 rounded-2xl px-4 py-3.5 flex items-center gap-3 border border-outline-variant/40 hover:border-primary/20 transition-all duration-300"
+                    >
+                      <Avatar name={friend.displayName} photoURL={friend.photoURL} size={44} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-[15px] text-on-surface truncate">{friend.displayName}</p>
+                        <p className="text-[12px] text-on-surface-variant">{friend.phone}</p>
+                      </div>
+                      <button
+                        onClick={() => removeFriend(friend.uid)}
+                        className="w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error/10 hover:text-error transition-colors cursor-pointer"
+                        aria-label="Remove friend"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">person_remove</span>
+                      </button>
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              )}
+            </section>
+          </div>
+        </div>
       </main>
 
       {/* Toast */}

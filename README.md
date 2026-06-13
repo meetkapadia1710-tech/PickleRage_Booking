@@ -15,6 +15,7 @@ PlayHub is a premium, feature-rich court booking application designed for mobile
 ### 2. Native Mobile Integration (Capacitor)
 * **Google Wallet Passes**: Save booked tickets directly into your Google Wallet. It uses a custom **Web Crypto API RS256 JWT signer** to allow signing passes on the Firebase Spark (free) plan without requiring Cloud Functions.
 * **Native Google Sign-In**: Uses native Android prompts (`@codetrix-studio/capacitor-google-auth`) instead of in-app web views to prevent Google's "Disallowed User-Agent" security block.
+* **Platform-Isolated Login**: Website and APK Google-login flows are fully separated (`src/auth/googleSignIn.web.ts` vs `src/auth/googleSignIn.native.ts`, selected via dynamic import) so fixing one platform can never break the other — see `src/auth/README.md` for the per-platform fix workflow.
 * **Haptic Feedback**: Integrates `@capacitor/haptics` to deliver physical controller vibrations on critical UI actions (like payment approval).
 * **StatusBar Control**: Configures native device bezel and status bar colors to match PlayHub's signature deep teal theme.
 

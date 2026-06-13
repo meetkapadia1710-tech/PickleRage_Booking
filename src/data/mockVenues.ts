@@ -28,7 +28,9 @@ export const mockVenues: Venue[] = [
         ]
       }
     ],
-    isPremium: true
+    isPremium: true,
+    lat: 21.7196,
+    lng: 73.0029
   },
   {
     id: "venue_2",
@@ -40,7 +42,9 @@ export const mockVenues: Venue[] = [
     distance: "2.5 mi",
     rating: 4.7,
     amenities: ["local_parking", "water_drop"],
-    isPremium: false
+    isPremium: false,
+    lat: 21.7051,
+    lng: 72.9959
   },
   {
     id: "venue_3",
@@ -52,7 +56,9 @@ export const mockVenues: Venue[] = [
     distance: "3.0 mi",
     rating: 4.8,
     amenities: ["local_parking", "shower", "storefront"],
-    isPremium: true
+    isPremium: true,
+    lat: 21.6963,
+    lng: 72.9961
   }
 ];
 

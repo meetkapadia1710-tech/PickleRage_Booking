@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAndroidBackClose } from '../lib/backClose';
 import { getUserBookings } from '../lib/store';
 import { mockVenues } from '../data/mockVenues';
 import { formatDate, formatTime } from '../lib/format';
@@ -23,6 +24,7 @@ const itemVariants = {
 } as const;
 
 export default function NotificationsPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+  useAndroidBackClose(open, onClose);
   const notifications = useMemo<Notification[]>(() => {
     const now = new Date();
     const bookingNotifs: Notification[] = getUserBookings()

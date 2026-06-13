@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import { useAndroidBackClose } from '../lib/backClose';
 import type { Venue, Court, Booking, UserProfile } from '../types';
 import Avatar from '../components/Avatar';
 
@@ -147,6 +148,8 @@ function VenueEditor({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  // Mounted = open; Android back closes the editor instead of leaving /admin
+  useAndroidBackClose(true, onClose);
   const [form, setForm] = useState<Omit<Venue, 'id'>>(
     venue ? { name: venue.name, type: venue.type, images: [...venue.images], price: venue.price,
                address: venue.address, distance: venue.distance, rating: venue.rating,
@@ -554,6 +557,8 @@ function UserEditor({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  // Mounted = open; Android back closes the editor instead of leaving /admin
+  useAndroidBackClose(true, onClose);
   const [displayName, setDisplayName] = useState(user.displayName || '');
   const [phone, setPhone] = useState(user.phone || '');
   const [saving, setSaving] = useState(false);

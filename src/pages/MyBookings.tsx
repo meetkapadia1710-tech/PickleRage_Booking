@@ -126,6 +126,42 @@ export default function MyBookings() {
     return { upcomingBookings: upcoming, pastBookings: past };
   }, [bookings]);
 
+  // Auto-expand/select first booking on desktop only
+  useEffect(() => {
+    if (window.innerWidth >= 1024) {
+      const list = activeTab === 'upcoming' ? upcomingBookings : pastBookings;
+      if (list.length > 0 && !expandedId) {
+        setExpandedId(list[0].id);
+      }
+    }
+  }, [bookings, activeTab, upcomingBookings, pastBookings, expandedId]);
+
+  const handleTabChange = (tab: 'upcoming' | 'past') => {
+    setActiveTab(tab);
+    if (window.innerWidth >= 1024) {
+      const list = tab === 'upcoming' ? upcomingBookings : pastBookings;
+      if (list.length > 0) {
+        setExpandedId(list[0].id);
+      } else {
+        setExpandedId(null);
+      }
+    } else {
+      setExpandedId(null); // Keep collapsed on mobile when switching tabs
+    }
+  };
+
+  const selectedBooking = useMemo(() => {
+    return bookings.find(b => b.id === expandedId);
+  }, [bookings, expandedId]);
+
+  const selectedVenue = useMemo(() => {
+    return venues.find(v => v.id === selectedBooking?.venueId);
+  }, [venues, selectedBooking]);
+
+  const selectedCourt = useMemo(() => {
+    return courts.find(c => c.id === selectedBooking?.courtId);
+  }, [courts, selectedBooking]);
+
   const tabs = [
     { key: 'upcoming' as const, label: 'Upcoming' },
     { key: 'past' as const, label: 'Past' },
@@ -141,7 +177,7 @@ export default function MyBookings() {
     >
       <AppHeader />
 
-      <main className="px-5 max-w-3xl mx-auto mt-6 w-full">
+      <main className="px-5 max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto mt-6 w-full animate-fadeIn">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -159,7 +195,7 @@ export default function MyBookings() {
             return (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => handleTabChange(tab.key)}
                 className="flex-1 relative z-10 h-[48px] flex items-center justify-center font-semibold text-[14px] cursor-pointer outline-none"
               >
                 {active && (
@@ -179,75 +215,113 @@ export default function MyBookings() {
 
         {/* Content */}
         {loading ? (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
             <BookingCardSkeleton /><BookingCardSkeleton />
           </div>
         ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, x: activeTab === 'upcoming' ? -16 : 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: activeTab === 'upcoming' ? 16 : -16 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            >
-              {activeTab === 'upcoming' ? (
-                upcomingBookings.length === 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    className="bg-surface-container-lowest rounded-[20px] p-8 text-center text-on-surface-variant font-medium border border-dashed border-outline-variant/30"
-                  >
-                    No upcoming bookings. Book a court now!
-                  </motion.div>
-                ) : (
-                  <motion.div variants={listVariants} initial="hidden" animate="visible" className="space-y-4">
-                    {upcomingBookings.map(booking => {
-                      const venue = venues.find(v => v.id === booking.venueId);
-                      const court = courts.find(c => c.id === booking.courtId);
-                      return (
-                        <motion.div key={booking.id} variants={itemVariants}>
-                          <BookingCard
-                            booking={booking} venue={venue} court={court}
-                            isExpanded={expandedId === booking.id}
-                            onToggle={() => setExpandedId(expandedId === booking.id ? null : booking.id)}
-                            onCancel={() => handleCancelBooking(booking.id)}
-                            currentUid={currentUser?.uid ?? ''}
-                          />
-                        </motion.div>
-                      );
-                    })}
-                  </motion.div>
-                )
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+            {/* Master List (Left Pane) */}
+            <div className="w-full lg:w-[380px] shrink-0 flex flex-col gap-4">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, x: activeTab === 'upcoming' ? -16 : 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: activeTab === 'upcoming' ? 16 : -16 }}
+                  transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+                >
+                  {activeTab === 'upcoming' ? (
+                    upcomingBookings.length === 0 ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                        className="bg-surface-container-lowest rounded-[20px] p-8 text-center text-on-surface-variant font-medium border border-dashed border-outline-variant/30"
+                      >
+                        No upcoming bookings. Book a court now!
+                      </motion.div>
+                    ) : (
+                      <motion.div variants={listVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+                        {upcomingBookings.map(booking => {
+                          const venue = venues.find(v => v.id === booking.venueId);
+                          const court = courts.find(c => c.id === booking.courtId);
+                          return (
+                            <motion.div key={booking.id} variants={itemVariants}>
+                              <BookingCard
+                                booking={booking} venue={venue} court={court}
+                                isExpanded={expandedId === booking.id}
+                                onToggle={() => {
+                                  if (window.innerWidth >= 1024) {
+                                    setExpandedId(booking.id);
+                                  } else {
+                                    setExpandedId(expandedId === booking.id ? null : booking.id);
+                                  }
+                                }}
+                                onCancel={() => handleCancelBooking(booking.id)}
+                                currentUid={currentUser?.uid ?? ''}
+                                hideDetailsOnDesktop={true}
+                              />
+                            </motion.div>
+                          );
+                        })}
+                      </motion.div>
+                    )
+                  ) : (
+                    pastBookings.length === 0 ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                        className="bg-surface-container-lowest rounded-[20px] p-8 text-center text-on-surface-variant font-medium border border-dashed border-outline-variant/30"
+                      >
+                        No past bookings found.
+                      </motion.div>
+                    ) : (
+                      <motion.div variants={listVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+                        {pastBookings.map(booking => {
+                          const venue = venues.find(v => v.id === booking.venueId);
+                          const court = courts.find(c => c.id === booking.courtId);
+                          return (
+                            <motion.div key={booking.id} variants={itemVariants}>
+                              <BookingCard
+                                booking={booking} venue={venue} court={court}
+                                isExpanded={expandedId === booking.id}
+                                onToggle={() => {
+                                  if (window.innerWidth >= 1024) {
+                                    setExpandedId(booking.id);
+                                  } else {
+                                    setExpandedId(expandedId === booking.id ? null : booking.id);
+                                  }
+                                }}
+                                onCancel={() => handleCancelBooking(booking.id)}
+                                currentUid={currentUser?.uid ?? ''}
+                                hideDetailsOnDesktop={true}
+                              />
+                            </motion.div>
+                          );
+                        })}
+                      </motion.div>
+                    )
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Sticky Detail Panel (Right Pane) */}
+            <div className="hidden lg:block flex-1 sticky top-24 self-start">
+              {selectedBooking ? (
+                <BookingDetailPanel
+                  booking={selectedBooking}
+                  venue={selectedVenue}
+                  court={selectedCourt}
+                  onCancel={() => handleCancelBooking(selectedBooking.id)}
+                  currentUid={currentUser?.uid ?? ''}
+                />
               ) : (
-                pastBookings.length === 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    className="bg-surface-container-lowest rounded-[20px] p-8 text-center text-on-surface-variant font-medium border border-dashed border-outline-variant/30"
-                  >
-                    No past bookings found.
-                  </motion.div>
-                ) : (
-                  <motion.div variants={listVariants} initial="hidden" animate="visible" className="space-y-4">
-                    {pastBookings.map(booking => {
-                      const venue = venues.find(v => v.id === booking.venueId);
-                      const court = courts.find(c => c.id === booking.courtId);
-                      return (
-                        <motion.div key={booking.id} variants={itemVariants}>
-                          <BookingCard
-                            booking={booking} venue={venue} court={court}
-                            isExpanded={expandedId === booking.id}
-                            onToggle={() => setExpandedId(expandedId === booking.id ? null : booking.id)}
-                            onCancel={() => handleCancelBooking(booking.id)}
-                            currentUid={currentUser?.uid ?? ''}
-                          />
-                        </motion.div>
-                      );
-                    })}
-                  </motion.div>
-                )
+                <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/65 p-8 text-center text-on-surface-variant font-medium min-h-[300px] flex flex-col items-center justify-center gap-3">
+                  <span className="material-symbols-outlined text-[40px] text-primary">event_available</span>
+                  <p className="font-semibold text-on-surface">Select a Reservation</p>
+                  <p className="text-[12px] text-on-surface-variant">Click a booking from the list to view its complete receipt and teammate split payments details.</p>
+                </div>
               )}
-            </motion.div>
-          </AnimatePresence>
+            </div>
+          </div>
         )}
       </main>
     </motion.div>
@@ -256,10 +330,11 @@ export default function MyBookings() {
 
 // ─── BookingCard ──────────────────────────────────────────────────────────────
 function BookingCard({
-  booking, venue, court, isExpanded, onToggle, onCancel, currentUid,
+  booking, venue, court, isExpanded, onToggle, onCancel, currentUid, hideDetailsOnDesktop = false,
 }: {
   booking: Booking; venue: Venue | undefined; court: Court | undefined;
   isExpanded: boolean; onToggle: () => void; onCancel: () => void; currentUid: string;
+  hideDetailsOnDesktop?: boolean;
 }) {
   const isConfirmed = booking.status === 'confirmed';
   const isHold      = booking.status === 'hold';
@@ -303,8 +378,8 @@ function BookingCard({
   const chip = statusChip();
 
   return (
-    <div className={`bg-surface-container-lowest rounded-[20px] shadow-[0_4px_16px_rgba(0,52,43,0.12)] border transition-all duration-200 overflow-hidden ${
-      isExpanded ? 'border-primary/40' : 'border-outline-variant/65 hover:border-primary/30'
+    <div className={`bg-surface-container-lowest rounded-[20px] shadow-[0_4px_16px_rgba(0,52,43,0.06)] border transition-all duration-200 overflow-hidden ${
+      isExpanded ? 'border-primary lg:bg-primary/5' : 'border-outline-variant/65 hover:border-primary/30'
     }`}>
 
       {/* ── Tap header ── */}
@@ -313,7 +388,7 @@ function BookingCard({
         className="w-full p-4 flex items-start gap-3 text-left cursor-pointer"
       >
         {/* Venue image thumbnail */}
-        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-variant">
+        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-variant shadow-sm">
           {venue?.images?.[0]
             ? <img src={venue.images[0]} alt="" className="w-full h-full object-cover" />
             : <span className="material-symbols-outlined text-[28px] text-on-surface-variant flex items-center justify-center h-full">sports_tennis</span>
@@ -331,24 +406,6 @@ function BookingCard({
                   <span className="material-symbols-outlined text-[11px]">call_split</span>
                   {paidCount}/{groupSize} paid
                 </span>
-                {payerDetails.length > 0 && (
-                  <div className="flex items-center -space-x-2 shrink-0">
-                    {payerDetails.slice(0, 4).map((payer) => (
-                      <Avatar
-                        key={payer.uid}
-                        name={payer.name}
-                        photoURL={payer.photoURL}
-                        size={20}
-                        className="ring-[1.5px] ring-surface-container-lowest"
-                      />
-                    ))}
-                    {payerDetails.length > 4 && (
-                      <div className="w-5 h-5 rounded-full bg-surface-container-high border-[1.5px] border-surface-container-lowest flex items-center justify-center text-[9px] font-bold text-on-surface-variant z-10 shrink-0 select-none">
-                        +{payerDetails.length - 4}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -360,9 +417,15 @@ function BookingCard({
           </p>
         </div>
 
-        <span className={`material-symbols-outlined text-on-surface-variant text-[20px] mt-1 transition-transform duration-200 shrink-0 ${isExpanded ? 'rotate-180' : ''}`}>
+        <span className={`material-symbols-outlined text-on-surface-variant text-[20px] mt-1 transition-transform duration-200 shrink-0 ${isExpanded ? 'rotate-180' : ''} ${hideDetailsOnDesktop ? 'lg:hidden' : ''}`}>
           expand_more
         </span>
+
+        {hideDetailsOnDesktop && (
+          <span className={`hidden lg:inline-block material-symbols-outlined text-primary text-[20px] mt-1 transition-all duration-200 shrink-0 ${isExpanded ? 'translate-x-1 opacity-100' : 'opacity-0'}`}>
+            chevron_right
+          </span>
+        )}
       </button>
 
       {/* ── Expanded details ── */}
@@ -373,7 +436,7 @@ function BookingCard({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.22, ease: 'easeInOut' }}
-            className="overflow-hidden"
+            className={`overflow-hidden ${hideDetailsOnDesktop ? 'lg:hidden' : ''}`}
           >
             <div className="px-4 pb-4 flex flex-col gap-4 border-t border-outline-variant/20 pt-4">
 
@@ -486,6 +549,187 @@ function BookingCard({
   );
 }
 
+// ─── BookingDetailPanel ────────────────────────────────────────────────────────
+function BookingDetailPanel({
+  booking, venue, court, onCancel, currentUid,
+}: {
+  booking: Booking; venue: Venue | undefined; court: Court | undefined;
+  onCancel: () => void; currentUid: string;
+}) {
+  const isConfirmed = booking.status === 'confirmed';
+  const isHold      = booking.status === 'hold';
+  const isCancelled = booking.status === 'cancelled';
+  const isSplit     = !!booking.splitPayment?.enabled;
+
+  const paidCount  = booking.splitPayment?.paidPlayers?.length ?? 0;
+  const groupSize  = booking.splitPayment?.groupSize ?? 1;
+  const allPaid    = paidCount >= groupSize;
+  const payerDetails: PayerDetail[] = booking.splitPayment?.payerDetails ?? [];
+
+
+  const [walletUrl, setWalletUrl]   = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  useEffect(() => {
+    if (venue && court && isConfirmed) {
+      getWalletPassUrl(booking, venue, court).then(setWalletUrl).catch(() => {});
+    }
+  }, [booking, venue, court, isConfirmed]);
+
+  const statusChip = () => {
+    if (isCancelled) return { label: 'Cancelled', cls: 'bg-error/10 text-error' };
+    if (allPaid && isSplit) return { label: 'Confirmed ✓', cls: 'bg-primary/10 text-primary' };
+    if (isHold)  return { label: '⏸ On Hold', cls: 'bg-amber-100 text-amber-700' };
+    if (isConfirmed) return { label: 'Confirmed', cls: 'bg-secondary text-on-secondary' };
+    return { label: booking.status, cls: 'bg-surface-container text-on-surface-variant' };
+  };
+
+  const chip = statusChip();
+
+  return (
+    <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/65 p-6 shadow-[0_8px_30px_rgba(0,52,43,0.06)] flex flex-col gap-5">
+      {/* Detail Header */}
+      <div className="flex gap-4 items-start">
+        <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-surface-variant shadow-sm">
+          {venue?.images?.[0]
+            ? <img src={venue.images[0]} alt="" className="w-full h-full object-cover" />
+            : <span className="material-symbols-outlined text-[36px] text-on-surface-variant flex items-center justify-center h-full">sports_tennis</span>
+          }
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex gap-2 items-center mb-1.5">
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${chip.cls}`}>
+              {chip.label}
+            </span>
+            {isSplit && (
+              <span className="text-[10px] font-semibold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full flex items-center gap-0.5 shrink-0">
+                <span className="material-symbols-outlined text-[11px]">call_split</span>
+                Split payment
+              </span>
+            )}
+          </div>
+          <h2 className="font-extrabold text-[20px] text-on-surface leading-tight truncate mb-1">
+            {venue?.name || booking.venueId}
+          </h2>
+          <p className="text-[13px] text-on-surface-variant flex items-center gap-1">
+            <span className="material-symbols-outlined text-[16px]">location_on</span>
+            {venue?.address || 'Court address unavailable'}
+          </p>
+        </div>
+      </div>
+
+      <hr className="border-outline-variant/20" />
+
+      {/* Grid info */}
+      <div className="grid grid-cols-2 gap-3">
+        {[
+          { icon: 'calendar_today', label: 'Date',
+            value: new Date(`${booking.date}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }) },
+          { icon: 'schedule', label: 'Time',
+            value: (() => { const [h,m] = booking.startTime.split(':'); const hr = parseInt(h); return `${hr % 12 || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`; })() },
+          { icon: 'location_on', label: 'Court', value: court?.name || '—' },
+          { icon: 'layers', label: 'Surface', value: court?.surface || '—' },
+        ].map(item => (
+          <div key={item.label} className="bg-surface-container-low/70 rounded-2xl p-4 border border-outline-variant/30">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <span className="material-symbols-outlined text-[15px] text-primary">{item.icon}</span>
+              <span className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">{item.label}</span>
+            </div>
+            <p className="font-bold text-[14px] text-on-surface truncate">{item.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Split details */}
+      {isSplit && booking.splitPayment && (
+        <div className="flex flex-col gap-3 bg-surface-container-low/30 border border-outline-variant/40 rounded-2xl p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-extrabold text-[14px] text-on-surface">Split Payment Status</p>
+              <p className="text-[11px] text-on-surface-variant">Each player pays ₹{booking.splitPayment.sharePerPlayer}</p>
+            </div>
+            <span className="text-[14px] font-extrabold text-primary bg-primary/10 px-3 py-1 rounded-full">{paidCount}/{groupSize} paid</span>
+          </div>
+
+          <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+            <motion.div
+              animate={{ width: `${(paidCount / groupSize) * 100}%` }}
+              className="h-full bg-gradient-to-r from-primary to-[#004d40] rounded-full"
+              transition={{ duration: 0.4 }}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2 mt-2">
+            {/* Paid players */}
+            {payerDetails.map(payer => (
+              <div key={payer.uid} className="flex items-center gap-3 bg-surface-container-lowest rounded-xl px-3 py-2 border border-outline-variant/20 shadow-sm">
+                <Avatar name={payer.name} photoURL={payer.photoURL} size={30} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-[13px] text-on-surface truncate">
+                    {payer.name}
+                    {payer.uid === currentUid && (
+                      <span className="ml-1.5 text-[10px] text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded-full">You</span>
+                    )}
+                  </p>
+                  <p className="text-[10px] text-on-surface-variant">
+                    {new Date(payer.paidAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-extrabold text-[13px] text-primary">₹{payer.amount}</span>
+                  <span className="material-symbols-outlined text-[15px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                </div>
+              </div>
+            ))}
+
+            {/* Unpaid slots */}
+            {Array.from({ length: Math.max(0, groupSize - paidCount) }).map((_, i) => (
+              <div key={`pending-${i}`} className="flex items-center gap-3 bg-surface-container-lowest/50 rounded-xl px-3 py-2 border border-dashed border-outline-variant/30 opacity-60">
+                <div className="w-[30px] h-[30px] rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[14px] text-on-surface-variant">person</span>
+                </div>
+                <p className="flex-1 text-[12px] text-on-surface-variant">Awaiting payment…</p>
+                <span className="text-[13px] font-semibold text-on-surface-variant">₹{booking.splitPayment?.sharePerPlayer}</span>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={async () => {
+              const url = `${window.location.origin}/split/${booking.splitPayment!.paymentLinkToken}`;
+              await navigator.clipboard.writeText(url);
+              setLinkCopied(true);
+              setTimeout(() => setLinkCopied(false), 2000);
+            }}
+            className="flex items-center justify-center gap-2 h-[42px] mt-2 bg-surface-container border border-outline-variant/40 rounded-full text-[13px] font-bold text-on-surface cursor-pointer hover:bg-surface-container-high transition-colors shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[16px]">{linkCopied ? 'check' : 'content_copy'}</span>
+            {linkCopied ? 'Link Copied!' : 'Copy Share Link'}
+          </button>
+        </div>
+      )}
+
+      {/* Actions */}
+      {!isCancelled && (
+        <div className="flex gap-3 mt-4">
+          {isConfirmed && walletUrl && (
+            <a href={walletUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex justify-center items-center h-[48px] bg-[#000000] rounded-xl hover:opacity-90 transition-opacity">
+              <img src={googleWalletBadge} alt="Save to Google Wallet" className="h-[36px] object-contain" />
+            </a>
+          )}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={onCancel}
+            className="flex-1 h-[48px] text-error font-bold text-[14px] border-[1.5px] border-error/20 rounded-xl hover:bg-error/5 hover:border-error/50 transition-colors cursor-pointer"
+          >
+            Cancel Booking
+          </motion.button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function BookingCardSkeleton() {
   return (
@@ -499,3 +743,4 @@ function BookingCardSkeleton() {
     </div>
   );
 }
+

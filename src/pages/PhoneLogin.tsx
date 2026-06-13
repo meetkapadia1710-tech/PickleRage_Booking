@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleAuthProvider, signInWithPopup, signInWithCredential } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
-import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { signInWithGoogle } from '../auth/googleSignIn';
 
 const FEATURES = [
   { icon: 'sports_tennis',  label: 'Pickleball',   sub: 'Premium courts' },
@@ -28,37 +24,13 @@ export default function PhoneLogin() {
     setLoading(true);
     setError(null);
     try {
-      let uid = '', displayName = '', email = '', photoURL = '';
-
-      if (Capacitor.isNativePlatform()) {
-        const googleUser = await GoogleAuth.signIn();
-        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
-        const result = await signInWithCredential(auth, credential);
-        uid = result.user.uid;
-        displayName = result.user.displayName || '';
-        email = result.user.email || '';
-        photoURL = googleUser.imageUrl || result.user.photoURL || '';
-      } else {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
-        const result = await signInWithPopup(auth, provider);
-        uid = result.user.uid;
-        displayName = result.user.displayName || '';
-        email = result.user.email || '';
-        photoURL = result.user.photoURL || '';
-      }
-
-      // Create doc for new users; existing users keep their data
-      const userRef = doc(db, 'users', uid);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          uid,
-          displayName: displayName || 'Player',
-          email,
-          photoURL,
-          createdAt: new Date().toISOString(),
-        });
+      // Platform-specific flow (website popup vs APK native chooser) lives
+      // in src/auth/ — this page stays platform-agnostic.
+      const user = await signInWithGoogle();
+      if (!user) {
+        // User closed the account chooser/popup — not an error.
+        setLoading(false);
+        return;
       }
 
       // Routing handles redirect to /complete-profile if phone is missing
@@ -86,11 +58,13 @@ export default function PhoneLogin() {
             backgroundSize: '28px 28px',
           }}
         />
-        <div className="absolute -top-1/2 -right-1/4 w-full h-full rounded-full bg-white/5 blur-[120px]" />
-        <div className="absolute bottom-[20%] -left-1/4 w-3/4 h-1/2 rounded-full bg-secondary-container/15 blur-[100px]" />
+        {/* Soft glows as radial gradients — filter:blur over areas this big is
+            too slow for the Android WebView and made page transitions jerky */}
+        <div className="absolute -top-1/2 -right-1/4 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)]" />
+        <div className="absolute bottom-[20%] -left-1/4 w-3/4 h-1/2 bg-[radial-gradient(circle_at_center,rgba(255,191,0,0.15)_0%,transparent_70%)]" />
       </div>
 
-      <div className="relative z-10 flex flex-col min-h-screen pt-[env(safe-area-inset-top)]">
+      <div className="relative z-10 flex flex-col min-h-screen pt-[env(safe-area-inset-top)] max-w-md mx-auto w-full">
 
         {/* ── Top green section ──────────────────────────────────────────────── */}
         <div className="flex flex-col px-6 pt-10 pb-8 flex-1">

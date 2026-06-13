@@ -21,7 +21,9 @@ export default function SplashScreen() {
       className="bg-primary text-on-primary h-screen w-full flex flex-col items-center justify-center relative overflow-hidden"
     >
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center opacity-40">
-        <div className="w-[150vw] h-[150vw] md:w-[80vw] md:h-[80vw] bg-[radial-gradient(circle_at_center,_var(--color-primary-container),_var(--color-primary),_var(--color-primary))] rounded-full blur-[100px]"></div>
+        {/* The radial gradient already fades smoothly — blur-[100px] on a
+            150vw element was the single heaviest paint in the app */}
+        <div className="w-[150vw] h-[150vw] md:w-[80vw] md:h-[80vw] bg-[radial-gradient(circle_at_center,_var(--color-primary-container),_var(--color-primary),_var(--color-primary))] rounded-full"></div>
       </div>
       
       <motion.div 
