@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   collection, query, where, onSnapshot, updateDoc, doc,
@@ -375,6 +376,12 @@ function BookingCard({
   const allPaid    = paidCount >= groupSize;
   const payerDetails: PayerDetail[] = booking.splitPayment?.payerDetails ?? [];
 
+  const navigate   = useNavigate();
+  const isOwner    = booking.userId === currentUid;
+  const hasPaid    = (booking.splitPayment?.paidPlayers ?? []).includes(currentUid);
+  // An invited teammate who still owes their share can pay straight from the card.
+  const canPayShare = isSplit && !isOwner && !hasPaid && !isCancelled && !allPaid;
+
   const formattedDate = useMemo(() => {
     const d = new Date(`${booking.date}T00:00:00`);
     const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -554,20 +561,32 @@ function BookingCard({
               )}
 
               {/* Actions */}
-              {!isCancelled && (
+              {!isCancelled && (canPayShare || isOwner || (isConfirmed && walletUrl)) && (
                 <div className="flex gap-2">
+                  {canPayShare && (
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate(`/split/${booking.splitPayment!.paymentLinkToken}`, { state: { booking, venue, court } })}
+                      className="flex-1 h-[48px] bg-secondary-container text-on-secondary-container font-semibold text-[14px] rounded-full flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
+                      Pay your share ₹{booking.splitPayment?.sharePerPlayer}
+                    </motion.button>
+                  )}
                   {isConfirmed && walletUrl && (
                     <a href={walletUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex justify-center items-center h-[48px]">
                       <img src={googleWalletBadge} alt="Save to Google Wallet" className="h-[48px] object-contain" />
                     </a>
                   )}
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={onCancel}
-                    className="flex-1 h-[48px] text-error font-semibold text-[14px] border-[1.5px] border-error/20 rounded-full hover:bg-error/5 hover:border-error/50 transition-colors cursor-pointer"
-                  >
-                    Cancel Booking
-                  </motion.button>
+                  {isOwner && (
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={onCancel}
+                      className="flex-1 h-[48px] text-error font-semibold text-[14px] border-[1.5px] border-error/20 rounded-full hover:bg-error/5 hover:border-error/50 transition-colors cursor-pointer"
+                    >
+                      Cancel Booking
+                    </motion.button>
+                  )}
                 </div>
               )}
             </div>
@@ -595,6 +614,11 @@ function BookingDetailPanel({
   const allPaid    = paidCount >= groupSize;
   const payerDetails: PayerDetail[] = booking.splitPayment?.payerDetails ?? [];
 
+  const navigate   = useNavigate();
+  const isOwner    = booking.userId === currentUid;
+  const hasPaid    = (booking.splitPayment?.paidPlayers ?? []).includes(currentUid);
+  // An invited teammate who still owes their share can pay straight from the panel.
+  const canPayShare = isSplit && !isOwner && !hasPaid && !isCancelled && !allPaid;
 
   const [walletUrl, setWalletUrl]   = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
@@ -739,20 +763,32 @@ function BookingDetailPanel({
       )}
 
       {/* Actions */}
-      {!isCancelled && (
+      {!isCancelled && (canPayShare || isOwner || (isConfirmed && walletUrl)) && (
         <div className="flex gap-3 mt-4">
+          {canPayShare && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(`/split/${booking.splitPayment!.paymentLinkToken}`)}
+              className="flex-1 h-[48px] bg-secondary-container text-on-secondary-container font-bold text-[14px] rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
+              Pay your share ₹{booking.splitPayment?.sharePerPlayer}
+            </motion.button>
+          )}
           {isConfirmed && walletUrl && (
             <a href={walletUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex justify-center items-center h-[48px] bg-[#000000] rounded-xl hover:opacity-90 transition-opacity">
               <img src={googleWalletBadge} alt="Save to Google Wallet" className="h-[36px] object-contain" />
             </a>
           )}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={onCancel}
-            className="flex-1 h-[48px] text-error font-bold text-[14px] border-[1.5px] border-error/20 rounded-xl hover:bg-error/5 hover:border-error/50 transition-colors cursor-pointer"
-          >
-            Cancel Booking
-          </motion.button>
+          {isOwner && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={onCancel}
+              className="flex-1 h-[48px] text-error font-bold text-[14px] border-[1.5px] border-error/20 rounded-xl hover:bg-error/5 hover:border-error/50 transition-colors cursor-pointer"
+            >
+              Cancel Booking
+            </motion.button>
+          )}
         </div>
       )}
     </div>

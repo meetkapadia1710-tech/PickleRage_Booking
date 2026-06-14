@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   collection, query, where, getDocs, doc, getDoc, updateDoc, arrayUnion, onSnapshot,
@@ -13,19 +13,43 @@ import Avatar from '../components/Avatar';
 export default function SplitPayment() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useAuth();
 
-  const [bookingId, setBookingId] = useState<string | null>(null);
-  const [booking, setBooking] = useState<Booking | null>(null);
-  const [venue, setVenue] = useState<Venue | null>(null);
-  const [court, setCourt] = useState<Court | null>(null);
-  const [loading, setLoading] = useState(true);
+  // When opened from a booking card we receive the booking (and maybe venue/court)
+  // via router state, so the page renders instantly instead of re-fetching.
+  const prefetched = (location.state ?? null) as
+    { booking?: Booking; venue?: Venue; court?: Court } | null;
+
+  const [bookingId, setBookingId] = useState<string | null>(prefetched?.booking?.id ?? null);
+  const [booking, setBooking] = useState<Booking | null>(prefetched?.booking ?? null);
+  const [venue, setVenue] = useState<Venue | null>(prefetched?.venue ?? null);
+  const [court, setCourt] = useState<Court | null>(prefetched?.court ?? null);
+  // Stay in "loading" until we also have the venue (the page's error guard treats
+  // a missing venue as invalid, so don't render the main UI without it).
+  const [loading, setLoading] = useState(!(prefetched?.booking && prefetched?.venue));
   const [paying, setPaying] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ── Initial fetch by token ──────────────────────────────────────────────────
+  // ── Initial load: fast path from My Bookings, else resolve by token ─────────
   useEffect(() => {
+    // Fast path — arrived from a booking card with the booking already in hand.
+    // Render immediately; only backfill venue/court if they weren't passed along.
+    if (prefetched?.booking) {
+      const b = prefetched.booking;
+      if (!prefetched.venue || !prefetched.court) {
+        Promise.all([
+          prefetched.venue ? null : getDoc(doc(db, 'venues', b.venueId)),
+          prefetched.court ? null : getDoc(doc(db, 'courts', b.courtId)),
+        ]).then(([vs, cs]) => {
+          if (vs?.exists()) setVenue({ ...(vs.data() as Venue), id: vs.id });
+          if (cs?.exists()) setCourt({ ...(cs.data() as Court), id: cs.id });
+        }).catch(() => {}).finally(() => setLoading(false));
+      }
+      return;
+    }
+
     const fetchByToken = async () => {
       if (!token) { setError('Invalid link.'); setLoading(false); return; }
       try {
