@@ -16,6 +16,24 @@ export async function initPushNotifications() {
       return;
     }
 
+    // Android 8+ needs a channel for notifications to show as heads-up with
+    // sound. Its id matches the FCM default channel set in AndroidManifest and
+    // the channelId the Cloud Functions send on.
+    if (Capacitor.getPlatform() === 'android') {
+      try {
+        await PushNotifications.createChannel({
+          id: 'playhub_default',
+          name: 'PlayHub Updates',
+          description: 'Booking and split-payment updates',
+          importance: 5,
+          visibility: 1,
+          sound: 'default',
+        });
+      } catch (e) {
+        console.warn('Could not create notification channel:', e);
+      }
+    }
+
     // Remove stale listeners first, wire up new ones, then trigger registration.
     // Reversing this order risks the 'registration' event firing before the
     // listener is attached and the token being silently dropped.
