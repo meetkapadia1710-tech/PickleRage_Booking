@@ -9,6 +9,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      // The app is wrapped in Capacitor (Android). A precaching service worker
+      // caches index.html + hashed bundles in the WebView's storage, which
+      // survives APK reinstalls and keeps serving the OLD UI after every build.
+      // selfDestroying ships a SW that unregisters itself and clears all caches,
+      // so the app always loads the freshly-built assets from disk.
+      selfDestroying: true,
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons.svg'],
       manifest: {
