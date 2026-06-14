@@ -10,6 +10,7 @@ import type { Booking, Venue, Court, PayerDetail } from '../types';
 import AppHeader from '../components/AppHeader';
 import Avatar from '../components/Avatar';
 import { getWalletPassUrl } from '../lib/wallet';
+import { splitPaymentUrl } from '../lib/appUrl';
 import googleWalletBadge from '../assets/add-to-google-wallet-badge.svg';
 import { sanitizeVenue } from '../lib/venues';
 
@@ -518,7 +519,7 @@ function BookingCard({
                   {/* Copy link */}
                   <button
                     onClick={async () => {
-                      const url = `${window.location.origin}/split/${booking.splitPayment!.paymentLinkToken}`;
+                      const url = splitPaymentUrl(booking.splitPayment!.paymentLinkToken);
                       await navigator.clipboard.writeText(url);
                       setLinkCopied(true);
                       setTimeout(() => setLinkCopied(false), 2000);
@@ -703,7 +704,7 @@ function BookingDetailPanel({
 
           <button
             onClick={async () => {
-              const url = `${window.location.origin}/split/${booking.splitPayment!.paymentLinkToken}`;
+              const url = splitPaymentUrl(booking.splitPayment!.paymentLinkToken);
               await navigator.clipboard.writeText(url);
               setLinkCopied(true);
               setTimeout(() => setLinkCopied(false), 2000);

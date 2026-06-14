@@ -5,6 +5,7 @@ import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firesto
 import { db } from '../firebase';
 import type { Venue, Court } from '../types';
 import { getMapEmbedUrl, getDirectionsUrl, hasLocation, openExternal } from '../lib/maps';
+import { publicAppOrigin } from '../lib/appUrl';
 import { isFavorite, toggleFavorite } from '../lib/store';
 import Toast from '../components/Toast';
 import { sanitizeVenue } from '../lib/venues';
@@ -84,7 +85,7 @@ export default function VenueDetail() {
     const shareData = {
       title: venue.name,
       text: `Check out ${venue.name} on PlayHub — ₹${venue.price}/hr`,
-      url: window.location.href,
+      url: `${publicAppOrigin()}${window.location.pathname}${window.location.search}`,
     };
     try {
       if (navigator.share) {

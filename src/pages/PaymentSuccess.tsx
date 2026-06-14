@@ -6,6 +6,7 @@ import { db } from '../firebase';
 import type { Booking, Venue, Court } from '../types';
 import { formatDate, formatTime } from '../lib/format';
 import { getWalletPassUrl } from '../lib/wallet';
+import { splitPaymentUrl } from '../lib/appUrl';
 import googleWalletBadge from '../assets/add-to-google-wallet-badge.svg';
 
 export default function PaymentSuccess() {
@@ -224,7 +225,7 @@ export default function PaymentSuccess() {
           {/* Share Link Card — only for split bookings */}
           {booking?.splitPayment?.enabled && (() => {
             const token = booking.splitPayment!.paymentLinkToken;
-            const shareUrl = `${window.location.origin}/split/${token}`;
+            const shareUrl = splitPaymentUrl(token);
             const waText = encodeURIComponent(`Hey! Join me at ${venue?.name ?? 'the venue'}. Pay your share: ${shareUrl}`);
             return (
               <motion.div
