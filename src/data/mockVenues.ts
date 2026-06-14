@@ -3,9 +3,9 @@ import type { Venue, Court } from '../types';
 export const mockVenues: Venue[] = [
   {
     id: "venue_1",
-    name: "PickleRage Pickleball at Shravan Chokdi",
+    name: "PickleRage Pickleball",
     type: "pickleball",
-    images: ["https://lh3.googleusercontent.com/aida-public/AB6AXuAfrKLO4vIYaVf-hotizWYDN9YXfbPDgdpxt0Uy8DynrBzcMOWRKE8ZeCzBVpXxMM2YTb_HhwcA4kUHTEYPd0x9aLRnTJTofK33R4_VOmg2d3EsReKk8ArQbkg5jLdAIP8fYaS73LlqNV5zPqQ3someJW9QxJ5mIxFdX3af_feF6FVRfwaE3TKw7VASQ0EAzeWO-Z7yQzTWWGnM1L5nLFZTmoEF-cILvtqduPgT9SzQkPF8aAyzP4dZNOo3Vc1NRTip4X0hEuCR_zU"],
+    images: ["/court-a.jpg", "/court-b.jpg"],
     price: 200,
     address: "Picklerage, Shravan Chowkdi, Opposite Ganesh Township, Bholav, Bharuch 392001",
     distance: "1.2 mi",
@@ -34,7 +34,7 @@ export const mockVenues: Venue[] = [
   },
   {
     id: "venue_2",
-    name: "PickleRage Pickleball at City Center",
+    name: "Rooftop Pickleball",
     type: "pickleball",
     images: ["https://lh3.googleusercontent.com/aida-public/AB6AXuBG4BC1nXZgoqd37ZqdL-4OsZjBgc7xU0JmOR-5eV40r2HtJMlVNAEoy-f81SX8H6LLto-2TAHCPb2i_xbJsPh9UIov_Bp0d074696d4fmeBYqDYqz7JD8S-01KVCGNMs6ZgngORmi_VYnVJiU6AoceAlHQWYcu3PjSh_Mup12mOTx6VCAAT8X8sv04VsRXG0XaPnuJNawDrv8yzxiTz1HTWXtYpImlXAmJhsdKXOdNzpcMufcZWS6ZnObR0phh2XUfhqrVYM49VM8"],
     price: 800,

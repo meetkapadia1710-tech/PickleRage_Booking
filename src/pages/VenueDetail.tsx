@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Venue, Court } from '../types';
 import { getMapEmbedUrl, getDirectionsUrl, hasLocation, openExternal } from '../lib/maps';
 import { isFavorite, toggleFavorite } from '../lib/store';
 import Toast from '../components/Toast';
+import { sanitizeVenue } from '../lib/venues';
 
 export default function VenueDetail() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ export default function VenueDetail() {
   const [loading, setLoading] = useState(true);
   const [selectedCourt, setSelectedCourt] = useState<string | null>(null);
   const [fav, setFav] = useState(() => (id ? isFavorite(id) : false));
+  const [activePhoto, setActivePhoto] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchVenueAndCourts = async () => {
@@ -28,19 +30,19 @@ export default function VenueDetail() {
         if (venueSnap.exists()) {
           const data = venueSnap.data() as Venue;
           const id = venueSnap.id;
-          if (id === 'venue_1') {
-            data.address = 'Picklerage, Shravan Chowkdi, Opposite Ganesh Township, Bholav, Bharuch 392001';
-          } else if (id === 'venue_3') {
-            data.name = 'SPORTS PLANET';
-            data.address = 'City Centre, Railway Station Rd, Moficer Jin Compound, Bharuch, Gujarat 392001';
-          }
-          setVenue({ ...data, id });
+          setVenue(sanitizeVenue({ ...data, id }));
         }
 
         // Fetch Courts
         const courtsQuery = query(collection(db, 'courts'), where('venueId', '==', id));
         const courtsSnap = await getDocs(courtsQuery);
-        const courtsList = courtsSnap.docs.map(d => ({ ...(d.data() as Court), id: d.id }));
+        let courtsList = courtsSnap.docs.map(d => ({ ...(d.data() as Court), id: d.id }));
+        if (id === 'venue_2') {
+          courtsList = [
+            { id: 'venue_2_c1', venueId: 'venue_2', name: 'Court 1', surface: 'Outdoor', isIndoor: false, squadSize: 'Full Court', sport: 'Pickleball' },
+            { id: 'venue_2_c2', venueId: 'venue_2', name: 'Court 2', surface: 'Outdoor', isIndoor: false, squadSize: 'Full Court', sport: 'Pickleball' },
+          ];
+        }
         setCourts(courtsList);
       } catch (err) {
         console.error('Error fetching venue details:', err);
@@ -51,6 +53,12 @@ export default function VenueDetail() {
 
     fetchVenueAndCourts();
   }, [id]);
+
+  useEffect(() => {
+    if (courts.length === 1) {
+      setSelectedCourt(courts[0].id);
+    }
+  }, [courts]);
 
   // Toast State
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -209,26 +217,33 @@ export default function VenueDetail() {
           {/* Left Column: Courts & Location Map */}
           <div className="w-full lg:flex-1 flex flex-col gap-6">
             {/* Court Type Selector */}
-            <section>
-              <h2 className="font-extrabold text-[20px] text-on-background mb-4 tracking-tight">Select a court to book</h2>
-              {courts.length === 0 ? (
-                <p className="text-on-surface-variant text-[14px]">No courts configured for this venue.</p>
-              ) : (
+            {courts.length > 1 ? (
+              <section>
+                <h2 className="font-extrabold text-[20px] text-on-background mb-4 tracking-tight">Select a court to book</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {courts.map((court, idx) => {
                     const isSelected = selectedCourt === court.id;
-                    const isPickleball = venue.type === 'pickleball';
-                    const courtDetails = isPickleball
+                    const courtDetails = venue.id === 'venue_1'
                       ? idx === 0
                         ? {
-                            badge: 'Court A',
+                            badge: court.name,
                             img: '/court-a.jpg',
                           }
                         : {
-                            badge: 'Court B',
+                            badge: court.name,
                             img: '/court-b.jpg',
                           }
-                      : null;
+                      : venue.id === 'venue_2'
+                        ? idx === 0
+                          ? {
+                              badge: court.name,
+                              img: '/city-center-1.jpg',
+                            }
+                          : {
+                              badge: court.name,
+                              img: '/city-center-2.jpg',
+                            }
+                        : null;
 
                     if (courtDetails) {
                       return (
@@ -257,12 +272,17 @@ export default function VenueDetail() {
                             <span className="self-start px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-secondary-container text-on-secondary-container shadow-sm">
                               {courtDetails.badge}
                             </span>
+                            {court.surface && (
+                              <span className="text-[13px] font-semibold text-white/95 drop-shadow-sm">
+                                {court.surface}
+                              </span>
+                            )}
                           </div>
                         </button>
                       );
                     }
 
-                    // Fallback for Box Cricket
+                    // Fallback
                     return (
                       <button 
                         key={court.id}
@@ -287,8 +307,31 @@ export default function VenueDetail() {
                     );
                   })}
                 </div>
-              )}
-            </section>
+              </section>
+            ) : courts.length === 0 ? (
+              <section>
+                <h2 className="font-extrabold text-[20px] text-on-background mb-4 tracking-tight">Select a court to book</h2>
+                <p className="text-on-surface-variant text-[14px]">No courts configured for this venue.</p>
+              </section>
+            ) : null}
+
+            {/* Photos Gallery */}
+            {venue.images && venue.images.length > 0 && (
+              <section className="animate-fadeIn">
+                <h2 className="font-extrabold text-[20px] text-on-background mb-4 tracking-tight">Photos</h2>
+                <div className="flex gap-3 overflow-x-auto pb-2 snap-x hide-scrollbar">
+                  {venue.images.map((imgUrl, idx) => (
+                    <button 
+                      key={idx} 
+                      onClick={() => setActivePhoto(imgUrl)}
+                      className="w-[200px] h-[135px] rounded-[20px] overflow-hidden shrink-0 border border-outline-variant/40 snap-start bg-surface-container-low shadow-sm active:scale-95 transition-transform cursor-pointer"
+                    >
+                      <img src={imgUrl} alt={`${venue.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Location & Directions */}
             {hasLocation(venue) && (
@@ -521,6 +564,32 @@ export default function VenueDetail() {
 
       {/* Dynamic Island style Toast */}
       <Toast message={toastMsg} icon={toastIcon} />
+
+      {/* Photo Lightbox Modal */}
+      <AnimatePresence>
+        {activePhoto && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90 backdrop-blur-md">
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActivePhoto(null)}
+              className="absolute top-[calc(1.5rem+env(safe-area-inset-top))] right-5 w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </motion.button>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+              className="max-w-[90vw] max-h-[80vh] rounded-2xl overflow-hidden shadow-2xl"
+            >
+              <img src={activePhoto} alt="Preview" className="max-w-full max-h-[80vh] object-contain" />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

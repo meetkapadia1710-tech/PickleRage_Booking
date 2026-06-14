@@ -11,6 +11,7 @@ import AppHeader from '../components/AppHeader';
 import Avatar from '../components/Avatar';
 import { getWalletPassUrl } from '../lib/wallet';
 import googleWalletBadge from '../assets/add-to-google-wallet-badge.svg';
+import { sanitizeVenue } from '../lib/venues';
 
 const listVariants = {
   hidden: {},
@@ -36,8 +37,14 @@ export default function MyBookings() {
       getDocs(collection(db, 'venues')),
       getDocs(collection(db, 'courts')),
     ]).then(([vSnap, cSnap]) => {
-      setVenues(vSnap.docs.map(d => ({ ...(d.data() as Venue), id: d.id })));
-      setCourts(cSnap.docs.map(d => ({ ...(d.data() as Court), id: d.id })));
+      setVenues(vSnap.docs.map(d => sanitizeVenue({ ...(d.data() as Venue), id: d.id })));
+      let courtsList = cSnap.docs.map(d => ({ ...(d.data() as Court), id: d.id }));
+      courtsList = [
+        ...courtsList,
+        { id: 'venue_2_c1', venueId: 'venue_2', name: 'Court 1', surface: 'Outdoor', isIndoor: false, squadSize: 'Full Court', sport: 'Pickleball' },
+        { id: 'venue_2_c2', venueId: 'venue_2', name: 'Court 2', surface: 'Outdoor', isIndoor: false, squadSize: 'Full Court', sport: 'Pickleball' },
+      ];
+      setCourts(courtsList);
     }).catch(console.error);
   }, []);
 

@@ -8,6 +8,7 @@ import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import SmartImage from '../components/SmartImage';
+import { sanitizeVenue } from '../lib/venues';
 
 // Create a custom modern map pin using Leaflet divIcon
 const createCustomIcon = (active: boolean) => L.divIcon({
@@ -57,15 +58,7 @@ export default function MapExplore() {
         const fetched = snap.docs.map(d => {
           const data = d.data() as Venue;
           const id = d.id;
-          // Apply fallback coordinates for known mock venues
-          if (id === 'venue_1' && !data.lat) {
-            data.lat = 21.7196; data.lng = 73.0029;
-          } else if (id === 'venue_2' && !data.lat) {
-            data.lat = 21.7051; data.lng = 72.9959;
-          } else if (id === 'venue_3' && !data.lat) {
-            data.lat = 21.6963; data.lng = 72.9961;
-          }
-          return { ...data, id };
+          return sanitizeVenue({ ...data, id });
         }).filter(v => typeof v.lat === 'number' && typeof v.lng === 'number');
         
         setVenues(fetched);

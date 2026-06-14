@@ -44,8 +44,14 @@ export default function TimeSlots() {
       try {
         const venueSnap = await getDoc(doc(db, 'venues', venueId));
         if (venueSnap.exists()) setVenue({ ...(venueSnap.data() as Venue), id: venueSnap.id });
-        const courtSnap = await getDoc(doc(db, 'courts', courtId));
-        if (courtSnap.exists()) setCourt({ ...(courtSnap.data() as Court), id: courtSnap.id });
+        if (courtId === 'venue_2_c1') {
+          setCourt({ id: 'venue_2_c1', venueId: 'venue_2', name: 'Court 1', surface: 'Outdoor', isIndoor: false, squadSize: 'Full Court', sport: 'Pickleball' });
+        } else if (courtId === 'venue_2_c2') {
+          setCourt({ id: 'venue_2_c2', venueId: 'venue_2', name: 'Court 2', surface: 'Outdoor', isIndoor: false, squadSize: 'Full Court', sport: 'Pickleball' });
+        } else {
+          const courtSnap = await getDoc(doc(db, 'courts', courtId));
+          if (courtSnap.exists()) setCourt({ ...(courtSnap.data() as Court), id: courtSnap.id });
+        }
       } catch (err) {
         console.error('Error fetching slot details:', err);
       } finally {

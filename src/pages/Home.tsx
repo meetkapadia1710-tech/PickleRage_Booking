@@ -6,7 +6,8 @@ import { db } from '../firebase';
 import type { Venue } from '../types';
 import AppHeader from '../components/AppHeader';
 import SmartImage from '../components/SmartImage';
-import { getMapSearchUrl, openExternal } from '../lib/maps';
+import { sanitizeVenue } from '../lib/venues';
+
 
 const cardVariants = {
   hidden: { opacity: 0, y: 18 },
@@ -41,13 +42,7 @@ export default function Home() {
         setVenues(snap.docs.map(d => {
           const data = d.data() as Venue;
           const id = d.id;
-          if (id === 'venue_1') {
-            data.address = 'nr Shravan Chowkdi, Link Rd, opp. Ganesh Township, PickleRage, Bharuch, Gujarat 392001';
-          } else if (id === 'venue_3') {
-            data.name = 'SPORTS PLANET';
-            data.address = 'City Centre, Railway Station Rd, Moficer Jin Compound, Bharuch, Gujarat 392001';
-          }
-          return { ...data, id };
+          return sanitizeVenue({ ...data, id });
         }));
         setLoading(false);
       })
