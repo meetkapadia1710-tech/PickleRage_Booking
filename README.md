@@ -19,18 +19,23 @@ PlayHub is a premium, feature-rich court booking application designed for mobile
 * **Haptic Feedback**: Integrates `@capacitor/haptics` to deliver physical controller vibrations on critical UI actions (like payment approval).
 * **StatusBar Control**: Configures native device bezel and status bar colors to match PlayHub's signature deep teal theme.
 
-### 3. Competitions & Community
+### 3. Explore & Discover
+* **Interactive Map Exploration**: Discover nearby courts and grounds instantly using an integrated map interface built with Leaflet.
+* **Detailed Venue Profiles**: View comprehensive venue details with favoriting, dynamic content rendering, and social sharing capabilities.
+
+### 4. Competitions & Community
+* **Friends & Social Network**: Add friends, manage your friends list, and get real-time notifications for social interactions.
 * **Leaderboards**: Automatically aggregates Firestore booking metrics per user to rank players.
 * **Winners Podium**: An interactive podium layout displaying avatars and animated trophies for the top 3 players.
 
-### 4. Admin Operations
+### 5. Admin Operations
 * **Dashboard Console**: Desktop-responsive sidebar control panels displaying core KPI metrics and table lists for booking records.
 * **Database Seeder**: Quick-start setup buttons to auto-populate Firestore collections with default venues and court configurations.
 
 ---
 
 ## 🛠️ Tech Stack
-* **Frontend**: React 19, TypeScript, Tailwind CSS, Framer Motion
+* **Frontend**: React 19, TypeScript, Tailwind CSS, Framer Motion, Leaflet
 * **Bundler & Tooling**: Vite, Vite-plugin-PWA, ESLint
 * **Backend**: Firebase Authentication, Firestore Database
 * **Hybrid Core**: Capacitor CLI (@capacitor/android, @capacitor/core)
