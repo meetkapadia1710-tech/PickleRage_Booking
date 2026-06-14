@@ -205,29 +205,29 @@ export default function Friends() {
                 <span className="material-symbols-outlined text-[20px] text-primary">person_search</span>
                 Find Players
               </h2>
-              <div className="flex gap-2 min-w-0">
-                <div className="flex-1 min-w-0 flex items-center gap-2 bg-surface-container-low rounded-2xl px-4 h-[48px] border border-outline-variant/40">
-                  <span className="material-symbols-outlined text-[20px] text-on-surface-variant">phone</span>
-                  <input
-                    type="tel"
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                    placeholder="Search by phone number"
-                    className="flex-1 bg-transparent text-[14px] text-on-surface outline-none placeholder:text-on-surface-variant"
-                  />
-                  {searchQuery && (
-                    <button onClick={() => { setSearchQuery(''); setSearchResult(null); }} className="cursor-pointer text-on-surface-variant">
-                      <span className="material-symbols-outlined text-[18px]">close</span>
-                    </button>
-                  )}
-                </div>
+              <div className="flex items-center gap-2 bg-surface-container-low rounded-2xl px-4 h-[52px] border border-outline-variant/40">
+                <span className="material-symbols-outlined text-[20px] text-on-surface-variant shrink-0">phone</span>
+                <input
+                  type="tel"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                  placeholder="Search by phone number"
+                  className="flex-1 min-w-0 bg-transparent text-[14px] text-on-surface outline-none placeholder:text-on-surface-variant"
+                />
+                {searchQuery && (
+                  <button onClick={() => { setSearchQuery(''); setSearchResult(null); }} className="cursor-pointer text-on-surface-variant shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                )}
                 <button
                   onClick={handleSearch}
                   disabled={!searchQuery.trim() || searching}
-                  className="h-[48px] px-5 bg-primary text-on-primary rounded-2xl font-bold text-[14px] disabled:opacity-50 cursor-pointer active:scale-95 transition-all shadow-[0_4px_12px_rgba(0,82,68,0.2)] shrink-0 whitespace-nowrap"
+                  className="shrink-0 h-[36px] px-4 bg-primary text-on-primary rounded-xl font-bold text-[13px] disabled:opacity-50 cursor-pointer active:scale-95 transition-all shadow-[0_2px_8px_rgba(0,82,68,0.2)]"
                 >
-                  {searching ? <span className="material-symbols-outlined animate-spin text-[18px]">sync</span> : 'Search'}
+                  {searching
+                    ? <span className="material-symbols-outlined animate-spin text-[16px]">sync</span>
+                    : 'Search'}
                 </button>
               </div>
 
