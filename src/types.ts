@@ -51,6 +51,7 @@ export interface SplitPayment {
   invitedFriends: string[];    // userIds of invited friends
   paymentLinkToken: string;    // unique token used in /split/:token route
   payerDetails?: PayerDetail[];// rich info: name + amount per payer
+  reminderSent?: boolean;      // set by the hourly hold-reminder Cloud Function
 }
 
 export interface Booking {

@@ -9,6 +9,10 @@ import { useAndroidBackClose } from '../lib/backClose';
 import type { Venue, Court, Booking, UserProfile, PayerDetail } from '../types';
 import Avatar from '../components/Avatar';
 
+// Local (not UTC) YYYY-MM-DD so "today" and slot dates match the user's clock.
+const toLocalIso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 export default function TimeSlots() {
   const { id: venueId, courtId } = useParams();
   const navigate = useNavigate();
@@ -20,10 +24,7 @@ export default function TimeSlots() {
   const [friends, setFriends] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  });
+  const [selectedDate, setSelectedDate] = useState(() => toLocalIso(new Date()));
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   // Android back closes the confirmation sheet instead of leaving the page
@@ -89,7 +90,9 @@ export default function TimeSlots() {
       where('venueId', '==', venueId),
       where('courtId', '==', courtId),
       where('date', '==', selectedDate),
-      where('status', '==', 'confirmed')
+      // Both confirmed AND held slots occupy the court — otherwise a held split
+      // booking's slot wrongly shows as available and gets double-booked.
+      where('status', 'in', ['confirmed', 'hold'])
     );
     return onSnapshot(bookingsQuery, snapshot => {
       setBookings(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Booking)));
@@ -103,7 +106,7 @@ export default function TimeSlots() {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       arr.push({
-        iso: d.toISOString().split('T')[0],
+        iso: toLocalIso(d),
         dayOfWeek: d.toLocaleDateString('en-US', { weekday: 'short' }),
         dayOfMonth: d.getDate(),
       });
@@ -111,7 +114,15 @@ export default function TimeSlots() {
     return arr;
   }, []);
 
-  const isSlotAvailable = (time: string) => !bookings.find(b => b.startTime === time);
+  const isSlotAvailable = (time: string) => {
+    if (bookings.find(b => b.startTime === time)) return false;
+    // Can't book a slot whose start hour has already passed today.
+    if (selectedDate === toLocalIso(new Date())) {
+      const slotHour = parseInt(time.split(':')[0], 10);
+      if (slotHour <= new Date().getHours()) return false;
+    }
+    return true;
+  };
 
   const handleSlotClick = (time: string) => {
     if (isSlotAvailable(time)) setSelectedSlot(time);
@@ -119,14 +130,48 @@ export default function TimeSlots() {
 
   // Derived split values
   const totalPrice = venue?.price ?? 0;
-  const sharePerPlayer = splitEnabled ? Math.ceil(totalPrice / groupSize) : totalPrice;
+  // Per-friend share uses floor; the booker absorbs the rounding remainder so the
+  // group total always equals the court fee (Math.ceil used to overcharge).
+  const friendShare = splitEnabled ? Math.floor(totalPrice / groupSize) : totalPrice;
+  const bookerShare = splitEnabled ? totalPrice - friendShare * (groupSize - 1) : totalPrice;
+  // "Instant" → booker pays the full court fee now, slot confirms immediately.
+  // "Hold"    → booker pays only their share, slot is held until everyone pays.
+  const bookerPays = splitEnabled && splitMode === 'instant' ? totalPrice : bookerShare;
+  // Amount each invited friend is asked to pay via the split link.
+  const sharePerPlayer = friendShare;
+
+  // A split booking must invite exactly (groupSize − 1) friends to cover every share.
+  const requiredFriends = groupSize - 1;
+  const friendsValid = !splitEnabled || selectedFriends.length === requiredFriends;
 
   const toggleFriend = (uid: string) => {
-    setSelectedFriends(prev => prev.includes(uid) ? prev.filter(x => x !== uid) : [...prev, uid]);
+    setSelectedFriends(prev => {
+      if (prev.includes(uid)) return prev.filter(x => x !== uid);
+      if (prev.length >= requiredFriends) return prev; // already invited enough
+      return [...prev, uid];
+    });
+  };
+
+  const adjustGroupSize = (delta: number) => {
+    const next = Math.min(8, Math.max(2, groupSize + delta));
+    setGroupSize(next);
+    setSelectedFriends(prev => prev.slice(0, next - 1)); // trim invites if shrinking
   };
 
   const handleConfirmBooking = async () => {
     if (!currentUser || !venue || !court || !selectedSlot || isSubmitting) return;
+    if (splitEnabled && selectedFriends.length !== requiredFriends) {
+      alert(`Please invite exactly ${requiredFriends} friend(s) for a group of ${groupSize}.`);
+      return;
+    }
+    // Re-check availability right before writing — the live listener includes
+    // confirmed + held slots, so this catches a slot taken since selection.
+    if (!isSlotAvailable(selectedSlot)) {
+      alert('Sorry, that slot was just taken. Please choose another time.');
+      setIsConfirming(false);
+      setSelectedSlot(null);
+      return;
+    }
     setIsSubmitting(true);
     try {
       await Haptics.impact({ style: ImpactStyle.Heavy });
@@ -150,7 +195,7 @@ export default function TimeSlots() {
       const firstPayerDetail: PayerDetail = {
         uid: currentUser.uid,
         name: payerName,
-        amount: splitEnabled ? Math.ceil((venue?.price ?? 0) / groupSize) : (venue?.price ?? 0),
+        amount: bookerPays,
         paidAt: new Date().toISOString(),
         photoURL: payerPhoto,
       };
@@ -427,12 +472,12 @@ export default function TimeSlots() {
                             </div>
                             <div className="flex items-center gap-3">
                               <button
-                                onClick={() => setGroupSize(s => Math.max(2, s - 1))}
+                                onClick={() => adjustGroupSize(-1)}
                                 className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary font-bold text-[18px] cursor-pointer active:scale-90 transition-all"
                               >−</button>
                               <span className="font-bold text-[20px] text-on-surface w-6 text-center">{groupSize}</span>
                               <button
-                                onClick={() => setGroupSize(s => Math.min(8, s + 1))}
+                                onClick={() => adjustGroupSize(1)}
                                 className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary font-bold text-[18px] cursor-pointer active:scale-90 transition-all"
                               >+</button>
                             </div>
@@ -564,10 +609,15 @@ export default function TimeSlots() {
                   )}
                   <div className="flex justify-between items-center mt-2 pt-2 border-t border-surface-variant border-dashed">
                     <span className="font-semibold text-[18px] text-on-surface">
-                      {splitEnabled ? 'Your Share' : 'Total'}
+                      {!splitEnabled ? 'Total' : splitMode === 'instant' ? 'You Pay (Full)' : 'Your Share'}
                     </span>
-                    <span className="font-bold text-[20px] text-primary">₹{sharePerPlayer}.00</span>
+                    <span className="font-bold text-[20px] text-primary">₹{bookerPays}.00</span>
                   </div>
+                  {splitEnabled && splitMode === 'instant' && (
+                    <p className="text-[11px] text-on-surface-variant">
+                      You pay the full ₹{totalPrice} now; friends reimburse ₹{sharePerPlayer} each via the link.
+                    </p>
+                  )}
                   {splitEnabled && splitMode === 'hold' && (
                     <p className="text-[11px] text-on-surface-variant bg-surface-container-low rounded-xl px-3 py-2 mt-1">
                       ⏸ Slot will be held for 24 hours. Pay your full share to confirm permanently.
@@ -575,11 +625,18 @@ export default function TimeSlots() {
                   )}
                 </div>
 
+                {/* Invite validation hint */}
+                {splitEnabled && !friendsValid && (
+                  <p className="text-[12px] text-error bg-error/5 rounded-xl px-3 py-2 text-center">
+                    Invite exactly {requiredFriends} friend{requiredFriends === 1 ? '' : 's'} for a group of {groupSize} ({selectedFriends.length} selected).
+                  </p>
+                )}
+
                 {/* Action Button */}
                 <button
                   onClick={handleConfirmBooking}
-                  disabled={isSubmitting}
-                  className={`w-full h-[52px] bg-secondary-container text-primary rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-95 transition-all shadow-sm cursor-pointer ${isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
+                  disabled={isSubmitting || !friendsValid}
+                  className={`w-full h-[52px] bg-secondary-container text-primary rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-95 transition-all shadow-sm cursor-pointer ${isSubmitting || !friendsValid ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
                 >
                   {isSubmitting
                     ? <span className="material-symbols-outlined animate-spin">sync</span>
@@ -587,7 +644,7 @@ export default function TimeSlots() {
                   {isSubmitting
                     ? 'Processing…'
                     : splitEnabled
-                      ? splitMode === 'hold' ? `Pay ₹${sharePerPlayer} & Hold Slot` : `Pay ₹${sharePerPlayer} & Confirm`
+                      ? splitMode === 'hold' ? `Pay ₹${bookerPays} & Hold Slot` : `Pay ₹${bookerPays} & Confirm`
                       : 'Pay & Book'}
                 </button>
 

@@ -56,9 +56,10 @@ export default function MyBookings() {
     const bookingMap = new Map<string, Booking>();
     let ownReady = false;
     let splitReady = false;
+    let invitedReady = false;
 
     const flush = () => {
-      if (ownReady && splitReady) {
+      if (ownReady && splitReady && invitedReady) {
         setBookings([...bookingMap.values()]);
         setLoading(false);
       }
@@ -109,7 +110,27 @@ export default function MyBookings() {
       flush();
     });
 
-    return () => { unsubOwn(); unsubSplit(); };
+    // Invited (but not-yet-paid) split bookings. A friend added at booking time
+    // is stored in splitPayment.invitedFriends but not yet in paidPlayers, so
+    // this surfaces the booking for them ("waiting for confirmation") until they
+    // pay their share — at which point the paidPlayers listener above takes over.
+    const invitedQ = query(
+      collection(db, 'bookings'),
+      where('splitPayment.invitedFriends', 'array-contains', currentUser.uid)
+    );
+    const unsubInvited = onSnapshot(invitedQ, snap => {
+      snap.docs.forEach(d => bookingMap.set(d.id, { ...(d.data() as Booking), id: d.id }));
+      snap.docChanges().forEach(change => {
+        if (change.type === 'removed') bookingMap.delete(change.doc.id);
+      });
+      invitedReady = true;
+      flush();
+    }, () => {
+      invitedReady = true;
+      flush();
+    });
+
+    return () => { unsubOwn(); unsubSplit(); unsubInvited(); };
   }, [currentUser]);
 
   const handleCancelBooking = async (bookingId: string) => {

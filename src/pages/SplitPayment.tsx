@@ -78,6 +78,11 @@ export default function SplitPayment() {
   // ── Pay handler ─────────────────────────────────────────────────────────────
   const handlePay = async () => {
     if (!currentUser || !booking) return;
+    // Guard against paying a dead/complete booking or paying twice (the live
+    // listener can update these between render and tap).
+    if (booking.status === 'cancelled') { setError('This booking was cancelled.'); return; }
+    if (alreadyPaid) return;
+    if (allPaid) return;
     setPaying(true);
     try {
       const newPaid = [...(booking.splitPayment?.paidPlayers ?? []), currentUser.uid];

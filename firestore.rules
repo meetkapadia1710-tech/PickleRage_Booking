@@ -66,8 +66,12 @@ service cloud.firestore {
           && request.resource.data.splitPayment.paidPlayers.toSet()
                .difference(resource.data.splitPayment.paidPlayers.toSet())
                .hasOnly([request.auth.uid])
+          // Status may stay put, or flip to 'confirmed' ONLY once every share is
+          // in (paidPlayers reaches groupSize) — no premature confirmation.
           && (request.resource.data.status == resource.data.status
-              || request.resource.data.status == 'confirmed');
+              || (request.resource.data.status == 'confirmed'
+                  && request.resource.data.splitPayment.paidPlayers.size()
+                       >= request.resource.data.splitPayment.groupSize));
       }
 
       // Signed-in users see bookings: slot availability, leaderboard,
