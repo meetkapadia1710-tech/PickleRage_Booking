@@ -6,8 +6,11 @@ type SplitPayment = {
   groupSize?: number;
   paidPlayers?: string[];
   invitedFriends?: string[];
+  payerDetails?: { uid: string; name: string }[];
   reminderSent?: boolean;
 };
+
+const CHANNEL_ID = 'playhub_default';
 
 /**
  * Send a push to every FCM token owned by the given users, then prune any tokens
@@ -37,7 +40,16 @@ async function sendToUsers(
   if (tokenOwners.length === 0) return;
 
   const tokens = tokenOwners.map(t => t.token);
-  const res = await admin.messaging().sendEachForMulticast({ tokens, notification, data });
+  const res = await admin.messaging().sendEachForMulticast({
+    tokens,
+    notification,
+    data,
+    // High priority + channel so Android shows a heads-up notification.
+    android: {
+      priority: 'high',
+      notification: { channelId: CHANNEL_ID, sound: 'default' },
+    },
+  });
   console.log(`Sent: ${res.successCount}, Failed: ${res.failureCount}`);
 
   // Prune invalid tokens, grouped per owner.
@@ -53,6 +65,11 @@ async function sendToUsers(
       fcmTokens: admin.firestore.FieldValue.arrayRemove(...stale),
     }).catch(() => undefined),
   ));
+}
+
+async function getUserName(uid: string): Promise<string | undefined> {
+  const snap = await admin.firestore().collection('users').doc(uid).get();
+  return snap.data()?.['displayName'] as string | undefined;
 }
 
 // ── On booking create: confirm to booker + invite split friends ───────────────
@@ -90,32 +107,75 @@ export const sendBookingConfirmation = functions.firestore
     return null;
   });
 
-// ── On booking cancel: notify teammates who paid / were invited ───────────────
-export const sendBookingCancellation = functions.firestore
+// ── On booking update: notify on every important change ───────────────────────
+// Covers: cancellation, a teammate paying their share, and the final all-paid
+// confirmation. (Hold expiry is handled by the scheduled job, which flips status
+// to 'cancelled' and therefore also triggers the cancellation branch here.)
+export const onBookingUpdate = functions.firestore
   .document('bookings/{bookingId}')
   .onUpdate(async (change, context) => {
     const before = change.before.data();
     const after = change.after.data();
     const bookingId = context.params['bookingId'] as string;
-
-    if (before['status'] === after['status'] || after['status'] !== 'cancelled') return null;
-
-    const sp = after['splitPayment'] as SplitPayment | undefined;
-    if (!sp?.enabled) return null;
-
+    const date = after['date'] as string;
+    const startTime = after['startTime'] as string;
     const owner = after['userId'] as string | undefined;
-    const recipients = [...(sp.paidPlayers ?? []), ...(sp.invitedFriends ?? [])]
-      .filter(uid => uid !== owner);
-    if (recipients.length === 0) return null;
+
+    const spBefore = before['splitPayment'] as SplitPayment | undefined;
+    const spAfter = after['splitPayment'] as SplitPayment | undefined;
 
     try {
-      await sendToUsers(
-        recipients,
-        { title: 'Booking cancelled', body: `A split booking for ${after['date']} at ${after['startTime']} was cancelled.` },
-        { bookingId },
-      );
+      // 1) Cancellation → tell every teammate (the owner who cancelled is excluded).
+      if (before['status'] !== 'cancelled' && after['status'] === 'cancelled') {
+        if (spAfter?.enabled) {
+          const recipients = [...(spAfter.paidPlayers ?? []), ...(spAfter.invitedFriends ?? [])]
+            .filter(uid => uid !== owner);
+          await sendToUsers(
+            recipients,
+            { title: 'Booking cancelled', body: `The split booking for ${date} at ${startTime} was cancelled.` },
+            { bookingId, type: 'cancelled' },
+          );
+        }
+        return null;
+      }
+
+      // 2) A new teammate paid their share.
+      if (spAfter?.enabled) {
+        const beforePaid = new Set(spBefore?.paidPlayers ?? []);
+        const afterPaid = spAfter.paidPlayers ?? [];
+        const newPayers = afterPaid.filter(uid => !beforePaid.has(uid));
+
+        if (newPayers.length > 0) {
+          const groupSize = spAfter.groupSize ?? 1;
+          const paidCount = afterPaid.length;
+          const allPaid = paidCount >= groupSize || after['status'] === 'confirmed';
+
+          if (allPaid) {
+            // Final payment → confirm to everyone involved.
+            const everyone = [owner, ...afterPaid, ...(spAfter.invitedFriends ?? [])];
+            await sendToUsers(
+              everyone,
+              { title: 'All paid — booking confirmed! 🎉', body: `Your court for ${date} at ${startTime} is locked in.` },
+              { bookingId, type: 'confirmed' },
+            );
+          } else {
+            // Partial progress → notify the owner + teammates who already paid.
+            const payerUid = newPayers[0];
+            const payerName =
+              spAfter.payerDetails?.find(p => p.uid === payerUid)?.name
+              || (await getUserName(payerUid))
+              || 'A friend';
+            const recipients = [owner, ...afterPaid].filter(uid => uid && !newPayers.includes(uid));
+            await sendToUsers(
+              recipients,
+              { title: 'Share paid 💸', body: `${payerName} paid their share (${paidCount}/${groupSize}) for ${date} at ${startTime}.` },
+              { bookingId, type: 'payment' },
+            );
+          }
+        }
+      }
     } catch (error) {
-      console.error('Error sending cancellation notice:', error);
+      console.error('Error in onBookingUpdate:', error);
     }
     return null;
   });
