@@ -5,6 +5,7 @@ import * as crypto from 'crypto';
 admin.initializeApp();
 
 export * from './notifications';
+export * from './razorpay';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

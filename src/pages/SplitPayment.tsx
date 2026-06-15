@@ -8,6 +8,7 @@ import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import type { Booking, Venue, Court, PayerDetail } from '../types';
 import { formatDate, formatTime } from '../lib/format';
+import { payWithRazorpay } from '../lib/razorpay';
 import Avatar from '../components/Avatar';
 
 export default function SplitPayment() {
@@ -109,6 +110,15 @@ export default function SplitPayment() {
     if (allPaid) return;
     setPaying(true);
     try {
+      // Collect the share via Razorpay; only record the payment once the
+      // signature is verified server-side.
+      await payWithRazorpay({
+        amountRupees: shareAmount,
+        receipt: `split_${booking.id}`,
+        description: `${venue?.name ?? 'PlayHub'} — your share`,
+        prefill: { name: currentUser.displayName ?? undefined, email: currentUser.email ?? undefined },
+      });
+
       const newPaid = [...(booking.splitPayment?.paidPlayers ?? []), currentUser.uid];
       const allNowPaid = newPaid.length >= groupSize;
 
@@ -138,7 +148,8 @@ export default function SplitPayment() {
       setDone(true);
     } catch (err) {
       console.error(err);
-      alert('Payment failed. Please try again.');
+      const msg = err instanceof Error ? err.message : 'Payment failed. Please try again.';
+      if (msg !== 'Payment cancelled.') alert(msg);
     } finally {
       setPaying(false);
     }

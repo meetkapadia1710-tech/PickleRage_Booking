@@ -6,6 +6,7 @@ import { doc, getDoc, collection, query, where, onSnapshot, setDoc, getDocs } fr
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { useAndroidBackClose } from '../lib/backClose';
+import { payWithRazorpay } from '../lib/razorpay';
 import type { Venue, Court, Booking, UserProfile, PayerDetail } from '../types';
 import Avatar from '../components/Avatar';
 
@@ -225,11 +226,21 @@ export default function TimeSlots() {
           : {}),
       };
 
+      // Collect payment via Razorpay before the booking is written. If the user
+      // cancels or payment fails, this throws and no booking is created.
+      await payWithRazorpay({
+        amountRupees: bookerPays,
+        receipt: `book_${bookingRef.id}`.slice(0, 40),
+        description: `${venue.name} — ${court.name}`,
+        prefill: { name: payerName, email: currentUser.email ?? undefined },
+      });
+
       await setDoc(bookingRef, { id: bookingRef.id, ...bookingData });
       navigate(`/payment-success/${bookingRef.id}`);
     } catch (err: unknown) {
       console.error('Error creating booking:', err);
-      alert(`Booking failed: ${err instanceof Error ? err.message : 'Please try again.'}`);
+      const msg = err instanceof Error ? err.message : 'Please try again.';
+      if (msg !== 'Payment cancelled.') alert(`Booking failed: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }

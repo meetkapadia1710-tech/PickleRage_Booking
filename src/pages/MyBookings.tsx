@@ -396,12 +396,41 @@ function BookingCard({
 
   const [walletUrl, setWalletUrl]   = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
+  const [isGeneratingWallet, setIsGeneratingWallet] = useState(false);
 
   useEffect(() => {
     if (venue && court && isConfirmed) {
       getWalletPassUrl(booking, venue, court).then(setWalletUrl).catch(() => {});
     }
   }, [booking, venue, court, isConfirmed]);
+
+  const handleAddToWallet = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (walletUrl) {
+      window.open(walletUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (!venue || !court) {
+      console.warn('Cannot generate wallet pass: venue or court data is missing', { venue, court });
+      alert('Cannot generate pass: Court details are still loading. Please try again in a moment.');
+      return;
+    }
+    setIsGeneratingWallet(true);
+    try {
+      const url = await getWalletPassUrl(booking, venue, court);
+      if (url) {
+        setWalletUrl(url);
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        alert('Failed to generate Google Wallet pass. Please try again.');
+      }
+    } catch (err) {
+      console.error('Wallet pass generation error:', err);
+      alert('Failed to generate Google Wallet pass. Please try again.');
+    } finally {
+      setIsGeneratingWallet(false);
+    }
+  };
 
   const statusChip = () => {
     if (isCancelled) return { label: 'Cancelled', cls: 'bg-error/10 text-error' };
@@ -561,7 +590,7 @@ function BookingCard({
               )}
 
               {/* Actions */}
-              {!isCancelled && (canPayShare || isOwner || (isConfirmed && walletUrl)) && (
+              {!isCancelled && (canPayShare || isOwner || isConfirmed) && (
                 <div className="flex gap-2">
                   {canPayShare && (
                     <motion.button
@@ -573,10 +602,18 @@ function BookingCard({
                       Pay your share ₹{booking.splitPayment?.sharePerPlayer}
                     </motion.button>
                   )}
-                  {isConfirmed && walletUrl && (
-                    <a href={walletUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex justify-center items-center h-[48px]">
-                      <img src={googleWalletBadge} alt="Save to Google Wallet" className="h-[48px] object-contain" />
-                    </a>
+                  {isConfirmed && (
+                    <button
+                      onClick={handleAddToWallet}
+                      disabled={isGeneratingWallet}
+                      className="flex-1 flex justify-center items-center h-[48px] bg-[#000000] rounded-full border-none cursor-pointer hover:opacity-90 transition-opacity"
+                    >
+                      {isGeneratingWallet ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <img src={googleWalletBadge} alt="Save to Google Wallet" className="h-[48px] object-contain" />
+                      )}
+                    </button>
                   )}
                   {isOwner && (
                     <motion.button
@@ -622,12 +659,41 @@ function BookingDetailPanel({
 
   const [walletUrl, setWalletUrl]   = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
+  const [isGeneratingWallet, setIsGeneratingWallet] = useState(false);
 
   useEffect(() => {
     if (venue && court && isConfirmed) {
       getWalletPassUrl(booking, venue, court).then(setWalletUrl).catch(() => {});
     }
   }, [booking, venue, court, isConfirmed]);
+
+  const handleAddToWallet = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (walletUrl) {
+      window.open(walletUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (!venue || !court) {
+      console.warn('Cannot generate wallet pass: venue or court data is missing', { venue, court });
+      alert('Cannot generate pass: Court details are still loading. Please try again in a moment.');
+      return;
+    }
+    setIsGeneratingWallet(true);
+    try {
+      const url = await getWalletPassUrl(booking, venue, court);
+      if (url) {
+        setWalletUrl(url);
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        alert('Failed to generate Google Wallet pass. Please try again.');
+      }
+    } catch (err) {
+      console.error('Wallet pass generation error:', err);
+      alert('Failed to generate Google Wallet pass. Please try again.');
+    } finally {
+      setIsGeneratingWallet(false);
+    }
+  };
 
   const statusChip = () => {
     if (isCancelled) return { label: 'Cancelled', cls: 'bg-error/10 text-error' };
@@ -763,7 +829,7 @@ function BookingDetailPanel({
       )}
 
       {/* Actions */}
-      {!isCancelled && (canPayShare || isOwner || (isConfirmed && walletUrl)) && (
+      {!isCancelled && (canPayShare || isOwner || isConfirmed) && (
         <div className="flex gap-3 mt-4">
           {canPayShare && (
             <motion.button
@@ -775,10 +841,18 @@ function BookingDetailPanel({
               Pay your share ₹{booking.splitPayment?.sharePerPlayer}
             </motion.button>
           )}
-          {isConfirmed && walletUrl && (
-            <a href={walletUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex justify-center items-center h-[48px] bg-[#000000] rounded-xl hover:opacity-90 transition-opacity">
-              <img src={googleWalletBadge} alt="Save to Google Wallet" className="h-[36px] object-contain" />
-            </a>
+          {isConfirmed && (
+            <button
+              onClick={handleAddToWallet}
+              disabled={isGeneratingWallet}
+              className="flex-1 flex justify-center items-center h-[48px] bg-[#000000] rounded-xl border-none cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              {isGeneratingWallet ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <img src={googleWalletBadge} alt="Save to Google Wallet" className="h-[36px] object-contain" />
+              )}
+            </button>
           )}
           {isOwner && (
             <motion.button
