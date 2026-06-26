@@ -6,6 +6,7 @@ import { db } from '../firebase';
 import type { Venue, Court } from '../types';
 import { getMapEmbedUrl, getDirectionsUrl, hasLocation, openExternal } from '../lib/maps';
 import { publicAppOrigin } from '../lib/appUrl';
+import { logger } from '../lib/logger';
 import { isFavorite, toggleFavorite } from '../lib/store';
 import Toast from '../components/Toast';
 import { sanitizeVenue } from '../lib/venues';
@@ -30,8 +31,7 @@ export default function VenueDetail() {
         const venueSnap = await getDoc(venueRef);
         if (venueSnap.exists()) {
           const data = venueSnap.data() as Venue;
-          const id = venueSnap.id;
-          setVenue(sanitizeVenue({ ...data, id }));
+          setVenue(sanitizeVenue({ ...data, id: venueSnap.id }));
         }
 
         // Fetch Courts
@@ -46,7 +46,7 @@ export default function VenueDetail() {
         }
         setCourts(courtsList);
       } catch (err) {
-        console.error('Error fetching venue details:', err);
+        logger.error('VenueDetail: error fetching venue details', err);
       } finally {
         setLoading(false);
       }
@@ -138,8 +138,8 @@ export default function VenueDetail() {
         )}
 
         <div className="fixed top-0 left-0 right-0 max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto w-full flex justify-between items-center px-5 pt-[calc(1.5rem+env(safe-area-inset-top))] h-auto z-50">
-          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer">
-            <span className="material-symbols-outlined">arrow_back</span>
+          <button onClick={() => navigate(-1)} aria-label="Go back" className="w-10 h-10 rounded-full bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-surface-container-lowest/30 transition-colors cursor-pointer">
+            <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>
           </button>
           <div className="flex gap-3">
             <motion.button
@@ -569,15 +569,21 @@ export default function VenueDetail() {
       {/* Photo Lightbox Modal */}
       <AnimatePresence>
         {activePhoto && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90 backdrop-blur-md">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Photo viewer"
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90 backdrop-blur-md"
+          >
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActivePhoto(null)}
+              aria-label="Close photo viewer"
               className="absolute top-[calc(1.5rem+env(safe-area-inset-top))] right-5 w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
             >
-              <span className="material-symbols-outlined">close</span>
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
             </motion.button>
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}

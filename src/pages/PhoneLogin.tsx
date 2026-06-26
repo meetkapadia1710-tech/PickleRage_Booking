@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { signInWithGoogle } from '../auth/googleSignIn';
+import { logger } from '../lib/logger';
 
 const FEATURES = [
   { icon: 'sports_tennis',  label: 'Pickleball',   sub: 'Premium courts' },
   { icon: 'sports_cricket', label: 'Box Cricket',  sub: 'Reserve slots'  },
-  { icon: 'group',          label: 'Split Pay',    sub: 'With friends'   },
+  { icon: 'bolt',           label: 'Instant',      sub: 'Book in 30s'    },
 ] as const;
 
 const STATS = [
@@ -36,7 +37,7 @@ export default function PhoneLogin() {
       // Routing handles redirect to /complete-profile if phone is missing
       navigate('/home');
     } catch (err: unknown) {
-      console.error('Google Sign-in failed:', err);
+      logger.error('PhoneLogin: Google sign-in failed', err);
       setError(err instanceof Error ? err.message : 'Sign-in failed. Please try again.');
       setLoading(false);
     }
@@ -99,7 +100,7 @@ export default function PhoneLogin() {
               <span className="text-secondary-container">Your Rules.</span>
             </h1>
             <p className="text-white/55 text-[14px] mt-4 leading-relaxed max-w-xs">
-              Premium pickleball & box cricket courts. Instant slots. Split costs with friends.
+              Premium pickleball & box cricket courts. Instant booking, guaranteed slots.
             </p>
           </motion.div>
 

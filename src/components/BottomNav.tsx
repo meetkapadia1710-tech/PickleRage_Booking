@@ -1,14 +1,10 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
 
 const tabs = [
   { path: '/home',     icon: 'home',            label: 'Home' },
-  { path: '/friends',  icon: 'group',           label: 'Friends' },
   { path: '/bookings', icon: 'event_available', label: 'Bookings' },
   { path: '/profile',  icon: 'person',          label: 'Profile' },
 ];
@@ -16,24 +12,10 @@ const tabs = [
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
   const visible = tabs.some(t => t.path === location.pathname);
 
-  // Pending friend request badge count
-  const [pendingCount, setPendingCount] = useState(0);
-  useEffect(() => {
-    if (!currentUser) return;
-    const q = query(
-      collection(db, 'friendRequests'),
-      where('toUid', '==', currentUser.uid),
-      where('status', '==', 'pending'),
-    );
-    return onSnapshot(
-      q,
-      snap => setPendingCount(snap.size),
-      err => console.warn('BottomNav friend requests query error:', err)
-    );
-  }, [currentUser]);
+  // No-op effect kept so adding future effects here is consistent
+  useEffect(() => {}, []);
 
   const handleTab = async (path: string, active: boolean) => {
     if (active) return;
@@ -59,7 +41,6 @@ export default function BottomNav() {
           <div className="flex items-stretch px-1.5 py-1.5">
             {tabs.map(tab => {
               const active = location.pathname === tab.path;
-              const hasBadge = tab.path === '/friends' && pendingCount > 0;
               return (
                 <button
                   key={tab.path}
@@ -74,23 +55,16 @@ export default function BottomNav() {
                       className="absolute inset-x-1 inset-y-1 bg-secondary-container rounded-full"
                     />
                   )}
-                  <div className="relative z-10">
-                    <motion.span
-                      animate={{ scale: active ? 1.08 : 1 }}
-                      transition={{ type: 'spring', damping: 14, stiffness: 400 }}
-                      className={`material-symbols-outlined transition-colors duration-200 text-[22px] ${
-                        active ? 'text-on-secondary-container' : 'text-white/70'
-                      }`}
-                      style={{ fontVariationSettings: `'FILL' ${active ? 1 : 0}` }}
-                    >
-                      {tab.icon}
-                    </motion.span>
-                    {hasBadge && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-error rounded-full flex items-center justify-center text-[9px] font-bold text-white">
-                        {pendingCount > 9 ? '9+' : pendingCount}
-                      </span>
-                    )}
-                  </div>
+                  <motion.span
+                    animate={{ scale: active ? 1.08 : 1 }}
+                    transition={{ type: 'spring', damping: 14, stiffness: 400 }}
+                    className={`relative z-10 material-symbols-outlined transition-colors duration-200 text-[22px] ${
+                      active ? 'text-on-secondary-container' : 'text-white/70'
+                    }`}
+                    style={{ fontVariationSettings: `'FILL' ${active ? 1 : 0}` }}
+                  >
+                    {tab.icon}
+                  </motion.span>
                   <span
                     className={`relative z-10 font-medium text-[9px] -mt-0.5 leading-none whitespace-nowrap transition-colors duration-200 ${
                       active ? 'text-on-secondary-container' : 'text-white/70'

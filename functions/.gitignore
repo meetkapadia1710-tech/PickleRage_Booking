@@ -1,4 +1,13 @@
 node_modules/
+lib/
+
+# Local environment secrets — never commit
 .env
 .env.local
 .env.*.local
+
+# Firebase emulator runtime config — contains private keys in plaintext
+.runtimeconfig.json
+
+# Build output
+*.js.map

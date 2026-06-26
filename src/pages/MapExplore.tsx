@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Venue } from '../types';
+import { logger } from '../lib/logger';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -66,7 +67,7 @@ export default function MapExplore() {
       })
       .catch(err => {
         if (cancelled) return;
-        console.error('Error fetching venues for map:', err);
+        logger.error('MapExplore: error fetching venues', err);
         setLoading(false);
       });
     return () => { cancelled = true; };
@@ -81,11 +82,12 @@ export default function MapExplore() {
         {/* Unified Header / Search Bar */}
         <div className="pointer-events-auto w-full max-w-md h-[54px] rounded-[27px] bg-surface-container-lowest/95 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-outline-variant/40 flex items-center px-1.5">
           
-          <button 
+          <button
             onClick={() => navigate(-1)}
+            aria-label="Go back"
             className="w-11 h-11 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-variant/50 transition-colors cursor-pointer shrink-0"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
+            <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>
           </button>
           
           <div className="flex-1 flex flex-col justify-center px-2.5 cursor-pointer">

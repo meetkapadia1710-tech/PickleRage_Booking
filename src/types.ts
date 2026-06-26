@@ -34,26 +34,6 @@ export interface Court {
   sport?: string;       // e.g. "Pickleball", "Box Cricket"
 }
 
-export interface PayerDetail {
-  uid: string;
-  name: string;
-  amount: number;
-  paidAt: string;   // ISO timestamp
-  photoURL?: string;
-}
-
-export interface SplitPayment {
-  enabled: boolean;
-  groupSize: number;
-  mode: 'instant' | 'hold';
-  sharePerPlayer: number;
-  paidPlayers: string[];       // userIds of players who paid
-  invitedFriends: string[];    // userIds of invited friends
-  paymentLinkToken: string;    // unique token used in /split/:token route
-  payerDetails?: PayerDetail[];// rich info: name + amount per payer
-  reminderSent?: boolean;      // set by the hourly hold-reminder Cloud Function
-}
-
 export interface Booking {
   id: string;
   userId: string;
@@ -62,9 +42,8 @@ export interface Booking {
   date: string;       // YYYY-MM-DD
   startTime: string;  // HH:mm
   endTime: string;    // HH:mm
-  status: "confirmed" | "cancelled" | "hold";
+  status: "confirmed" | "cancelled";
   createdAt?: string;
-  splitPayment?: SplitPayment;
 }
 
 export interface UserProfile {
@@ -76,13 +55,3 @@ export interface UserProfile {
   createdAt?: string;
 }
 
-export interface FriendRequest {
-  id: string;
-  fromUid: string;
-  toUid: string;
-  fromName: string;
-  fromPhone: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  createdAt: string;
-  fromPhotoURL?: string;
-}

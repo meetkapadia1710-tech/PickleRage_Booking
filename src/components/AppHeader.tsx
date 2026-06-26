@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import NotificationsPanel from './NotificationsPanel';
 
 const tabs = [
-  { path: '/home', icon: 'home', label: 'Home' },
-  { path: '/leaderboard', icon: 'leaderboard', label: 'Leaderboard' },
-  { path: '/bookings', icon: 'event_available', label: 'Bookings' },
-  { path: '/profile', icon: 'person', label: 'Profile' },
+  { path: '/home',        icon: 'home',           label: 'Home' },
+  { path: '/leaderboard', icon: 'leaderboard',    label: 'Leaderboard' },
+  { path: '/bookings',    icon: 'event_available', label: 'Bookings' },
+  { path: '/profile',     icon: 'person',          label: 'Profile' },
 ];
 
 export default function AppHeader({ showBack = false }: { showBack?: boolean }) {
@@ -15,13 +15,19 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [hasUnread, setHasUnread] = useState(true);
+  // Starts false — set to true only when NotificationsPanel reports real content.
+  const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const handleOpenNotifs = useCallback(() => {
+    setNotifOpen(true);
+    setHasUnread(false);
   }, []);
 
   return (
@@ -40,6 +46,7 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => navigate(-1)}
+                aria-label="Go back"
                 className="flex items-center justify-center w-10 h-10 rounded-full border border-outline-variant/50 bg-surface-container-low/40 text-on-surface hover:bg-surface-container-high transition-all duration-300 -ml-1 mr-0.5 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[20px]">arrow_back</span>
@@ -64,15 +71,19 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
               </span>
             </div>
           </div>
- 
+
           {/* Desktop Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-1 bg-surface-container-low/50 backdrop-blur-md p-1.5 rounded-full border border-outline-variant/35 hover:border-outline-variant/60 transition-colors duration-300">
+          <nav
+            aria-label="Main navigation"
+            className="hidden md:flex items-center gap-1 bg-surface-container-low/50 backdrop-blur-md p-1.5 rounded-full border border-outline-variant/35 hover:border-outline-variant/60 transition-colors duration-300"
+          >
             {tabs.map(tab => {
               const active = location.pathname === tab.path;
               return (
                 <Link
                   key={tab.path}
                   to={tab.path}
+                  aria-current={active ? 'page' : undefined}
                   className="relative px-4 py-1.5 rounded-full font-semibold text-[13px] flex items-center gap-1.5 outline-none select-none cursor-pointer transition-transform duration-200 active:scale-95"
                 >
                   {active && (
@@ -103,42 +114,39 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
 
           {/* Right action buttons */}
           <div className="flex items-center gap-2">
-            {/* Leaderboard shortcut */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => navigate('/leaderboard')}
+              aria-label="Leaderboard"
               className={`relative flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-300 cursor-pointer ${
                 location.pathname === '/leaderboard'
                   ? 'border-primary/40 bg-primary/10 text-primary'
                   : 'border-outline-variant/50 bg-surface-container-low/40 text-on-surface hover:bg-surface-container-high'
               }`}
-              aria-label="Leaderboard"
             >
-              <span className="material-symbols-outlined text-[22px]"
-                style={{ fontVariationSettings: `'FILL' ${location.pathname === '/leaderboard' ? 1 : 0}` }}>
+              <span
+                className="material-symbols-outlined text-[22px]"
+                style={{ fontVariationSettings: `'FILL' ${location.pathname === '/leaderboard' ? 1 : 0}` }}
+              >
                 leaderboard
               </span>
             </motion.button>
 
-            {/* Notifications */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => {
-                setNotifOpen(true);
-                setHasUnread(false);
-              }}
+              onClick={handleOpenNotifs}
+              aria-label={hasUnread ? 'Notifications (unread)' : 'Notifications'}
               className="relative flex items-center justify-center w-10 h-10 rounded-full border border-outline-variant/50 bg-surface-container-low/40 text-on-surface hover:bg-surface-container-high transition-all duration-300 cursor-pointer"
-              aria-label="Notifications"
             >
               <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 0" }}>
                 notifications
               </span>
               {hasUnread && (
-                <span className="absolute top-2.5 right-2.5 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+                <span className="absolute top-2.5 right-2.5 flex h-2 w-2" aria-hidden="true">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-error" />
                 </span>
               )}
             </motion.button>
@@ -146,7 +154,11 @@ export default function AppHeader({ showBack = false }: { showBack?: boolean }) 
         </div>
       </header>
 
-      <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
+      <NotificationsPanel
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        onHasNotifications={setHasUnread}
+      />
     </>
   );
 }

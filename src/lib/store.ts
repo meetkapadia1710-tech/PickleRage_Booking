@@ -1,11 +1,10 @@
-import type { Booking } from '../types';
+/**
+ * Thin localStorage persistence layer for client-side preferences.
+ *
+ * Booking data lives exclusively in Firestore — never in localStorage.
+ * Only lightweight user preferences (favourites) are persisted here.
+ */
 
-export interface UserBooking extends Booking {
-  price: number;
-  createdAt: string;
-}
-
-const BOOKINGS_KEY = 'playhub_bookings';
 const FAVORITES_KEY = 'playhub_favorites';
 
 function read<T>(key: string, fallback: T): T {
@@ -21,42 +20,11 @@ function write(key: string, value: unknown) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // storage unavailable (private mode etc.) — booking still works in-memory for the session
+    // storage unavailable (private mode etc.) — preferences silently no-op
   }
 }
 
-// ---------- Bookings ----------
-
-export function getUserBookings(): UserBooking[] {
-  return read<UserBooking[]>(BOOKINGS_KEY, []);
-}
-
-export function getBookingById(id: string): UserBooking | undefined {
-  return getUserBookings().find(b => b.id === id);
-}
-
-export function addBooking(
-  input: Omit<UserBooking, 'id' | 'status' | 'createdAt'>
-): UserBooking {
-  const booking: UserBooking = {
-    ...input,
-    id: `PH-${Date.now().toString(36).toUpperCase()}`,
-    status: 'confirmed',
-    createdAt: new Date().toISOString(),
-  };
-  write(BOOKINGS_KEY, [...getUserBookings(), booking]);
-  return booking;
-}
-
-export function cancelBooking(id: string): UserBooking[] {
-  const next = getUserBookings().map(b =>
-    b.id === id ? { ...b, status: 'cancelled' as const } : b
-  );
-  write(BOOKINGS_KEY, next);
-  return next;
-}
-
-// ---------- Favorites ----------
+// ── Favourites ────────────────────────────────────────────────────────────────
 
 export function getFavorites(): string[] {
   return read<string[]>(FAVORITES_KEY, []);

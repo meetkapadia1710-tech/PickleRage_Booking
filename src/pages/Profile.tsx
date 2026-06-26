@@ -7,6 +7,7 @@ import { db } from '../firebase';
 import { signOutUser } from '../auth/googleSignIn';
 import { useAuth } from '../context/AuthContext';
 import AppHeader from '../components/AppHeader';
+import { logger } from '../lib/logger';
 import Toast from '../components/Toast';
 
 // ─── Sheet backdrop + slide-up wrapper ───────────────────────────────────────
@@ -25,6 +26,9 @@ function Sheet({ open, onClose, title, children }: {
           <motion.div
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
             className="relative bg-surface-container-lowest rounded-t-[32px] md:rounded-2xl shadow-[0_-12px_36px_rgba(0,52,43,0.18)] pb-safe max-h-[85vh] flex flex-col w-full md:max-w-md md:mx-auto md:mb-6 z-10 border-t border-outline-variant/40"
           >
             {/* Drag handle / Grabber */}
@@ -77,7 +81,7 @@ function EditProfileSheet({ open, onClose, showToast }: { open: boolean; onClose
       showToast('Profile updated!', 'person');
       setTimeout(() => { setSaved(false); onClose(); }, 1200);
     } catch (err) {
-      console.error('Failed to update profile:', err);
+      logger.error('Profile: failed to update profile', err);
     } finally {
       setSaving(false);
     }
@@ -432,6 +436,9 @@ function SignOutDialog({ open, onClose, onConfirm }: { open: boolean; onClose: (
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 8 }}
             transition={{ type: 'spring', damping: 24, stiffness: 320 }}
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="Sign out confirmation"
             className="relative w-full max-w-sm bg-surface-container-lowest rounded-[24px] p-6 shadow-[0_16px_48px_rgba(0,52,43,0.30)]"
           >
             <div className="w-12 h-12 rounded-full bg-error-container flex items-center justify-center mb-4 mx-auto">
@@ -485,7 +492,7 @@ export default function Profile() {
         // Each booking = 1 hour slot
         setHoursPlayed(snap.size);
       } catch (err) {
-        console.error('Error fetching booking stats:', err);
+        logger.error('Profile: error fetching booking stats', err);
       }
     };
     fetchStats();
@@ -496,7 +503,7 @@ export default function Profile() {
       await signOutUser();
       navigate('/login');
     } catch (err) {
-      console.error('Sign out error:', err);
+      logger.error('Profile: sign out error', err);
     }
   };
 

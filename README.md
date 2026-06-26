@@ -1,101 +1,117 @@
-# PlayHub - Premium Court & Venue Booking Application
+# PlayHub — Court & Venue Booking
 
-PlayHub is a premium, feature-rich court booking application designed for mobile (native Android/iOS via Capacitor) and web (Progressive Web App). It provides real-time court availability, seamless booking confirmation, secure Google Login, a competitive leaderboard, and Google Wallet integration.
-
----
-
-## 🚀 Key Features
-
-### 1. Booking & Payment Flow
-* **Live Slot Grid**: Instant booking grid listening to Firestore updates in real-time.
-* **Confirmation Sheets**: Smooth slide-up bottom sheets built with `framer-motion`.
-* **Confetti Success Page**: A premium checkout success screen featuring overlay confetti canvas animations.
-* **Booking Records**: Comprehensive status categorization ("Confirmed", "Pending", "Cancelled") in the "My Bookings" menu.
-
-### 2. Native Mobile Integration (Capacitor)
-* **Google Wallet Passes**: Save booked tickets directly into your Google Wallet. It uses a custom **Web Crypto API RS256 JWT signer** to allow signing passes on the Firebase Spark (free) plan without requiring Cloud Functions.
-* **Native Google Sign-In**: Uses native Android prompts (`@codetrix-studio/capacitor-google-auth`) instead of in-app web views to prevent Google's "Disallowed User-Agent" security block.
-* **Platform-Isolated Login**: Website and APK Google-login flows are fully separated (`src/auth/googleSignIn.web.ts` vs `src/auth/googleSignIn.native.ts`, selected via dynamic import) so fixing one platform can never break the other — see `src/auth/README.md` for the per-platform fix workflow.
-* **Haptic Feedback**: Integrates `@capacitor/haptics` to deliver physical controller vibrations on critical UI actions (like payment approval).
-* **StatusBar Control**: Configures native device bezel and status bar colors to match PlayHub's signature deep teal theme.
-
-### 3. Explore & Discover
-* **Interactive Map Exploration**: Discover nearby courts and grounds instantly using an integrated map interface built with Leaflet.
-* **Detailed Venue Profiles**: View comprehensive venue details with favoriting, dynamic content rendering, and social sharing capabilities.
-
-### 4. Competitions & Community
-* **Friends & Social Network**: Add friends, manage your friends list, and get real-time notifications for social interactions.
-* **Leaderboards**: Automatically aggregates Firestore booking metrics per user to rank players.
-* **Winners Podium**: An interactive podium layout displaying avatars and animated trophies for the top 3 players.
-
-### 5. Admin Operations
-* **Dashboard Console**: Desktop-responsive sidebar control panels displaying core KPI metrics and table lists for booking records.
-* **Database Seeder**: Quick-start setup buttons to auto-populate Firestore collections with default venues and court configurations.
+PlayHub is a mobile-first court booking app for Pickleball and Box Cricket. It runs as a native Android APK (Capacitor) and a Progressive Web App.
 
 ---
 
-## 🛠️ Tech Stack
-* **Frontend**: React 19, TypeScript, Tailwind CSS, Framer Motion, Leaflet
-* **Bundler & Tooling**: Vite, Vite-plugin-PWA, ESLint
-* **Backend**: Firebase Authentication, Firestore Database
-* **Hybrid Core**: Capacitor CLI (@capacitor/android, @capacitor/core)
-* **Security & Keys**: Native Web Crypto API (SubtleCrypto)
+## Features
+
+- **Live slot grid** — Real-time Firestore `onSnapshot` shows available and booked courts instantly.
+- **Google Sign-In** — Native Android popup (`@codetrix-studio/capacitor-google-auth`) and web popup, fully separated so each can be fixed independently.
+- **Razorpay payments** — Server-side `createOrder` + `verifyPayment` via Firebase Cloud Functions; keys never hit the client.
+- **Google Wallet passes** — `generateWalletPassUrl` Cloud Function signs an RS256 JWT server-side and returns a ready-to-use Wallet link.
+- **Interactive map** — Leaflet map shows venue pins; tapping navigates to the venue detail page.
+- **Leaderboard** — Ranks players by confirmed booking count with a gold/silver/bronze podium.
+- **Push notifications** — Firebase Cloud Messaging via `@capacitor/push-notifications`.
+- **Admin dashboard** — Manage venues, courts, bookings, and users; access restricted to `/admins/{uid}` documents in Firestore.
 
 ---
 
-## ⚙️ Project Setup & Installation
+## Tech stack
 
-### 1. Clone & Install Dependencies
+| Layer | Technology |
+|---|---|
+| UI | React 19, TypeScript, Tailwind CSS v4, Framer Motion |
+| Routing | React Router v7 |
+| Backend | Firebase Auth, Cloud Firestore, Cloud Functions (Node 18) |
+| Payments | Razorpay Standard Checkout |
+| Map | Leaflet / react-leaflet |
+| Native | Capacitor 8 (Android) |
+| PWA | vite-plugin-pwa |
+| Bundler | Vite 8 |
+| Testing | Vitest 3, jsdom |
+
+---
+
+## Project setup
+
+### 1. Install dependencies
+
 ```bash
 npm install
 ```
 
-### 2. Configure Environment Variables
-Create a `.env` file in the root directory:
-```env
-# Google Wallet Service Account Configurations
-VITE_WALLET_ISSUER_ID="3388000000023155636"
-VITE_WALLET_CLIENT_EMAIL="google-wallet-signer@picklerage-booking-499009.iam.gserviceaccount.com"
-VITE_WALLET_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_NEWLINES_ESCAPED\n-----END PRIVATE KEY-----\n"
-```
+### 2. Configure environment variables
 
-### 3. Run Development Server
-To launch the dev server locally:
+Copy `.env.example` to `.env` and fill in your values. See `docs/deployment.md` for all required variables. **Do not commit `.env` — it is git-ignored.**
+
+### 3. Run the dev server
+
 ```bash
 npm run dev
 ```
-Open **`http://localhost:5001`** in your browser. Use the mock test credentials on the login screen to sign in instantly:
-* **Test Email**: `testplayer@playhub.com`
-* **Test Password**: `password123`
+
+The app opens at `http://localhost:5001`. Sign in with **Google Sign-In** — there is no email/password login.
+
+> **Emulator tip** — `src/lib/functions.ts` auto-connects to the local Firebase Functions emulator (`localhost:5002`) when the hostname is `localhost` or `127.0.0.1`. Start it with `firebase emulators:start --only functions`.
 
 ---
 
-## 📱 Native Android Build Instructions
+## Available scripts
 
-### 1. Compile Web Assets & Sync Capacitor
+| Script | Description |
+|---|---|
+| `npm run dev` | Start the Vite dev server |
+| `npm run build` | TypeScript type-check + production build |
+| `npm run lint` | ESLint across the whole project |
+| `npm run preview` | Preview the production build locally |
+| `npm test` | Run Vitest unit tests once |
+| `npm run test:watch` | Run Vitest in watch mode |
+| `npm run test:coverage` | Run tests with V8 coverage report |
+
+---
+
+## Android build
+
+### 1. Build web assets and sync Capacitor
+
 ```bash
 npm run build
 npx cap sync
 ```
 
-### 2. Place Configuration Files
-Make sure the `google-services.json` file is present in your native project:
-* Path: `android/app/google-services.json`
+### 2. Place the Firebase config
+
+Ensure `android/app/google-services.json` is present (downloaded from the Firebase console).
 
 ### 3. Compile the APK
-To build the debug APK using the local JetBrains OpenJDK toolchain:
+
 ```powershell
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
 cd android
 ./gradlew assembleDebug
 ```
-The compiled output is saved at:
-👉 `android/app/build/outputs/apk/debug/app-debug.apk`
+
+Output: `android/app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
-## 🔒 Production Guidelines for Release
+## Docs
 
-1. **Google Wallet Publishing Access**: Go to Google Pay & Wallet Developer Console and switch your Issuer ID from **Demo Mode** to **Live Mode**.
-2. **Move JWT Signer to Backend**: Prior to publishing publicly, migrate the private key signing logic in `src/lib/wallet.ts` to a secure server or serverless endpoint (e.g. Vercel, Render) to protect your GCP credentials.
-3. **Register Release Fingerprints**: In Google Play Console, copy the release SHA-1 signature and add it to your Firebase Project Settings to authorize production OAuth requests.
+Detailed documentation lives in the `docs/` directory:
+
+- [`docs/architecture.md`](docs/architecture.md) — folder structure, data flow, key design decisions
+- [`docs/database.md`](docs/database.md) — Firestore schema reference
+- [`docs/deployment.md`](docs/deployment.md) — environment variables and deploy steps
+- [`docs/security.md`](docs/security.md) — auth model, Firestore rules, CSP headers
+
+---
+
+## Production checklist
+
+1. Activate Google Wallet Issuer ID in Live Mode (Google Pay & Wallet Console).
+2. Add the release SHA-1 to Firebase Project Settings to authorize production OAuth.
+3. Set `RAZORPAY_KEY_SECRET` in `functions/.env` (never in client-side env vars).
+4. Deploy Firestore rules and indexes: `firebase deploy --only firestore`.
+5. Deploy Cloud Functions: `firebase deploy --only functions`.
+6. Deploy hosting: `firebase deploy --only hosting`.

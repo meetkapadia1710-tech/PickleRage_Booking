@@ -6,8 +6,8 @@ import { db } from '../firebase';
 import type { Booking, Venue, Court } from '../types';
 import { formatDate, formatTime } from '../lib/format';
 import { getWalletPassUrl } from '../lib/wallet';
-import { splitPaymentUrl } from '../lib/appUrl';
 import googleWalletBadge from '../assets/add-to-google-wallet-badge.svg';
+import { logger } from '../lib/logger';
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
@@ -18,7 +18,6 @@ export default function PaymentSuccess() {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [court, setCourt] = useState<Court | null>(null);
   const [walletUrl, setWalletUrl] = useState<string>('');
-  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     const fetchWalletUrl = async () => {
@@ -46,7 +45,7 @@ export default function PaymentSuccess() {
         if (venueSnap.exists()) setVenue(venueSnap.data() as Venue);
         if (courtSnap.exists()) setCourt(courtSnap.data() as Court);
       } catch (err) {
-        console.error('Error fetching booking details:', err);
+        logger.error('PaymentSuccess: error fetching booking details', err);
       }
     };
     fetchDetails();
@@ -66,7 +65,7 @@ export default function PaymentSuccess() {
       vx: number; vy: number; rot: number; rotSpeed: number;
     }
     const pieces: Piece[] = [];
-    const colors = ['#ffbf00', '#00342b', '#7ebdac', '#94d3c1']; // Theme colors
+    const colors = ['#ffbf00', '#00342b', '#7ebdac', '#94d3c1'];
 
     for (let i = 0; i < 50; i++) {
       pieces.push({
@@ -144,7 +143,7 @@ export default function PaymentSuccess() {
             className="absolute inset-0 rounded-full border-2 border-secondary-container"
           />
           <span className="material-symbols-outlined text-secondary-container" style={{ fontSize: '80px', fontVariationSettings: "'FILL' 1" }}>
-            {booking?.splitPayment?.enabled && booking?.status === 'hold' ? 'pause_circle' : 'check_circle'}
+            check_circle
           </span>
         </motion.div>
 
@@ -153,19 +152,13 @@ export default function PaymentSuccess() {
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="font-bold text-[28px] md:text-[30px] text-primary mb-2"
         >
-          {booking?.splitPayment?.enabled
-            ? booking?.status === 'hold' ? 'Slot Reserved! 🏸' : 'Booking Confirmed!'
-            : 'Payment Successful'}
+          Payment Successful
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="text-[16px] text-on-surface-variant mb-6"
         >
-          {booking?.splitPayment?.enabled
-            ? booking?.status === 'hold'
-              ? 'Your share is paid. Share the link with teammates to confirm the slot.'
-              : 'Your booking is confirmed. Share the link so teammates can pay their share.'
-            : venue ? `${venue.name} is booked and ready for action.` : 'Your court is secured and ready for action.'}
+          {venue ? `${venue.name} is booked and ready for action.` : 'Your court is secured and ready for action.'}
         </motion.p>
 
         <motion.div
@@ -180,7 +173,7 @@ export default function PaymentSuccess() {
           </div>
           {booking && (
             <>
-              <div className="h-px bg-outline-variant/30 w-full my-1"></div>
+              <div className="h-px bg-outline-variant/30 w-full my-1" />
               <div className="flex justify-between items-center w-full">
                 <span className="font-semibold text-[14px] text-on-surface-variant">Court</span>
                 <span className="font-medium text-[14px] text-on-surface">{court?.name ?? booking.courtId}</span>
@@ -197,21 +190,9 @@ export default function PaymentSuccess() {
             <>
               <div className="h-px bg-outline-variant/30 w-full my-1" />
               <div className="flex justify-between items-center w-full">
-                <span className="font-semibold text-[14px] text-on-surface-variant">
-                  {booking?.splitPayment?.enabled ? 'Your Share Paid' : 'Amount Paid'}
-                </span>
-                <span className="font-semibold text-[20px] text-primary">
-                  ₹{booking?.splitPayment?.enabled ? booking.splitPayment.sharePerPlayer : venue.price}.00
-                </span>
+                <span className="font-semibold text-[14px] text-on-surface-variant">Amount Paid</span>
+                <span className="font-semibold text-[20px] text-primary">₹{venue.price}.00</span>
               </div>
-              {booking?.splitPayment?.enabled && (
-                <div className="flex justify-between items-center w-full">
-                  <span className="font-semibold text-[13px] text-on-surface-variant">Players paid</span>
-                  <span className="font-semibold text-[13px] text-primary">
-                    {booking.splitPayment.paidPlayers.length} / {booking.splitPayment.groupSize}
-                  </span>
-                </div>
-              )}
             </>
           )}
         </motion.div>
@@ -222,49 +203,6 @@ export default function PaymentSuccess() {
           transition={{ delay: 0.3 }}
           className="w-full flex flex-col gap-4"
         >
-          {/* Share Link Card — only for split bookings */}
-          {booking?.splitPayment?.enabled && (() => {
-            const token = booking.splitPayment!.paymentLinkToken;
-            const shareUrl = splitPaymentUrl(token);
-            const waText = encodeURIComponent(`Hey! Join me at ${venue?.name ?? 'the venue'}. Pay your share: ${shareUrl}`);
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
-                className="w-full bg-surface-container-lowest/80 backdrop-blur-md border border-outline-variant/30 rounded-xl p-4 flex flex-col gap-3 text-left"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-secondary">link</span>
-                  <p className="font-semibold text-[13px] text-on-surface">Share Payment Link</p>
-                </div>
-                <div className="bg-surface-container-low rounded-lg px-3 py-2 text-[11px] text-on-surface-variant font-mono truncate">
-                  {shareUrl}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={async () => {
-                      await navigator.clipboard.writeText(shareUrl);
-                      setLinkCopied(true);
-                      setTimeout(() => setLinkCopied(false), 2000);
-                    }}
-                    className="flex-1 h-[40px] bg-surface-container text-on-surface rounded-full text-[12px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[15px]">{linkCopied ? 'check' : 'content_copy'}</span>
-                    {linkCopied ? 'Copied!' : 'Copy Link'}
-                  </button>
-                  <a
-                    href={`https://wa.me/?text=${waText}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 h-[40px] bg-[#25D366] text-white rounded-full text-[12px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[15px]">chat</span>
-                    WhatsApp
-                  </a>
-                </div>
-              </motion.div>
-            );
-          })()}
-
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => navigate('/bookings')}
@@ -282,10 +220,10 @@ export default function PaymentSuccess() {
               whileTap={{ scale: 0.96 }}
               className="flex justify-center items-center w-full"
             >
-              <img 
-                src={googleWalletBadge} 
-                alt="Save to Google Wallet" 
-                className="h-[48px] object-contain" 
+              <img
+                src={googleWalletBadge}
+                alt="Save to Google Wallet"
+                className="h-[48px] object-contain"
               />
             </motion.a>
           )}

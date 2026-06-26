@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   collection, query, where, onSnapshot, updateDoc, doc,
@@ -7,13 +6,12 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import type { Booking, Venue, Court, PayerDetail } from '../types';
+import type { Booking, Venue, Court } from '../types';
 import AppHeader from '../components/AppHeader';
-import Avatar from '../components/Avatar';
 import { getWalletPassUrl } from '../lib/wallet';
-import { splitPaymentUrl } from '../lib/appUrl';
 import googleWalletBadge from '../assets/add-to-google-wallet-badge.svg';
 import { sanitizeVenue } from '../lib/venues';
+import { logger } from '../lib/logger';
 
 const listVariants = {
   hidden: {},
@@ -47,91 +45,29 @@ export default function MyBookings() {
         { id: 'venue_2_c2', venueId: 'venue_2', name: 'Court 2', surface: 'Outdoor', isIndoor: false, squadSize: 'Full Court', sport: 'Pickleball' },
       ];
       setCourts(courtsList);
-    }).catch(console.error);
+    }).catch(err => logger.error('MyBookings: error fetching venues', err));
   }, []);
 
-  // ── Real-time listener: own bookings + teammate split bookings ─────────────
+  // ── Real-time listener: own bookings ──────────────────────────────────────
   useEffect(() => {
     if (!currentUser) return;
 
-    const bookingMap = new Map<string, Booking>();
-    let ownReady = false;
-    let splitReady = false;
-    let invitedReady = false;
-
-    const flush = () => {
-      if (ownReady && splitReady && invitedReady) {
-        setBookings([...bookingMap.values()]);
-        setLoading(false);
-      }
-    };
-
-    // Own bookings
     const ownQ = query(collection(db, 'bookings'), where('userId', '==', currentUser.uid));
-    const unsubOwn = onSnapshot(
+    const unsub = onSnapshot(
       ownQ,
       snap => {
-        snap.docs.forEach(d => bookingMap.set(d.id, { ...(d.data() as Booking), id: d.id }));
-        // Remove own bookings that were deleted
-        snap.docChanges().forEach(change => {
-          if (change.type === 'removed') bookingMap.delete(change.doc.id);
-        });
-        ownReady = true;
-        flush();
+        const result: Booking[] = [];
+        snap.forEach(d => result.push({ ...(d.data() as Booking), id: d.id }));
+        setBookings(result);
+        setLoading(false);
       },
       err => {
-        console.warn('MyBookings ownQ error:', err);
-        ownReady = true;
-        flush();
+        logger.warn('MyBookings: listener error', err);
+        setLoading(false);
       }
     );
 
-    // Teammate split bookings (where user is in paidPlayers)
-    const splitQ = query(
-      collection(db, 'bookings'),
-      where('splitPayment.paidPlayers', 'array-contains', currentUser.uid)
-    );
-    const unsubSplit = onSnapshot(splitQ, snap => {
-      snap.docs.forEach(d => {
-        if (!bookingMap.has(d.id)) {  // don't overwrite own booking
-          bookingMap.set(d.id, { ...(d.data() as Booking), id: d.id });
-        } else {
-          // Update existing entry with latest data
-          bookingMap.set(d.id, { ...(d.data() as Booking), id: d.id });
-        }
-      });
-      snap.docChanges().forEach(change => {
-        if (change.type === 'removed') bookingMap.delete(change.doc.id);
-      });
-      splitReady = true;
-      flush();
-    }, () => {
-      // If array-contains query fails (missing index), just mark ready
-      splitReady = true;
-      flush();
-    });
-
-    // Invited (but not-yet-paid) split bookings. A friend added at booking time
-    // is stored in splitPayment.invitedFriends but not yet in paidPlayers, so
-    // this surfaces the booking for them ("waiting for confirmation") until they
-    // pay their share — at which point the paidPlayers listener above takes over.
-    const invitedQ = query(
-      collection(db, 'bookings'),
-      where('splitPayment.invitedFriends', 'array-contains', currentUser.uid)
-    );
-    const unsubInvited = onSnapshot(invitedQ, snap => {
-      snap.docs.forEach(d => bookingMap.set(d.id, { ...(d.data() as Booking), id: d.id }));
-      snap.docChanges().forEach(change => {
-        if (change.type === 'removed') bookingMap.delete(change.doc.id);
-      });
-      invitedReady = true;
-      flush();
-    }, () => {
-      invitedReady = true;
-      flush();
-    });
-
-    return () => { unsubOwn(); unsubSplit(); unsubInvited(); };
+    return unsub;
   }, [currentUser]);
 
   const handleCancelBooking = async (bookingId: string) => {
@@ -176,7 +112,7 @@ export default function MyBookings() {
         setExpandedId(null);
       }
     } else {
-      setExpandedId(null); // Keep collapsed on mobile when switching tabs
+      setExpandedId(null);
     }
   };
 
@@ -286,7 +222,7 @@ export default function MyBookings() {
                                   }
                                 }}
                                 onCancel={() => handleCancelBooking(booking.id)}
-                                currentUid={currentUser?.uid ?? ''}
+                                isOwner={currentUser?.uid === booking.userId}
                                 hideDetailsOnDesktop={true}
                               />
                             </motion.div>
@@ -320,7 +256,7 @@ export default function MyBookings() {
                                   }
                                 }}
                                 onCancel={() => handleCancelBooking(booking.id)}
-                                currentUid={currentUser?.uid ?? ''}
+                                isOwner={currentUser?.uid === booking.userId}
                                 hideDetailsOnDesktop={true}
                               />
                             </motion.div>
@@ -341,13 +277,13 @@ export default function MyBookings() {
                   venue={selectedVenue}
                   court={selectedCourt}
                   onCancel={() => handleCancelBooking(selectedBooking.id)}
-                  currentUid={currentUser?.uid ?? ''}
+                  isOwner={currentUser?.uid === selectedBooking.userId}
                 />
               ) : (
                 <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/65 p-8 text-center text-on-surface-variant font-medium min-h-[300px] flex flex-col items-center justify-center gap-3">
                   <span className="material-symbols-outlined text-[40px] text-primary">event_available</span>
                   <p className="font-semibold text-on-surface">Select a Reservation</p>
-                  <p className="text-[12px] text-on-surface-variant">Click a booking from the list to view its complete receipt and teammate split payments details.</p>
+                  <p className="text-[12px] text-on-surface-variant">Click a booking from the list to view its complete receipt.</p>
                 </div>
               )}
             </div>
@@ -360,27 +296,14 @@ export default function MyBookings() {
 
 // ─── BookingCard ──────────────────────────────────────────────────────────────
 function BookingCard({
-  booking, venue, court, isExpanded, onToggle, onCancel, currentUid, hideDetailsOnDesktop = false,
+  booking, venue, court, isExpanded, onToggle, onCancel, isOwner, hideDetailsOnDesktop = false,
 }: {
   booking: Booking; venue: Venue | undefined; court: Court | undefined;
-  isExpanded: boolean; onToggle: () => void; onCancel: () => void; currentUid: string;
+  isExpanded: boolean; onToggle: () => void; onCancel: () => void; isOwner: boolean;
   hideDetailsOnDesktop?: boolean;
 }) {
   const isConfirmed = booking.status === 'confirmed';
-  const isHold      = booking.status === 'hold';
   const isCancelled = booking.status === 'cancelled';
-  const isSplit     = !!booking.splitPayment?.enabled;
-
-  const paidCount  = booking.splitPayment?.paidPlayers?.length ?? 0;
-  const groupSize  = booking.splitPayment?.groupSize ?? 1;
-  const allPaid    = paidCount >= groupSize;
-  const payerDetails: PayerDetail[] = booking.splitPayment?.payerDetails ?? [];
-
-  const navigate   = useNavigate();
-  const isOwner    = booking.userId === currentUid;
-  const hasPaid    = (booking.splitPayment?.paidPlayers ?? []).includes(currentUid);
-  // An invited teammate who still owes their share can pay straight from the card.
-  const canPayShare = isSplit && !isOwner && !hasPaid && !isCancelled && !allPaid;
 
   const formattedDate = useMemo(() => {
     const d = new Date(`${booking.date}T00:00:00`);
@@ -394,8 +317,7 @@ function BookingCard({
     return `${dateStr} · ${h % 12 || 12}:${min} ${h >= 12 ? 'PM' : 'AM'}`;
   }, [booking.date, booking.startTime]);
 
-  const [walletUrl, setWalletUrl]   = useState('');
-  const [linkCopied, setLinkCopied] = useState(false);
+  const [walletUrl, setWalletUrl] = useState('');
   const [isGeneratingWallet, setIsGeneratingWallet] = useState(false);
 
   useEffect(() => {
@@ -411,7 +333,6 @@ function BookingCard({
       return;
     }
     if (!venue || !court) {
-      console.warn('Cannot generate wallet pass: venue or court data is missing', { venue, court });
       alert('Cannot generate pass: Court details are still loading. Please try again in a moment.');
       return;
     }
@@ -425,22 +346,18 @@ function BookingCard({
         alert('Failed to generate Google Wallet pass. Please try again.');
       }
     } catch (err) {
-      console.error('Wallet pass generation error:', err);
+      logger.error('MyBookings: wallet pass generation error', err);
       alert('Failed to generate Google Wallet pass. Please try again.');
     } finally {
       setIsGeneratingWallet(false);
     }
   };
 
-  const statusChip = () => {
-    if (isCancelled) return { label: 'Cancelled', cls: 'bg-error/10 text-error' };
-    if (allPaid && isSplit) return { label: 'Confirmed ✓', cls: 'bg-primary/10 text-primary' };
-    if (isHold)  return { label: '⏸ On Hold', cls: 'bg-amber-100 text-amber-700' };
-    if (isConfirmed) return { label: 'Confirmed', cls: 'bg-secondary text-on-secondary' };
-    return { label: booking.status, cls: 'bg-surface-container text-on-surface-variant' };
-  };
-
-  const chip = statusChip();
+  const chip = isCancelled
+    ? { label: 'Cancelled', cls: 'bg-error/10 text-error' }
+    : isConfirmed
+      ? { label: 'Confirmed', cls: 'bg-secondary text-on-secondary' }
+      : { label: booking.status, cls: 'bg-surface-container text-on-surface-variant' };
 
   return (
     <div className={`bg-surface-container-lowest rounded-[20px] shadow-[0_4px_16px_rgba(0,52,43,0.06)] border transition-all duration-200 overflow-hidden ${
@@ -452,7 +369,6 @@ function BookingCard({
         onClick={onToggle}
         className="w-full p-4 flex items-start gap-3 text-left cursor-pointer"
       >
-        {/* Venue image thumbnail */}
         <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-variant shadow-sm">
           {venue?.images?.[0]
             ? <img src={venue.images[0]} alt="" className="w-full h-full object-cover" />
@@ -465,14 +381,6 @@ function BookingCard({
             <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${chip.cls}`}>
               {chip.label}
             </span>
-            {isSplit && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-semibold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full flex items-center gap-0.5 shrink-0">
-                  <span className="material-symbols-outlined text-[11px]">call_split</span>
-                  {paidCount}/{groupSize} paid
-                </span>
-              </div>
-            )}
           </div>
           <h3 className="font-semibold text-[15px] text-on-surface truncate">
             {venue?.name?.split(',')[0] || booking.venueId}
@@ -525,83 +433,9 @@ function BookingCard({
                 ))}
               </div>
 
-              {/* Split payment payer list */}
-              {isSplit && booking.splitPayment && (
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold text-[13px] text-on-surface">Payment Status</p>
-                    <div className="h-1.5 flex-1 mx-3 bg-surface-container-low rounded-full overflow-hidden">
-                      <motion.div
-                        animate={{ width: `${(paidCount / groupSize) * 100}%` }}
-                        className="h-full bg-primary rounded-full"
-                        transition={{ duration: 0.4 }}
-                      />
-                    </div>
-                    <span className="text-[12px] font-bold text-primary">{paidCount}/{groupSize}</span>
-                  </div>
-
-                  {/* Paid players */}
-                  {payerDetails.map(payer => (
-                    <div key={payer.uid} className="flex items-center gap-3 bg-primary/5 rounded-xl px-3 py-2.5">
-                      <Avatar name={payer.name} photoURL={payer.photoURL} size={34} />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-[13px] text-on-surface truncate">
-                          {payer.name}
-                          {payer.uid === currentUid && (
-                            <span className="ml-1.5 text-[10px] text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded-full">You</span>
-                          )}
-                        </p>
-                        <p className="text-[10px] text-on-surface-variant">
-                          {new Date(payer.paidAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="font-bold text-[14px] text-primary">₹{payer.amount}</span>
-                        <span className="material-symbols-outlined text-[15px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Unpaid slots */}
-                  {Array.from({ length: Math.max(0, groupSize - paidCount) }).map((_, i) => (
-                    <div key={`pending-${i}`} className="flex items-center gap-3 bg-surface-container-low rounded-xl px-3 py-2.5 opacity-60">
-                      <div className="w-[34px] h-[34px] rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[15px] text-on-surface-variant">person</span>
-                      </div>
-                      <p className="flex-1 text-[12px] text-on-surface-variant">Awaiting payment…</p>
-                      <span className="text-[13px] font-semibold text-on-surface-variant">₹{booking.splitPayment?.sharePerPlayer}</span>
-                    </div>
-                  ))}
-
-                  {/* Copy link */}
-                  <button
-                    onClick={async () => {
-                      const url = splitPaymentUrl(booking.splitPayment!.paymentLinkToken);
-                      await navigator.clipboard.writeText(url);
-                      setLinkCopied(true);
-                      setTimeout(() => setLinkCopied(false), 2000);
-                    }}
-                    className="flex items-center justify-center gap-2 h-[40px] bg-surface-container border border-outline-variant/40 rounded-full text-[12px] font-semibold text-on-surface cursor-pointer hover:bg-surface-container-high transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[15px]">{linkCopied ? 'check' : 'content_copy'}</span>
-                    {linkCopied ? 'Link Copied!' : 'Copy Share Link'}
-                  </button>
-                </div>
-              )}
-
               {/* Actions */}
-              {!isCancelled && (canPayShare || isOwner || isConfirmed) && (
+              {!isCancelled && (isConfirmed || isOwner) && (
                 <div className="flex gap-2">
-                  {canPayShare && (
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate(`/split/${booking.splitPayment!.paymentLinkToken}`, { state: { booking, venue, court } })}
-                      className="flex-1 h-[48px] bg-secondary-container text-on-secondary-container font-semibold text-[14px] rounded-full flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
-                      Pay your share ₹{booking.splitPayment?.sharePerPlayer}
-                    </motion.button>
-                  )}
                   {isConfirmed && (
                     <button
                       onClick={handleAddToWallet}
@@ -636,29 +470,15 @@ function BookingCard({
 
 // ─── BookingDetailPanel ────────────────────────────────────────────────────────
 function BookingDetailPanel({
-  booking, venue, court, onCancel, currentUid,
+  booking, venue, court, onCancel, isOwner,
 }: {
   booking: Booking; venue: Venue | undefined; court: Court | undefined;
-  onCancel: () => void; currentUid: string;
+  onCancel: () => void; isOwner: boolean;
 }) {
   const isConfirmed = booking.status === 'confirmed';
-  const isHold      = booking.status === 'hold';
   const isCancelled = booking.status === 'cancelled';
-  const isSplit     = !!booking.splitPayment?.enabled;
 
-  const paidCount  = booking.splitPayment?.paidPlayers?.length ?? 0;
-  const groupSize  = booking.splitPayment?.groupSize ?? 1;
-  const allPaid    = paidCount >= groupSize;
-  const payerDetails: PayerDetail[] = booking.splitPayment?.payerDetails ?? [];
-
-  const navigate   = useNavigate();
-  const isOwner    = booking.userId === currentUid;
-  const hasPaid    = (booking.splitPayment?.paidPlayers ?? []).includes(currentUid);
-  // An invited teammate who still owes their share can pay straight from the panel.
-  const canPayShare = isSplit && !isOwner && !hasPaid && !isCancelled && !allPaid;
-
-  const [walletUrl, setWalletUrl]   = useState('');
-  const [linkCopied, setLinkCopied] = useState(false);
+  const [walletUrl, setWalletUrl] = useState('');
   const [isGeneratingWallet, setIsGeneratingWallet] = useState(false);
 
   useEffect(() => {
@@ -674,7 +494,6 @@ function BookingDetailPanel({
       return;
     }
     if (!venue || !court) {
-      console.warn('Cannot generate wallet pass: venue or court data is missing', { venue, court });
       alert('Cannot generate pass: Court details are still loading. Please try again in a moment.');
       return;
     }
@@ -688,22 +507,18 @@ function BookingDetailPanel({
         alert('Failed to generate Google Wallet pass. Please try again.');
       }
     } catch (err) {
-      console.error('Wallet pass generation error:', err);
+      logger.error('MyBookings: wallet pass generation error', err);
       alert('Failed to generate Google Wallet pass. Please try again.');
     } finally {
       setIsGeneratingWallet(false);
     }
   };
 
-  const statusChip = () => {
-    if (isCancelled) return { label: 'Cancelled', cls: 'bg-error/10 text-error' };
-    if (allPaid && isSplit) return { label: 'Confirmed ✓', cls: 'bg-primary/10 text-primary' };
-    if (isHold)  return { label: '⏸ On Hold', cls: 'bg-amber-100 text-amber-700' };
-    if (isConfirmed) return { label: 'Confirmed', cls: 'bg-secondary text-on-secondary' };
-    return { label: booking.status, cls: 'bg-surface-container text-on-surface-variant' };
-  };
-
-  const chip = statusChip();
+  const chip = isCancelled
+    ? { label: 'Cancelled', cls: 'bg-error/10 text-error' }
+    : isConfirmed
+      ? { label: 'Confirmed', cls: 'bg-secondary text-on-secondary' }
+      : { label: booking.status, cls: 'bg-surface-container text-on-surface-variant' };
 
   return (
     <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/65 p-6 shadow-[0_8px_30px_rgba(0,52,43,0.06)] flex flex-col gap-5">
@@ -720,12 +535,6 @@ function BookingDetailPanel({
             <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${chip.cls}`}>
               {chip.label}
             </span>
-            {isSplit && (
-              <span className="text-[10px] font-semibold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full flex items-center gap-0.5 shrink-0">
-                <span className="material-symbols-outlined text-[11px]">call_split</span>
-                Split payment
-              </span>
-            )}
           </div>
           <h2 className="font-extrabold text-[20px] text-on-surface leading-tight truncate mb-1">
             {venue?.name || booking.venueId}
@@ -759,88 +568,9 @@ function BookingDetailPanel({
         ))}
       </div>
 
-      {/* Split details */}
-      {isSplit && booking.splitPayment && (
-        <div className="flex flex-col gap-3 bg-surface-container-low/30 border border-outline-variant/40 rounded-2xl p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-extrabold text-[14px] text-on-surface">Split Payment Status</p>
-              <p className="text-[11px] text-on-surface-variant">Each player pays ₹{booking.splitPayment.sharePerPlayer}</p>
-            </div>
-            <span className="text-[14px] font-extrabold text-primary bg-primary/10 px-3 py-1 rounded-full">{paidCount}/{groupSize} paid</span>
-          </div>
-
-          <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
-            <motion.div
-              animate={{ width: `${(paidCount / groupSize) * 100}%` }}
-              className="h-full bg-gradient-to-r from-primary to-[#004d40] rounded-full"
-              transition={{ duration: 0.4 }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2 mt-2">
-            {/* Paid players */}
-            {payerDetails.map(payer => (
-              <div key={payer.uid} className="flex items-center gap-3 bg-surface-container-lowest rounded-xl px-3 py-2 border border-outline-variant/20 shadow-sm">
-                <Avatar name={payer.name} photoURL={payer.photoURL} size={30} />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-[13px] text-on-surface truncate">
-                    {payer.name}
-                    {payer.uid === currentUid && (
-                      <span className="ml-1.5 text-[10px] text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded-full">You</span>
-                    )}
-                  </p>
-                  <p className="text-[10px] text-on-surface-variant">
-                    {new Date(payer.paidAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="font-extrabold text-[13px] text-primary">₹{payer.amount}</span>
-                  <span className="material-symbols-outlined text-[15px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                </div>
-              </div>
-            ))}
-
-            {/* Unpaid slots */}
-            {Array.from({ length: Math.max(0, groupSize - paidCount) }).map((_, i) => (
-              <div key={`pending-${i}`} className="flex items-center gap-3 bg-surface-container-lowest/50 rounded-xl px-3 py-2 border border-dashed border-outline-variant/30 opacity-60">
-                <div className="w-[30px] h-[30px] rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[14px] text-on-surface-variant">person</span>
-                </div>
-                <p className="flex-1 text-[12px] text-on-surface-variant">Awaiting payment…</p>
-                <span className="text-[13px] font-semibold text-on-surface-variant">₹{booking.splitPayment?.sharePerPlayer}</span>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={async () => {
-              const url = splitPaymentUrl(booking.splitPayment!.paymentLinkToken);
-              await navigator.clipboard.writeText(url);
-              setLinkCopied(true);
-              setTimeout(() => setLinkCopied(false), 2000);
-            }}
-            className="flex items-center justify-center gap-2 h-[42px] mt-2 bg-surface-container border border-outline-variant/40 rounded-full text-[13px] font-bold text-on-surface cursor-pointer hover:bg-surface-container-high transition-colors shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[16px]">{linkCopied ? 'check' : 'content_copy'}</span>
-            {linkCopied ? 'Link Copied!' : 'Copy Share Link'}
-          </button>
-        </div>
-      )}
-
       {/* Actions */}
-      {!isCancelled && (canPayShare || isOwner || isConfirmed) && (
+      {!isCancelled && (isConfirmed || isOwner) && (
         <div className="flex gap-3 mt-4">
-          {canPayShare && (
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate(`/split/${booking.splitPayment!.paymentLinkToken}`)}
-              className="flex-1 h-[48px] bg-secondary-container text-on-secondary-container font-bold text-[14px] rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
-              Pay your share ₹{booking.splitPayment?.sharePerPlayer}
-            </motion.button>
-          )}
           {isConfirmed && (
             <button
               onClick={handleAddToWallet}
@@ -882,4 +612,3 @@ function BookingCardSkeleton() {
     </div>
   );
 }
-

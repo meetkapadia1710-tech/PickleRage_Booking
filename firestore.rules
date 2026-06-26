@@ -9,38 +9,77 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Admins are provisioned manually or via default email fallback:
+    // Admin status is managed via the /admins collection (Firestore console).
+    // To grant admin: create /admins/{uid} with any data.
     function isAdmin() {
       return isSignedIn()
-        && (
-          request.auth.token.email == "1080patelharshil@gmail.com"
-          || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-        );
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ── field-level validation helpers ───────────────────────────────────────
+
+    // A non-empty string within a max byte length.
+    function isValidString(val, maxLen) {
+      return val is string && val.size() > 0 && val.size() <= maxLen;
+    }
+
+    // A 10-digit numeric phone string (Indian format, no country code).
+    function isValidPhone(val) {
+      return val is string && val.matches('^[6-9][0-9]{9}$');
+    }
+
+    // YYYY-MM-DD date string (basic format check).
+    function isValidDate(val) {
+      return val is string && val.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    // HH:mm time string.
+    function isValidTime(val) {
+      return val is string && val.matches('^[0-2][0-9]:[0-5][0-9]$');
+    }
+
+    // Validate that a user profile write has safe field values.
+    function isValidUserProfile() {
+      let d = request.resource.data;
+      return isValidString(d.displayName, 64)
+        && isValidPhone(d.phone)
+        && (!('photoURL' in d)    || (d.photoURL is string    && d.photoURL.size() <= 512))
+        && (!('email' in d)       || (d.email is string       && d.email.size() <= 254))
+        && (!('createdAt' in d)   || (d.createdAt is string))
+        && (!('fcmToken' in d)    || (d.fcmToken is string    && d.fcmToken.size() <= 256))
+        && (!('fcmTokens' in d)   || (d.fcmTokens is list));
+    }
+
+    // Validate that a new booking has required fields with safe values.
+    function isValidBooking() {
+      let d = request.resource.data;
+      return isValidString(d.venueId, 64)
+        && isValidString(d.courtId, 64)
+        && isValidDate(d.date)
+        && isValidTime(d.startTime)
+        && isValidTime(d.endTime)
+        && d.status == 'confirmed';
     }
 
     // ── admins ───────────────────────────────────────────────────────────────
-    // Console-managed only; users may check their own admin status.
     match /admins/{uid} {
       allow read: if isSignedIn() && request.auth.uid == uid;
       allow write: if false;
     }
 
     // ── users ────────────────────────────────────────────────────────────────
-    // Read by any signed-in user: leaderboard, friend search by phone,
-    // split-payment payer names, friend profiles.
-    // Writes only to your own profile, and the stored uid can't be spoofed.
+    // Read by any signed-in user (leaderboard).
+    // Writes only to your own profile with validated fields.
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create, update: if isSignedIn()
-        && (
-          isAdmin()
-          || request.auth.uid == userId
-        );
+        && (isAdmin() || request.auth.uid == userId)
+        && isValidUserProfile();
       allow delete: if isAdmin();
     }
 
     // ── venues & courts ──────────────────────────────────────────────────────
-    // Publicly readable (share links, logged-out browsing); admin-managed.
+    // Publicly readable; admin-managed.
     match /venues/{venueId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -54,83 +93,23 @@ service cloud.firestore {
     // ── bookings ─────────────────────────────────────────────────────────────
     match /bookings/{bookingId} {
 
-      // Teammate paying their share via a split link: may only add their own
-      // uid to paidPlayers / their payer details, and optionally flip the
-      // status to 'confirmed' once everyone has paid.
-      function isSplitShareUpdate() {
-        return resource.data.splitPayment != null
-          && request.resource.data.diff(resource.data).affectedKeys()
-               .hasOnly(['splitPayment', 'status'])
-          && request.resource.data.splitPayment.diff(resource.data.splitPayment).affectedKeys()
-               .hasOnly(['paidPlayers', 'payerDetails'])
-          && request.resource.data.splitPayment.paidPlayers.toSet()
-               .difference(resource.data.splitPayment.paidPlayers.toSet())
-               .hasOnly([request.auth.uid])
-          // Status may stay put, or flip to 'confirmed' ONLY once every share is
-          // in (paidPlayers reaches groupSize) — no premature confirmation.
-          && (request.resource.data.status == resource.data.status
-              || (request.resource.data.status == 'confirmed'
-                  && request.resource.data.splitPayment.paidPlayers.size()
-                       >= request.resource.data.splitPayment.groupSize));
-      }
-
-      // Signed-in users see bookings: slot availability, leaderboard,
-      // split-payment lookups by link token.
+      // Signed-in users can read all bookings (slot availability, leaderboard).
       allow read: if isSignedIn();
 
-      // You can only create bookings for yourself, with a sane status.
+      // Users can only create bookings for themselves with validated fields.
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status in ['confirmed', 'hold'];
+        && isValidBooking();
 
-      // Owners manage their booking (e.g. cancel) but can't reassign it;
-      // teammates may only record their own split-share payment.
+      // Owners can update their own booking (e.g. cancel); they cannot reassign it.
+      // Only the status field may change (to 'cancelled').
       allow update: if isSignedIn()
-        && (
-          (request.auth.uid == resource.data.userId
-            && request.resource.data.userId == resource.data.userId)
-          || isSplitShareUpdate()
-        );
+        && request.auth.uid == resource.data.userId
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'cancelled';
 
       allow delete: if isAdmin();
-    }
-
-    // ── friend requests ──────────────────────────────────────────────────────
-    match /friendRequests/{requestId} {
-      // Only sender and recipient can see a request.
-      allow get: if isSignedIn()
-        && (request.auth.uid == resource.data.fromUid
-            || request.auth.uid == resource.data.toUid);
-      allow list: if isSignedIn()
-        && (request.auth.uid == resource.data.fromUid
-            || request.auth.uid == resource.data.toUid);
-
-      // Requests are sent as yourself, to someone else, always pending.
-      allow create: if isSignedIn()
-        && request.resource.data.fromUid == request.auth.uid
-        && request.resource.data.toUid is string
-        && request.resource.data.toUid != request.auth.uid
-        && request.resource.data.status == 'pending';
-
-      // Only the recipient resolves a pending request, touching status alone.
-      allow update: if isSignedIn()
-        && request.auth.uid == resource.data.toUid
-        && resource.data.status == 'pending'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
-        && request.resource.data.status in ['accepted', 'rejected'];
-
-      // Sender may retract their own request.
-      allow delete: if isSignedIn() && request.auth.uid == resource.data.fromUid;
-    }
-
-    // ── friends lists ────────────────────────────────────────────────────────
-    // friends/{userId}/list/{friendId} — accepting a request writes BOTH
-    // sides' lists from the accepter's client, and removing a friend deletes
-    // both sides, so the list owner or the named friend may write an entry.
-    match /friends/{userId}/list/{friendId} {
-      allow read: if isSignedIn() && request.auth.uid == userId;
-      allow create, update, delete: if isSignedIn()
-        && (request.auth.uid == userId || request.auth.uid == friendId);
     }
   }
 }

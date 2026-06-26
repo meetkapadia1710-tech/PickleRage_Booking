@@ -7,6 +7,7 @@ import type { Venue } from '../types';
 import AppHeader from '../components/AppHeader';
 import SmartImage from '../components/SmartImage';
 import { sanitizeVenue } from '../lib/venues';
+import { logger } from '../lib/logger';
 
 
 const cardVariants = {
@@ -48,7 +49,7 @@ export default function Home() {
       })
       .catch(err => {
         if (cancelled) return;
-        console.error('Error fetching venues:', err);
+        logger.error('Home: error fetching venues', err);
         setError(true);
         setLoading(false);
       });

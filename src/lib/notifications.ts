@@ -2,6 +2,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { doc, setDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth } from '../firebase';
+import { logger } from './logger';
 
 export async function initPushNotifications() {
   if (!Capacitor.isNativePlatform()) return;
@@ -12,7 +13,7 @@ export async function initPushNotifications() {
       permStatus = await PushNotifications.requestPermissions();
     }
     if (permStatus.receive !== 'granted') {
-      console.warn('User denied push notification permissions');
+      logger.warn('User denied push notification permissions');
       return;
     }
 
@@ -24,13 +25,13 @@ export async function initPushNotifications() {
         await PushNotifications.createChannel({
           id: 'playhub_default',
           name: 'PlayHub Updates',
-          description: 'Booking and split-payment updates',
+          description: 'Booking confirmations and updates',
           importance: 5,
           visibility: 1,
           sound: 'default',
         });
       } catch (e) {
-        console.warn('Could not create notification channel:', e);
+        logger.warn('Could not create notification channel:', e);
       }
     }
 
@@ -51,19 +52,19 @@ export async function initPushNotifications() {
     });
 
     PushNotifications.addListener('registrationError', (error: unknown) => {
-      console.error('Push registration error:', error);
+      logger.error('Push registration error:', error);
     });
 
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      console.log('Push received:', notification);
+      logger.log('Push received:', notification);
     });
 
     PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-      console.log('Push action performed:', notification);
+      logger.log('Push action performed:', notification);
     });
 
     await PushNotifications.register();
   } catch (err) {
-    console.error('Failed to initialize push notifications:', err);
+    logger.error('Failed to initialize push notifications:', err);
   }
 }

@@ -33,3 +33,16 @@ public/wallet-config.json
 
 
 .vercel
+
+# Android build artifacts — never commit compiled binaries
+*.apk
+*.aab
+android/app/build/
+android/.gradle/
+
+# Capacitor generated native project (re-generate with `npx cap sync`)
+# Uncomment if you prefer not to track native project changes:
+# android/
+
+# OS artifacts
+Thumbs.db

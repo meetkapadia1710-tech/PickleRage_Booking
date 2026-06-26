@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import { logger } from '../lib/logger';
 import Avatar from '../components/Avatar';
 
 export default function CompleteProfile() {
@@ -35,7 +36,7 @@ export default function CompleteProfile() {
       await refreshProfile();
       navigate('/home');
     } catch (err) {
-      console.error(err);
+      logger.error('CompleteProfile: save failed', err);
       setError('Failed to save profile. Please try again.');
       setSaving(false);
     }
@@ -130,7 +131,7 @@ export default function CompleteProfile() {
         >
           <h2 className="font-bold text-[22px] text-on-background mb-1">Complete Your Profile</h2>
           <p className="text-[13px] text-on-surface-variant mb-6">
-            So friends can find you and you can split bookings.
+            Let us know who you are so your bookings are personalised.
           </p>
 
           <div className="flex flex-col gap-4">
@@ -195,7 +196,7 @@ export default function CompleteProfile() {
                 )}
               </div>
               <p className="text-[11px] text-on-surface-variant/60 px-1">
-                Used so friends can find you by number.
+                Used for booking confirmations and support.
               </p>
             </div>
 

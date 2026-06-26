@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import type { Booking } from '../types';
+import { logger } from '../lib/logger';
 import AppHeader from '../components/AppHeader';
 import Avatar from '../components/Avatar';
 
@@ -103,9 +104,12 @@ export default function Leaderboard() {
 
   useEffect(() => {
     let cancelled = false;
+    // Hard cap prevents unbounded reads on large datasets. At scale this page
+    // should be replaced with server-side aggregation (e.g. a scheduled Cloud
+    // Function that writes pre-computed leaderboard documents to Firestore).
     Promise.all([
-      getDocs(collection(db, 'users')),
-      getDocs(query(collection(db, 'bookings'), where('status', '==', 'confirmed'))),
+      getDocs(query(collection(db, 'users'), limit(500))),
+      getDocs(query(collection(db, 'bookings'), where('status', '==', 'confirmed'), limit(2000))),
     ])
       .then(([usersSnap, bookingsSnap]) => {
         if (cancelled) return;
@@ -136,7 +140,7 @@ export default function Leaderboard() {
       })
       .catch(err => {
         if (cancelled) return;
-        console.error('Error fetching leaderboard data:', err);
+        logger.error('Leaderboard: error fetching data', err);
         setError(true);
         setLoading(false);
       });

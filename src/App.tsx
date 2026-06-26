@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AnimatePresence } from 'framer-motion';
 import { Capacitor } from '@capacitor/core';
 
@@ -14,8 +15,6 @@ import TimeSlots from './pages/TimeSlots';
 import PaymentSuccess from './pages/PaymentSuccess';
 import MyBookings from './pages/MyBookings';
 import Leaderboard from './pages/Leaderboard';
-import Friends from './pages/Friends';
-import SplitPayment from './pages/SplitPayment';
 import BottomNav from './components/BottomNav';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -80,8 +79,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
-        <Route path="/split/:token" element={<ProtectedRoute><SplitPayment /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );
@@ -131,14 +128,16 @@ function PushInit() {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <NativeBackHandler />
-        <PushInit />
-        <AnimatedRoutes />
-        <BottomNav />
-      </BrowserRouter>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <NativeBackHandler />
+          <PushInit />
+          <AnimatedRoutes />
+          <BottomNav />
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

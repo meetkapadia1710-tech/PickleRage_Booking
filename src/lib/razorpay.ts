@@ -1,18 +1,8 @@
-import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
-import { app } from '../firebase';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from './functions';
 
-const fns = getFunctions(app);
-if (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1' ||
-  window.location.hostname.startsWith('192.168.') ||
-  import.meta.env.DEV
-) {
-  const host = window.location.hostname === 'localhost' ? 'localhost' : (window.location.hostname || 'localhost');
-  connectFunctionsEmulator(fns, host, 5002);
-}
-const createOrderFn = httpsCallable(fns, 'createRazorpayOrder');
-const verifyPaymentFn = httpsCallable(fns, 'verifyRazorpayPayment');
+const createOrderFn = httpsCallable(functions, 'createRazorpayOrder');
+const verifyPaymentFn = httpsCallable(functions, 'verifyRazorpayPayment');
 
 type OrderResponse = { order_id: string; amount: number; currency: string; key_id?: string };
 type RazorpaySuccess = { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string };
@@ -35,7 +25,10 @@ function loadCheckout(): Promise<void> {
       s.src = CHECKOUT_SRC;
       s.async = true;
       s.onload = () => resolve();
-      s.onerror = () => { scriptPromise = null; reject(new Error('Could not load Razorpay. Check your connection.')); };
+      s.onerror = () => {
+        scriptPromise = null;
+        reject(new Error('Could not load Razorpay. Check your connection.'));
+      };
       document.head.appendChild(s);
     });
   }
